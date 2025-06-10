@@ -1,0 +1,766 @@
+
+> t3-crusher@0.1.0 dev
+> next dev --turbopack
+
+ ⚠ Port 3000 is in use, using available port 3001 instead.
+   ▲ Next.js 15.3.3 (Turbopack)
+   - Local:        http://localhost:3001
+   - Network:      http://192.168.1.138:3001
+   - Environments: .env.local, .env.development
+
+ ✓ Starting...
+ ✓ Compiled middleware in 72ms
+ ✓ Ready in 723ms
+ ○ Compiling / ...
+ ✓ Compiled / in 1117ms
+ GET / 200 in 1306ms
+ GET / 200 in 368ms
+ ○ Compiling /_not-found/page ...
+ ✓ Compiled /_not-found/page in 652ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 717ms
+ ✓ Compiled in 248ms
+ ✓ Compiled in 0ms
+ GET / 200 in 296ms
+ ✓ Compiled in 327ms
+ ✓ Compiled in 143ms
+ GET / 200 in 248ms
+[Middleware] POST /api/chat
+ ✓ Compiled /api/chat in 467ms
+🚀 [CHAT API] Request received at 2025-06-09T23:47:12.466Z
+📝 [CHAT API] Request details: {
+  messagesCount: 1,
+  conversationId: '84dac762-09b5-44d6-b47e-857aff8187dd',
+  model: 'claude-3-haiku-20240307',
+  firstMessage: 'hi...',
+  requestBody: '{\n' +
+    '  "id": "htwOPbNiHuZDFUln",\n' +
+    '  "messages": [\n' +
+    '    {\n' +
+    '      "role": "user",\n' +
+    '      "content": "hi",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "hi"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    }\n' +
+    '  ],\n' +
+    '  "conversationId": "84dac762-09b5-44d6-b47e-857aff8187dd",\n' +
+    '  "model": "claude-3-haiku-20240307"\n' +
+    '}'
+}
+🔑 [CHAT API] API Key check: {
+  hasKey: true,
+  keyPrefix: 'sk-ant-api...',
+  keyLength: 108,
+  startsWithCorrectPrefix: true,
+  isPlaceholder: false
+}
+🤖 [ANTHROPIC] Starting API call with model: claude-3-haiku-20240307
+🤖 [ANTHROPIC] Messages being sent: [
+  {
+    "role": "user",
+    "content": "hi",
+    "parts": [
+      {
+        "type": "text",
+        "text": "hi"
+      }
+    ]
+  }
+]
+✅ [ANTHROPIC] API call successful, returning stream response
+⏱️ [CHAT API] Total request time: 5 ms
+📤 [CHAT API] Response headers: {
+  'content-type': 'text/plain; charset=utf-8',
+  'x-vercel-ai-data-stream': 'v1'
+}
+ POST /api/chat 200 in 1717ms
+[Middleware] POST /api/chat
+🚀 [CHAT API] Request received at 2025-06-09T23:47:21.751Z
+📝 [CHAT API] Request details: {
+  messagesCount: 3,
+  conversationId: '84dac762-09b5-44d6-b47e-857aff8187dd',
+  model: 'claude-3-haiku-20240307',
+  firstMessage: 'hi...',
+  requestBody: '{\n' +
+    '  "id": "htwOPbNiHuZDFUln",\n' +
+    '  "messages": [\n' +
+    '    {\n' +
+    '      "role": "user",\n' +
+    '      "content": "hi",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "hi"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    },\n' +
+    '    {\n' +
+    '      "role": "assistant",\n' +
+    '      "content": "Hello! How can I assist you today?",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "step-start"\n' +
+    '        },\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "Hello! How can I assist you today?"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    },\n' +
+    '    {\n' +
+    '      "role": "user",\n' +
+    '      "content": "hi",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "hi"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    }\n' +
+    '  ],\n' +
+    '  "conversationId": "84dac762-09b5-44d6-b47e-857aff8187dd",\n' +
+    '  "model": "claude-3-haiku-20240307"\n' +
+    '}'
+}
+🔑 [CHAT API] API Key check: {
+  hasKey: true,
+  keyPrefix: 'sk-ant-api...',
+  keyLength: 108,
+  startsWithCorrectPrefix: true,
+  isPlaceholder: false
+}
+🤖 [ANTHROPIC] Starting API call with model: claude-3-haiku-20240307
+🤖 [ANTHROPIC] Messages being sent: [
+  {
+    "role": "user",
+    "content": "hi",
+    "parts": [
+      {
+        "type": "text",
+        "text": "hi"
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! How can I assist you today?",
+    "parts": [
+      {
+        "type": "step-start"
+      },
+      {
+        "type": "text",
+        "text": "Hello! How can I assist you today?"
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "parts": [
+      {
+        "type": "text",
+        "text": "hi"
+      }
+    ]
+  }
+]
+✅ [ANTHROPIC] API call successful, returning stream response
+⏱️ [CHAT API] Total request time: 2 ms
+📤 [CHAT API] Response headers: {
+  'content-type': 'text/plain; charset=utf-8',
+  'x-vercel-ai-data-stream': 'v1'
+}
+ POST /api/chat 200 in 1163ms
+[Middleware] POST /api/chat
+🚀 [CHAT API] Request received at 2025-06-09T23:47:46.209Z
+📝 [CHAT API] Request details: {
+  messagesCount: 5,
+  conversationId: '84dac762-09b5-44d6-b47e-857aff8187dd',
+  model: 'claude-3-haiku-20240307',
+  firstMessage: 'hi...',
+  requestBody: '{\n' +
+    '  "id": "htwOPbNiHuZDFUln",\n' +
+    '  "messages": [\n' +
+    '    {\n' +
+    '      "role": "user",\n' +
+    '      "content": "hi",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "hi"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    },\n' +
+    '    {\n' +
+    '      "role": "assistant",\n' +
+    '      "content": "Hello! How can I assist you today?",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "step-start"\n' +
+    '        },\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "Hello! How can I assist you today?"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    },\n' +
+    '    {\n' +
+    '      "role": "user",\n' +
+    '      "content": "hi",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "hi"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    },\n' +
+    '    {\n' +
+    '      "role": "assistant",\n' +
+    '      "content": "Hello again! Is there something I can help you with?",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "step-start"\n' +
+    '        },\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "Hello again! Is there something I can help you with?"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    },\n' +
+    '    {\n' +
+    '      "role": "user",\n' +
+    `      "content": "hello how many r's are there in strawberry",\n` +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    `          "text": "hello how many r's are there in strawberry"\n` +
+    '        }\n' +
+    '      ]\n' +
+    '    }\n' +
+    '  ],\n' +
+    '  "conversationId": "84dac762-09b5-44d6-b47e-857aff8187dd",\n' +
+    '  "model": "claude-3-haiku-20240307"\n' +
+    '}'
+}
+🔑 [CHAT API] API Key check: {
+  hasKey: true,
+  keyPrefix: 'sk-ant-api...',
+  keyLength: 108,
+  startsWithCorrectPrefix: true,
+  isPlaceholder: false
+}
+🤖 [ANTHROPIC] Starting API call with model: claude-3-haiku-20240307
+🤖 [ANTHROPIC] Messages being sent: [
+  {
+    "role": "user",
+    "content": "hi",
+    "parts": [
+      {
+        "type": "text",
+        "text": "hi"
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! How can I assist you today?",
+    "parts": [
+      {
+        "type": "step-start"
+      },
+      {
+        "type": "text",
+        "text": "Hello! How can I assist you today?"
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "parts": [
+      {
+        "type": "text",
+        "text": "hi"
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": "Hello again! Is there something I can help you with?",
+    "parts": [
+      {
+        "type": "step-start"
+      },
+      {
+        "type": "text",
+        "text": "Hello again! Is there something I can help you with?"
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": "hello how many r's are there in strawberry",
+    "parts": [
+      {
+        "type": "text",
+        "text": "hello how many r's are there in strawberry"
+      }
+    ]
+  }
+]
+✅ [ANTHROPIC] API call successful, returning stream response
+⏱️ [CHAT API] Total request time: 8 ms
+📤 [CHAT API] Response headers: {
+  'content-type': 'text/plain; charset=utf-8',
+  'x-vercel-ai-data-stream': 'v1'
+}
+ POST /api/chat 200 in 689ms
+[Middleware] POST /api/chat
+🚀 [CHAT API] Request received at 2025-06-09T23:48:10.358Z
+📝 [CHAT API] Request details: {
+  messagesCount: 7,
+  conversationId: '84dac762-09b5-44d6-b47e-857aff8187dd',
+  model: 'claude-3-haiku-20240307',
+  firstMessage: 'hi...',
+  requestBody: '{\n' +
+    '  "id": "htwOPbNiHuZDFUln",\n' +
+    '  "messages": [\n' +
+    '    {\n' +
+    '      "role": "user",\n' +
+    '      "content": "hi",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "hi"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    },\n' +
+    '    {\n' +
+    '      "role": "assistant",\n' +
+    '      "content": "Hello! How can I assist you today?",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "step-start"\n' +
+    '        },\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "Hello! How can I assist you today?"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    },\n' +
+    '    {\n' +
+    '      "role": "user",\n' +
+    '      "content": "hi",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "hi"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    },\n' +
+    '    {\n' +
+    '      "role": "assistant",\n' +
+    '      "content": "Hello again! Is there something I can help you with?",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "step-start"\n' +
+    '        },\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "Hello again! Is there something I can help you with?"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    },\n' +
+    '    {\n' +
+    '      "role": "user",\n' +
+    `      "content": "hello how many r's are there in strawberry",\n` +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    `          "text": "hello how many r's are there in strawberry"\n` +
+    '        }\n' +
+    '      ]\n' +
+    '    },\n' +
+    '    {\n' +
+    '      "role": "assistant",\n' +
+    `      "content": "There are 3 r's in the word \\"strawberry\\".",\n` +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "step-start"\n' +
+    '        },\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    `          "text": "There are 3 r's in the word \\"strawberry\\"."\n` +
+    '        }\n' +
+    '      ]\n' +
+    '    },\n' +
+    '    {\n' +
+    '      "role": "user",\n' +
+    '      "content": "what is the best way to buy a car in 2025",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "what is the best way to buy a car in 2025"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    }\n' +
+    '  ],\n' +
+    '  "conversationId": "84dac762-09b5-44d6-b47e-857aff8187dd",\n' +
+    '  "model": "claude-3-haiku-20240307"\n' +
+    '}'
+}
+🔑 [CHAT API] API Key check: {
+  hasKey: true,
+  keyPrefix: 'sk-ant-api...',
+  keyLength: 108,
+  startsWithCorrectPrefix: true,
+  isPlaceholder: false
+}
+🤖 [ANTHROPIC] Starting API call with model: claude-3-haiku-20240307
+🤖 [ANTHROPIC] Messages being sent: [
+  {
+    "role": "user",
+    "content": "hi",
+    "parts": [
+      {
+        "type": "text",
+        "text": "hi"
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! How can I assist you today?",
+    "parts": [
+      {
+        "type": "step-start"
+      },
+      {
+        "type": "text",
+        "text": "Hello! How can I assist you today?"
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "parts": [
+      {
+        "type": "text",
+        "text": "hi"
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": "Hello again! Is there something I can help you with?",
+    "parts": [
+      {
+        "type": "step-start"
+      },
+      {
+        "type": "text",
+        "text": "Hello again! Is there something I can help you with?"
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": "hello how many r's are there in strawberry",
+    "parts": [
+      {
+        "type": "text",
+        "text": "hello how many r's are there in strawberry"
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": "There are 3 r's in the word \"strawberry\".",
+    "parts": [
+      {
+        "type": "step-start"
+      },
+      {
+        "type": "text",
+        "text": "There are 3 r's in the word \"strawberry\"."
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": "what is the best way to buy a car in 2025",
+    "parts": [
+      {
+        "type": "text",
+        "text": "what is the best way to buy a car in 2025"
+      }
+    ]
+  }
+]
+✅ [ANTHROPIC] API call successful, returning stream response
+⏱️ [CHAT API] Total request time: 13 ms
+📤 [CHAT API] Response headers: {
+  'content-type': 'text/plain; charset=utf-8',
+  'x-vercel-ai-data-stream': 'v1'
+}
+ POST /api/chat 200 in 3881ms
+ ✓ Compiled in 131ms
+ ✓ Compiled in 79ms
+ ✓ Compiled in 118ms
+ ✓ Compiled in 149ms
+ ✓ Compiled in 164ms
+ ✓ Compiled in 271ms
+ ✓ Compiled in 62ms
+ GET / 200 in 305ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 92ms
+ ○ Compiling /favicon.ico ...
+ ✓ Compiled /favicon.ico in 530ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 775ms
+[Middleware] POST /api/chat
+🚀 [CHAT API] Request received at 2025-06-10T00:28:41.750Z
+📝 [CHAT API] Request details: {
+  messagesCount: 1,
+  conversationId: 'ffdc94f3-e3ed-4ffb-828a-d42deb79cced',
+  model: 'gemini-pro',
+  provider: 'google',
+  firstMessage: 'hi...',
+  requestBody: '{\n' +
+    '  "id": "KDWh84vp36yXozyE",\n' +
+    '  "messages": [\n' +
+    '    {\n' +
+    '      "role": "user",\n' +
+    '      "content": "hi",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "hi"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    }\n' +
+    '  ],\n' +
+    '  "conversationId": "ffdc94f3-e3ed-4ffb-828a-d42deb79cced",\n' +
+    '  "model": "gemini-pro",\n' +
+    '  "provider": "google"\n' +
+    '}'
+}
+❌ [GOOGLE] API call failed: {
+  error: Error: Unsupported provider: google
+      at POST (src/app/api/chat/route.ts:72:14)
+    70 |         }
+    71 |       } else {
+  > 72 |         throw new Error(`Unsupported provider: ${provider}`)
+       |              ^
+    73 |       }
+    74 |
+    75 |       console.log(`✅ [${provider.toUpperCase()}] API call successful, returning stream response`),
+  message: 'Unsupported provider: google',
+  stack: 'Error: Unsupported provider: google\n' +
+    '    at POST (/Users/caseymanos/T3Clone/t3-crusher/.next/server/chunks/[root-of-the-server]__2527c68a._.js:127:23)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n' +
+    '    at async AppRouteRouteModule.do (/Users/caseymanos/T3Clone/t3-crusher/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:26:34112)\n' +
+    '    at async AppRouteRouteModule.handle (/Users/caseymanos/T3Clone/t3-crusher/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:26:41338)\n' +
+    '    at async doRender (/Users/caseymanos/T3Clone/t3-crusher/node_modules/next/dist/server/base-server.js:1518:42)\n' +
+    '    at async DevServer.renderToResponseWithComponentsImpl (/Users/caseymanos/T3Clone/t3-crusher/node_modules/next/dist/server/base-server.js:1920:28)\n' +
+    '    at async DevServer.renderPageComponent (/Users/caseymanos/T3Clone/t3-crusher/node_modules/next/dist/server/base-server.js:2408:24)\n' +
+    '    at async DevServer.renderToResponseImpl (/Users/caseymanos/T3Clone/t3-crusher/node_modules/next/dist/server/base-server.js:2445:32)\n' +
+    '    at async DevServer.pipeImpl (/Users/caseymanos/T3Clone/t3-crusher/node_modules/next/dist/server/base-server.js:1008:25)\n' +
+    '    at async NextNodeServer.handleCatchallRenderRequest (/Users/caseymanos/T3Clone/t3-crusher/node_modules/next/dist/server/next-server.js:305:17)\n' +
+    '    at async DevServer.handleRequestImpl (/Users/caseymanos/T3Clone/t3-crusher/node_modules/next/dist/server/base-server.js:900:17)\n' +
+    '    at async /Users/caseymanos/T3Clone/t3-crusher/node_modules/next/dist/server/dev/next-dev-server.js:371:20\n' +
+    '    at async Span.traceAsyncFn (/Users/caseymanos/T3Clone/t3-crusher/node_modules/next/dist/trace/trace.js:157:20)\n' +
+    '    at async DevServer.handleRequest (/Users/caseymanos/T3Clone/t3-crusher/node_modules/next/dist/server/dev/next-dev-server.js:368:24)\n' +
+    '    at async invokeRender (/Users/caseymanos/T3Clone/t3-crusher/node_modules/next/dist/server/lib/router-server.js:237:21)\n' +
+    '    at async handleRequest (/Users/caseymanos/T3Clone/t3-crusher/node_modules/next/dist/server/lib/router-server.js:428:24)\n' +
+    '    at async requestHandlerImpl (/Users/caseymanos/T3Clone/t3-crusher/node_modules/next/dist/server/lib/router-server.js:452:13)\n' +
+    '    at async Server.requestListener (/Users/caseymanos/T3Clone/t3-crusher/node_modules/next/dist/server/lib/start-server.js:158:13)'
+}
+ POST /api/chat 500 in 289ms
+[Middleware] POST /api/chat
+🚀 [CHAT API] Request received at 2025-06-10T00:29:25.959Z
+📝 [CHAT API] Request details: {
+  messagesCount: 2,
+  conversationId: 'ffdc94f3-e3ed-4ffb-828a-d42deb79cced',
+  model: 'claude-3-5-sonnet-20241022',
+  provider: 'anthropic',
+  firstMessage: 'hi...',
+  requestBody: '{\n' +
+    '  "id": "KDWh84vp36yXozyE",\n' +
+    '  "messages": [\n' +
+    '    {\n' +
+    '      "role": "user",\n' +
+    '      "content": "hi",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "hi"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    },\n' +
+    '    {\n' +
+    '      "role": "user",\n' +
+    '      "content": "what is t3 chat",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "what is t3 chat"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    }\n' +
+    '  ],\n' +
+    '  "conversationId": "ffdc94f3-e3ed-4ffb-828a-d42deb79cced",\n' +
+    '  "model": "claude-3-5-sonnet-20241022",\n' +
+    '  "provider": "anthropic"\n' +
+    '}'
+}
+🔑 [ANTHROPIC] API Key check: {
+  hasKey: true,
+  keyPrefix: 'sk-ant-api...',
+  keyLength: 108,
+  startsWithCorrectPrefix: true
+}
+🤖 [ANTHROPIC] Starting API call with model: claude-3-5-sonnet-20241022
+✅ [ANTHROPIC] API call successful, returning stream response
+⏱️ [CHAT API] Total request time: 9 ms
+📤 [CHAT API] Response headers: {
+  'content-type': 'text/plain; charset=utf-8',
+  'x-vercel-ai-data-stream': 'v1'
+}
+ POST /api/chat 200 in 2279ms
+[Middleware] POST /api/chat
+🚀 [CHAT API] Request received at 2025-06-10T00:29:38.540Z
+📝 [CHAT API] Request details: {
+  messagesCount: 4,
+  conversationId: 'ffdc94f3-e3ed-4ffb-828a-d42deb79cced',
+  model: 'gpt-4o',
+  provider: 'openai',
+  firstMessage: 'hi...',
+  requestBody: '{\n' +
+    '  "id": "KDWh84vp36yXozyE",\n' +
+    '  "messages": [\n' +
+    '    {\n' +
+    '      "role": "user",\n' +
+    '      "content": "hi",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "hi"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    },\n' +
+    '    {\n' +
+    '      "role": "user",\n' +
+    '      "content": "what is t3 chat",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "what is t3 chat"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    },\n' +
+    '    {\n' +
+    '      "role": "assistant",\n' +
+    `      "content": "T3 Chat appears to be a chatbot or chat application, but I don't have detailed, reliable information about its specific features or purpose. Could you provide more context about where you encountered T3 Chat? That would help me give you more accurate information.",\n` +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "step-start"\n' +
+    '        },\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    `          "text": "T3 Chat appears to be a chatbot or chat application, but I don't have detailed, reliable information about its specific features or purpose. Could you provide more context about where you encountered T3 Chat? That would help me give you more accurate information."\n` +
+    '        }\n' +
+    '      ]\n' +
+    '    },\n' +
+    '    {\n' +
+    '      "role": "user",\n' +
+    '      "content": "what is t3 chat",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "what is t3 chat"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    }\n' +
+    '  ],\n' +
+    '  "conversationId": "ffdc94f3-e3ed-4ffb-828a-d42deb79cced",\n' +
+    '  "model": "gpt-4o",\n' +
+    '  "provider": "openai"\n' +
+    '}'
+}
+🔑 [OPENAI] API Key check: {
+  hasKey: true,
+  keyPrefix: 'sk-proj-7J...',
+  keyLength: 164,
+  startsWithCorrectPrefix: true
+}
+🤖 [OPENAI] Starting API call with model: gpt-4o
+✅ [OPENAI] API call successful, returning stream response
+⏱️ [CHAT API] Total request time: 2 ms
+📤 [CHAT API] Response headers: {
+  'content-type': 'text/plain; charset=utf-8',
+  'x-vercel-ai-data-stream': 'v1'
+}
+ POST /api/chat 200 in 4849ms
+ ✓ Compiled in 185ms
+ ✓ Compiled in 135ms
+ ✓ Compiled in 121ms
+ ✓ Compiled in 84ms
+ ✓ Compiled in 149ms
+ ✓ Compiled in 197ms
+ ✓ Compiled in 109ms
+ ✓ Compiled in 117ms
+ ✓ Compiled in 210ms
+ ✓ Compiled in 118ms
+ ✓ Compiled in 138ms
+ ✓ Compiled in 116ms
+ ✓ Compiled in 174ms
+ ✓ Compiled in 110ms
+ ✓ Compiled in 310ms
+ GET / 200 in 323ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 301ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 335ms
+[Middleware] POST /api/chat
+🚀 [CHAT API] Request received at 2025-06-10T00:46:42.713Z
+📝 [CHAT API] Request details: {
+  messagesCount: 1,
+  conversationId: '12b33f73-28f7-43e7-8dbc-54dd2af619a4',
+  model: 'claude-3-haiku-20240307',
+  provider: 'anthropic',
+  firstMessage: 'give a few good tips for baking chocolate chip cookies...',
+  requestBody: '{\n' +
+    '  "id": "EJoBi3GUAQgPqcqG",\n' +
+    '  "messages": [\n' +
+    '    {\n' +
+    '      "role": "user",\n' +
+    '      "content": "give a few good tips for baking chocolate chip cookies",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "give a few good tips for baking chocolate chip cookies"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    }\n' +
+    '  ],\n' +
+    '  "conversationId": "12b33f73-28f7-43e7-8dbc-54dd2af619a4",\n' +
+    '  "model": "claude-3-haiku-20240307",\n' +
+    '  "provider": "anthropic"\n' +
+    '}'
+}
+🔑 [ANTHROPIC] API Key check: {
+  hasKey: true,
+  keyPrefix: 'sk-ant-api...',
+  keyLength: 108,
+  startsWithCorrectPrefix: true
+}
+🤖 [ANTHROPIC] Starting API call with model: claude-3-haiku-20240307
+✅ [ANTHROPIC] API call successful, returning stream response
+⏱️ [CHAT API] Total request time: 20 ms
+📤 [CHAT API] Response headers: {
+  'content-type': 'text/plain; charset=utf-8',
+  'x-vercel-ai-data-stream': 'v1'
+}
+ POST /api/chat 200 in 3053ms

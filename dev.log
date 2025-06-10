@@ -1,0 +1,48 @@
+
+> t3-crusher@0.1.0 dev
+> next dev --turbopack
+
+ ⚠ Port 3000 is in use, using available port 3001 instead.
+   ▲ Next.js 15.3.3 (Turbopack)
+   - Local:        http://localhost:3001
+   - Network:      http://192.168.1.138:3001
+   - Environments: .env.local, .env.development
+
+ ✓ Starting...
+ ✓ Compiled middleware in 106ms
+ ✓ Ready in 926ms
+ ○ Compiling / ...
+ ✓ Compiled / in 1179ms
+ GET / 200 in 1343ms
+ GET / 200 in 86ms
+ ○ Compiling /_not-found/page ...
+ ✓ Compiled /_not-found/page in 558ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 580ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 625ms
+[Middleware] POST /api/chat
+ ✓ Compiled /api/chat in 297ms
+Attempting Anthropic API call...
+Anthropic API call successful
+ POST /api/chat 200 in 461ms
+ GET / 200 in 80ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 111ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 224ms
+[Middleware] POST /api/chat
+Attempting Anthropic API call...
+Anthropic API call successful
+ POST /api/chat 200 in 152ms
+ GET / 200 in 87ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 146ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 323ms
+ GET / 200 in 95ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 84ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 258ms
+ GET / 200 in 86ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 143ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 283ms
+ ✓ Compiled in 238ms
+ ✓ Compiled in 91ms
+ ✓ Compiled in 184ms
+ ✓ Compiled in 79ms
+ GET / 200 in 201ms
+[?25h
