@@ -3,13 +3,17 @@
 import { useRef, useEffect, useState } from 'react'
 import { useRealtimeChat } from '@/hooks/useRealtimeChat'
 import { useAIChat, getModelById } from '@/lib/ai'
+import { useCollaborativeChat } from '@/hooks/useCollaborativeChat'
 import MessageList from './MessageList'
 import MessageInput from './MessageInput'
 import ModelSelector from './ModelSelector'
 import BranchNavigator from './BranchNavigator'
 import FileUpload from './FileUpload'
 import FileSummaries from './FileSummaries'
+import CollaborativeCursors from './CollaborativeCursors'
+import CollaborativeInvite from './CollaborativeInvite'
 import type { Database } from '@/lib/supabase'
+import { UserPlusIcon } from '@heroicons/react/24/outline'
 
 type Message = Database['public']['Tables']['messages']['Row']
 
@@ -37,6 +41,12 @@ export default function ChatMain({
   
   // Tab state for side panels
   const [activeTab, setActiveTab] = useState<'chat' | 'files' | 'summaries'>('chat')
+  
+  // Collaborative state
+  const [showInviteModal, setShowInviteModal] = useState(false)
+  
+  // Collaborative features
+  const { updateTyping, isCollaborative } = useCollaborativeChat(conversationId)
 
   // Use AI chat hook for streaming responses
   const {
@@ -151,8 +161,10 @@ export default function ChatMain({
 
   const handleInputValueChange = (value: string) => {
     handleInputChange({ target: { value } } as React.ChangeEvent<HTMLInputElement>)
-    // Update typing status (debounced in real implementation)
+    // Update typing status for real-time chat
     updateTypingStatus(value.length > 0)
+    // Update collaborative typing indicator
+    updateTyping(value.length > 0)
   }
 
   if (!conversationId) {
@@ -187,7 +199,10 @@ export default function ChatMain({
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header with Model Selector and Branch Controls */}
+      {/* Collaborative Cursors Overlay */}
+      <CollaborativeCursors conversationId={conversationId} />
+      
+      {/* Header with Model Selector and Controls */}
       <div className="border-b border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -243,6 +258,14 @@ export default function ChatMain({
                   🌿 Tree
                 </button>
               )}
+              <button
+                onClick={() => setShowInviteModal(true)}
+                className="text-xs px-3 py-1.5 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors flex items-center gap-1"
+                title="Invite collaborators"
+              >
+                <UserPlusIcon className="w-3 h-3" />
+                {isCollaborative ? 'Manage' : 'Invite'}
+              </button>
             </div>
           </div>
           <ModelSelector
@@ -337,6 +360,13 @@ export default function ChatMain({
           }
         />
       </div>
+
+      {/* Collaborative Invite Modal */}
+      <CollaborativeInvite
+        conversationId={conversationId}
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+      />
     </div>
   )
 }
