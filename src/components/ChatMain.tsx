@@ -7,6 +7,8 @@ import MessageList from './MessageList'
 import MessageInput from './MessageInput'
 import ModelSelector from './ModelSelector'
 import BranchNavigator from './BranchNavigator'
+import FileUpload from './FileUpload'
+import FileSummaries from './FileSummaries'
 import type { Database } from '@/lib/supabase'
 
 type Message = Database['public']['Tables']['messages']['Row']
@@ -32,6 +34,9 @@ export default function ChatMain({
   // Branching state
   const [showBranchNavigator, setShowBranchNavigator] = useState(false)
   const [activeBranchId, setActiveBranchId] = useState<string | undefined>()
+  
+  // Tab state for side panels
+  const [activeTab, setActiveTab] = useState<'chat' | 'files' | 'summaries'>('chat')
 
   // Use AI chat hook for streaming responses
   const {
@@ -192,17 +197,53 @@ export default function ChatMain({
             <span className="text-sm text-slate-500 dark:text-slate-400">
               Conversation {conversationId.split('-')[0]}
             </span>
-            <button
-              onClick={() => setShowBranchNavigator(!showBranchNavigator)}
-              className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                showBranchNavigator
-                  ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-purple-50 dark:hover:bg-purple-900/30'
-              }`}
-              title="Toggle conversation tree"
-            >
-              🌿 Tree View
-            </button>
+            
+            {/* Tab Buttons */}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setActiveTab('chat')}
+                className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+                  activeTab === 'chat'
+                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/30'
+                }`}
+              >
+                💬 Chat
+              </button>
+              <button
+                onClick={() => setActiveTab('files')}
+                className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+                  activeTab === 'files'
+                    ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-green-50 dark:hover:bg-green-900/30'
+                }`}
+              >
+                📁 Upload
+              </button>
+              <button
+                onClick={() => setActiveTab('summaries')}
+                className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+                  activeTab === 'summaries'
+                    ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-purple-50 dark:hover:bg-purple-900/30'
+                }`}
+              >
+                📄 Files
+              </button>
+              {activeTab === 'chat' && (
+                <button
+                  onClick={() => setShowBranchNavigator(!showBranchNavigator)}
+                  className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+                    showBranchNavigator
+                      ? 'bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-orange-50 dark:hover:bg-orange-900/30'
+                  }`}
+                  title="Toggle conversation tree"
+                >
+                  🌿 Tree
+                </button>
+              )}
+            </div>
           </div>
           <ModelSelector
             selectedModel={selectedModel}
@@ -213,27 +254,46 @@ export default function ChatMain({
         </div>
       </div>
 
-      {/* Messages Area with Branch Navigator */}
+      {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Branch Navigator Sidebar */}
-        {showBranchNavigator && (
+        {/* Sidebar Content */}
+        {(activeTab !== 'chat' || showBranchNavigator) && (
           <div className="w-80 border-r border-slate-200 dark:border-slate-700 bg-white/30 dark:bg-slate-900/30 backdrop-blur-sm overflow-y-auto">
-            <BranchNavigator
-              messages={messages}
-              activeMessageId={activeBranchId}
-              onBranchSelect={handleBranchSelect}
-              onCreateBranch={handleCreateBranch}
-            />
+            {activeTab === 'chat' && showBranchNavigator && (
+              <BranchNavigator
+                messages={messages}
+                activeMessageId={activeBranchId}
+                onBranchSelect={handleBranchSelect}
+                onCreateBranch={handleCreateBranch}
+              />
+            )}
+            {activeTab === 'files' && (
+              <div className="p-4">
+                <FileUpload
+                  conversationId={conversationId}
+                  onAnalysisComplete={(summary, fileInfo) => {
+                    console.log('File analysis completed:', { summary, fileInfo })
+                    // Optionally switch back to chat tab or add message
+                    setActiveTab('chat')
+                  }}
+                />
+              </div>
+            )}
+            {activeTab === 'summaries' && (
+              <div className="p-4">
+                <FileSummaries conversationId={conversationId} />
+              </div>
+            )}
           </div>
         )}
         
-        {/* Main Messages Area */}
+        {/* Main Content Area */}
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
             <div className="h-full flex items-center justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
-          ) : (
+          ) : activeTab === 'chat' ? (
             <>
               <MessageList 
                 messages={messages} 
@@ -242,6 +302,23 @@ export default function ChatMain({
               />
               <div ref={messagesEndRef} />
             </>
+          ) : (
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center text-slate-500 dark:text-slate-400">
+                <div className="text-4xl mb-4">
+                  {activeTab === 'files' ? '📁' : '📄'}
+                </div>
+                <p className="text-lg font-medium mb-2">
+                  {activeTab === 'files' ? 'File Upload & Analysis' : 'File Summaries'}
+                </p>
+                <p className="text-sm">
+                  {activeTab === 'files' 
+                    ? 'Use the sidebar to upload and analyze files with your selected AI model'
+                    : 'View and manage your analyzed file summaries from the sidebar'
+                  }
+                </p>
+              </div>
+            </div>
           )}
         </div>
       </div>

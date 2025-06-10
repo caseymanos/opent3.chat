@@ -1,0 +1,18 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Claude Code Dangerously (Automatically)",
+      "type": "shell",
+      "command": "/Users/caseymanos/.claude/local/claude --dangerously-skip-permissions",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "focus": true
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      }
+    }
+  ]
+}

@@ -21,7 +21,9 @@ export default function ChatInterface() {
     messages, 
     conversation, 
     isLoading, 
-    createNewConversation 
+    createNewConversation,
+    deleteConversation,
+    clearAllConversations
   } = useRealtimeChat(currentConversationId)
 
   const handleNewConversation = async () => {
@@ -64,6 +66,28 @@ export default function ChatInterface() {
     setCurrentConversationId(conversationId)
   }
 
+  const handleDeleteConversation = async (conversationId: string) => {
+    try {
+      await deleteConversation(conversationId)
+      // If we deleted the current conversation, create a new one
+      if (conversationId === currentConversationId) {
+        handleNewConversation()
+      }
+    } catch (error) {
+      console.error('Failed to delete conversation:', error)
+    }
+  }
+
+  const handleClearAll = async () => {
+    try {
+      await clearAllConversations()
+      // Create a new conversation after clearing all
+      handleNewConversation()
+    } catch (error) {
+      console.error('Failed to clear conversations:', error)
+    }
+  }
+
   return (
     <div className="flex h-screen w-full">
       {/* Sidebar */}
@@ -79,6 +103,8 @@ export default function ChatInterface() {
             currentConversationId={currentConversationId}
             onConversationSelect={handleConversationSelect}
             onNewConversation={handleNewConversation}
+            onDeleteConversation={handleDeleteConversation}
+            onClearAllConversations={handleClearAll}
           />
         )}
       </div>

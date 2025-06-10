@@ -36,11 +36,13 @@ export default function MessageList({ messages, aiMessages = [], onCreateBranch 
       allMessages.push({
         id: `ai-temp-${aiMsg.id}`,
         conversation_id: 'temp',
+        parent_id: null,
         role: aiMsg.role as 'user' | 'assistant' | 'system',
         content: { text: aiMsg.content },
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        model_metadata: null
+        model_metadata: null,
+        attachments: null,
+        branch_index: 0
       })
     }
   })
