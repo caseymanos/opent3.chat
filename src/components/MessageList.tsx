@@ -2,6 +2,8 @@
 
 import { motion } from 'framer-motion'
 import { useState } from 'react'
+import ReactMarkdown from 'react-markdown'
+import rehypeHighlight from 'rehype-highlight'
 import ChainOfThought from './ChainOfThought'
 import MessageActions from './MessageActions'
 import { extractReasoning } from '@/lib/reasoning'
@@ -174,8 +176,73 @@ function MessageBubble({ message, onCreateBranch }: MessageBubbleProps) {
             }
           `}
         >
-          <div className="whitespace-pre-wrap break-words">
-            {reasoningData ? reasoningData.mainResponse : getMessageContent()}
+          <div className="prose prose-sm dark:prose-invert max-w-none">
+            <ReactMarkdown
+              rehypePlugins={[[rehypeHighlight, { detect: true }]]}
+              components={{
+                pre: ({ children, ...props }) => {
+                  const [copied, setCopied] = useState(false)
+                  
+                  const extractText = (node: any): string => {
+                    if (typeof node === 'string') return node
+                    if (node?.props?.children) return extractText(node.props.children)
+                    if (Array.isArray(node)) return node.map(extractText).join('')
+                    return ''
+                  }
+                  
+                  const handleCopy = () => {
+                    const code = extractText(children)
+                    navigator.clipboard.writeText(code)
+                    setCopied(true)
+                    setTimeout(() => setCopied(false), 2000)
+                  }
+                  
+                  return (
+                    <div className="relative group">
+                      <pre {...props} className="!bg-slate-900 !text-slate-100 overflow-x-auto rounded-lg">
+                        {children}
+                      </pre>
+                      <button
+                        onClick={handleCopy}
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-100 rounded flex items-center gap-1"
+                      >
+                        {copied ? (
+                          <>
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            Copy
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )
+                },
+                code: ({ inline, className, children, ...props }) => {
+                  if (inline) {
+                    return (
+                      <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-sm" {...props}>
+                        {children}
+                      </code>
+                    )
+                  }
+                  return (
+                    <code className={className} {...props}>
+                      {children}
+                    </code>
+                  )
+                }
+              }}
+            >
+              {reasoningData ? reasoningData.mainResponse : getMessageContent()}
+            </ReactMarkdown>
           </div>
           
           {/* Reasoning Toggle Button for Assistant Messages */}
