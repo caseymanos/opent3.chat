@@ -168,7 +168,18 @@ export function useRealtimeChat(conversationId: string) {
 
   const deleteConversation = useCallback(async (conversationId: string) => {
     try {
-      // Delete messages first (due to foreign key constraint)
+      // Delete chat sessions first
+      const { error: sessionsError } = await supabase
+        .from('chat_sessions')
+        .delete()
+        .eq('conversation_id', conversationId)
+
+      if (sessionsError) {
+        console.error('Error deleting chat sessions:', sessionsError)
+        // Don't throw - continue with cleanup
+      }
+
+      // Delete messages (due to foreign key constraint)
       const { error: messagesError } = await supabase
         .from('messages')
         .delete()
@@ -230,8 +241,20 @@ export function useRealtimeChat(conversationId: string) {
 
       let totalDeleted = 0
 
-      // Delete messages in batches
+      // Delete related records in batches first
       for (const batch of batches) {
+        // Delete chat sessions
+        const { error: sessionsError } = await supabase
+          .from('chat_sessions')
+          .delete()
+          .in('conversation_id', batch)
+
+        if (sessionsError) {
+          console.error('Error deleting chat sessions batch:', sessionsError)
+          // Don't throw - continue with cleanup
+        }
+
+        // Delete messages
         const { error: messagesError } = await supabase
           .from('messages')
           .delete()
@@ -341,7 +364,9 @@ export function useRealtimeChat(conversationId: string) {
           for (let i = 0; i < oldIds.length; i += BATCH_SIZE) {
             const batch = oldIds.slice(i, i + BATCH_SIZE)
             
-            // Delete messages first
+            // Delete chat sessions first
+            await supabase.from('chat_sessions').delete().in('conversation_id', batch)
+            // Delete messages
             await supabase.from('messages').delete().in('conversation_id', batch)
             // Delete conversations
             await supabase.from('conversations').delete().in('id', batch)
