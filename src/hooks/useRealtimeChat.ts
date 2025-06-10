@@ -166,6 +166,134 @@ export function useRealtimeChat(conversationId: string) {
     }
   }, [conversationId, supabase])
 
+  const deleteConversation = useCallback(async (conversationId: string) => {
+    try {
+      // Delete messages first (due to foreign key constraint)
+      const { error: messagesError } = await supabase
+        .from('messages')
+        .delete()
+        .eq('conversation_id', conversationId)
+
+      if (messagesError) {
+        console.error('Error deleting messages:', messagesError)
+        throw messagesError
+      }
+
+      // Delete the conversation
+      const { error: conversationError } = await supabase
+        .from('conversations')
+        .delete()
+        .eq('id', conversationId)
+
+      if (conversationError) {
+        console.error('Error deleting conversation:', conversationError)
+        throw conversationError
+      }
+
+      return true
+    } catch (error) {
+      console.error('Error in deleteConversation:', error)
+      throw error
+    }
+  }, [supabase])
+
+  const clearAllConversations = useCallback(async () => {
+    try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser()
+      const userId = user?.id || '00000000-0000-0000-0000-000000000001'
+
+      // Get all user conversations
+      const { data: conversations, error: fetchError } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('user_id', userId)
+
+      if (fetchError) {
+        console.error('Error fetching conversations:', fetchError)
+        throw fetchError
+      }
+
+      if (!conversations || conversations.length === 0) {
+        return { deleted: 0 }
+      }
+
+      const conversationIds = conversations.map((c: any) => c.id)
+
+      // Delete all messages for these conversations
+      const { error: messagesError } = await supabase
+        .from('messages')
+        .delete()
+        .in('conversation_id', conversationIds)
+
+      if (messagesError) {
+        console.error('Error deleting messages:', messagesError)
+        throw messagesError
+      }
+
+      // Delete all conversations
+      const { error: conversationsError } = await supabase
+        .from('conversations')
+        .delete()
+        .in('id', conversationIds)
+
+      if (conversationsError) {
+        console.error('Error deleting conversations:', conversationsError)
+        throw conversationsError
+      }
+
+      return { deleted: conversations.length }
+    } catch (error) {
+      console.error('Error in clearAllConversations:', error)
+      throw error
+    }
+  }, [supabase])
+
+  const saveFileSummary = useCallback(async (fileId: string, summary: string, metadata?: any) => {
+    try {
+      const { error } = await supabase
+        .from('file_uploads')
+        .update({
+          processed_data: {
+            summary,
+            analysis_timestamp: new Date().toISOString(),
+            metadata
+          }
+        })
+        .eq('id', fileId)
+
+      if (error) {
+        console.error('Error saving file summary:', error)
+        throw error
+      }
+
+      return true
+    } catch (error) {
+      console.error('Error in saveFileSummary:', error)
+      throw error
+    }
+  }, [supabase])
+
+  const getFileSummary = useCallback(async (fileId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('file_uploads')
+        .select('processed_data, filename, file_type')
+        .eq('id', fileId)
+        .single()
+
+      if (error) {
+        console.error('Error getting file summary:', error)
+        throw error
+      }
+
+      return data
+    } catch (error) {
+      console.error('Error in getFileSummary:', error)
+      throw error
+    }
+  }, [supabase])
+
   const createNewConversation = useCallback(async (title?: string) => {
     try {
       logger.group('createNewConversation')
@@ -238,6 +366,10 @@ export function useRealtimeChat(conversationId: string) {
     isTyping,
     sendMessage,
     updateTypingStatus,
-    createNewConversation
+    createNewConversation,
+    deleteConversation,
+    clearAllConversations,
+    saveFileSummary,
+    getFileSummary
   }
 }

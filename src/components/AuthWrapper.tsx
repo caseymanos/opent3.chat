@@ -55,7 +55,7 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
         await supabase.from('profiles').upsert({
           id: mockUserId,
           username: 'Demo User'
-        }).then(result => {
+        }).then((result: any) => {
           console.log('Mock profile upsert result:', result)
         })
         
