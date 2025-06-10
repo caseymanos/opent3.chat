@@ -219,30 +219,47 @@ export function useRealtimeChat(conversationId: string) {
       }
 
       const conversationIds = conversations.map((c: any) => c.id)
+      console.log(`🗑️ [clearAllConversations] Deleting ${conversationIds.length} conversations`)
 
-      // Delete all messages for these conversations
-      const { error: messagesError } = await supabase
-        .from('messages')
-        .delete()
-        .in('conversation_id', conversationIds)
-
-      if (messagesError) {
-        console.error('Error deleting messages:', messagesError)
-        throw messagesError
+      // Process in batches to avoid URL length limits
+      const BATCH_SIZE = 50 // Safe batch size for Supabase
+      const batches = []
+      for (let i = 0; i < conversationIds.length; i += BATCH_SIZE) {
+        batches.push(conversationIds.slice(i, i + BATCH_SIZE))
       }
 
-      // Delete all conversations
-      const { error: conversationsError } = await supabase
-        .from('conversations')
-        .delete()
-        .in('id', conversationIds)
+      let totalDeleted = 0
 
-      if (conversationsError) {
-        console.error('Error deleting conversations:', conversationsError)
-        throw conversationsError
+      // Delete messages in batches
+      for (const batch of batches) {
+        const { error: messagesError } = await supabase
+          .from('messages')
+          .delete()
+          .in('conversation_id', batch)
+
+        if (messagesError) {
+          console.error('Error deleting messages batch:', messagesError)
+          throw messagesError
+        }
       }
 
-      return { deleted: conversations.length }
+      // Delete conversations in batches
+      for (const batch of batches) {
+        const { error: conversationsError } = await supabase
+          .from('conversations')
+          .delete()
+          .in('id', batch)
+
+        if (conversationsError) {
+          console.error('Error deleting conversations batch:', conversationsError)
+          throw conversationsError
+        }
+
+        totalDeleted += batch.length
+      }
+
+      console.log(`✅ [clearAllConversations] Successfully deleted ${totalDeleted} conversations`)
+      return { deleted: totalDeleted }
     } catch (error) {
       console.error('Error in clearAllConversations:', error)
       throw error
@@ -303,16 +320,45 @@ export function useRealtimeChat(conversationId: string) {
       const { data: { user } } = await supabase.auth.getUser()
       logger.info('Auth check result:', { userId: user?.id, email: user?.email })
       
+      const userId = user?.id || '00000000-0000-0000-0000-000000000001'
+      
+      // Clean up old conversations automatically to prevent accumulation
+      // Keep only the most recent 50 conversations per user
+      try {
+        const { data: oldConversations } = await supabase
+          .from('conversations')
+          .select('id')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .range(50, 1000) // Skip first 50, get next 950
+        
+        if (oldConversations && oldConversations.length > 0) {
+          const oldIds = oldConversations.map(c => c.id)
+          console.log(`🧹 [createNewConversation] Auto-cleaning ${oldIds.length} old conversations`)
+          
+          // Process in small batches
+          const BATCH_SIZE = 20
+          for (let i = 0; i < oldIds.length; i += BATCH_SIZE) {
+            const batch = oldIds.slice(i, i + BATCH_SIZE)
+            
+            // Delete messages first
+            await supabase.from('messages').delete().in('conversation_id', batch)
+            // Delete conversations
+            await supabase.from('conversations').delete().in('id', batch)
+          }
+        }
+      } catch (cleanupError) {
+        console.warn('Auto-cleanup failed (non-critical):', cleanupError)
+      }
+      
       if (!user) {
-        // If no user, try using the demo user id with valid UUID
-        const demoUserId = '00000000-0000-0000-0000-000000000001'
-        logger.info('No authenticated user, using demo mode with UUID:', demoUserId)
+        logger.info('No authenticated user, using demo mode with UUID:', userId)
         
         const { data, error } = await supabase
           .from('conversations')
           .insert({
             title: title || 'New Conversation',
-            user_id: demoUserId
+            user_id: userId
           })
           .select()
           .single()
@@ -324,7 +370,7 @@ export function useRealtimeChat(conversationId: string) {
           return {
             id: mockId,
             title: title || 'New Conversation',
-            user_id: demoUserId,
+            user_id: userId,
             model_provider: 'openai',
             model_name: 'gpt-4',
             system_prompt: null,

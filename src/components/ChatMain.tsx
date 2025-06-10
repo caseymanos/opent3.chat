@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react'
 import { useRealtimeChat } from '@/hooks/useRealtimeChat'
-import { useAIChat, getModelById } from '@/lib/ai'
+import { useAIChat } from '@/lib/ai'
 import { useCollaborativeChat } from '@/hooks/useCollaborativeChat'
 import MessageList from './MessageList'
 import MessageInput from './MessageInput'

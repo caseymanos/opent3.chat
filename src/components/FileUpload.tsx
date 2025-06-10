@@ -10,11 +10,9 @@ import {
   XMarkIcon,
   EyeIcon,
   DocumentTextIcon,
-  Cog6ToothIcon,
-  ArrowUpTrayIcon
+  Cog6ToothIcon
 } from '@heroicons/react/24/outline'
 import { CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/solid'
-import { Button } from './ui/Button'
 import ModelSelector from './ModelSelector'
 import { useRealtimeChat } from '@/hooks/useRealtimeChat'
 
@@ -66,7 +64,7 @@ export default function FileUpload({
   const [selectedProvider, setSelectedProvider] = useState('anthropic')
   const [analysisResult, setAnalysisResult] = useState<string>('')
   
-  const { saveFileSummary } = useRealtimeChat(conversationId)
+  const { saveFileSummary } = useRealtimeChat(conversationId || '')
 
   const analyzeFile = useCallback(async (file: File): Promise<UploadedFile['analysis']> => {
     const fileType = file.type
@@ -504,115 +502,6 @@ export default function FileUpload({
         </div>
       )}
 
-      {/* File List */}
-      <AnimatePresence>
-        {uploadedFiles.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="space-y-3"
-          >
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-              Uploaded Files ({uploadedFiles.length})
-            </h3>
-            
-            {uploadedFiles.map((uploadedFile) => (
-              <motion.div
-                key={uploadedFile.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm"
-              >
-                <div className="flex items-start gap-4">
-                  {/* File Preview/Icon */}
-                  <div className="flex-shrink-0">
-                    {uploadedFile.preview ? (
-                      <img
-                        src={uploadedFile.preview}
-                        alt={uploadedFile.file.name}
-                        className="w-16 h-16 object-cover rounded-lg"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-400">
-                        {getFileIcon(uploadedFile.file)}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* File Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
-                        {uploadedFile.file.name}
-                      </h4>
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(uploadedFile.status)}
-                        <button
-                          onClick={() => removeFile(uploadedFile.id)}
-                          className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-colors"
-                        >
-                          <XMarkIcon className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      {(uploadedFile.file.size / 1024 / 1024).toFixed(2)} MB • {uploadedFile.file.type}
-                    </p>
-
-                    {/* Progress Bar */}
-                    {(uploadedFile.status === 'uploading' || uploadedFile.status === 'processing') && (
-                      <div className="mt-2">
-                        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
-                          <motion.div
-                            className="h-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"
-                            initial={{ width: 0 }}
-                            animate={{ width: `${uploadedFile.progress}%` }}
-                            transition={{ duration: 0.3 }}
-                          />
-                        </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                          {uploadedFile.status === 'uploading' ? 'Uploading...' : 'Analyzing with AI...'}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Analysis Results */}
-                    {uploadedFile.status === 'completed' && uploadedFile.analysis && (
-                      <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                        <div className="flex items-start gap-2">
-                          <EyeIcon className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                              AI Analysis Complete
-                            </p>
-                            {uploadedFile.analysis.summary && (
-                              <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-                                {uploadedFile.analysis.summary}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Error */}
-                    {uploadedFile.status === 'error' && (
-                      <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                        <p className="text-sm text-red-800 dark:text-red-200">
-                          Error: {uploadedFile.error}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
       {/* File List */}
       <AnimatePresence>
         {uploadedFiles.length > 0 && (
