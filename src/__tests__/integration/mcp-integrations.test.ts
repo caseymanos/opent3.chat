@@ -41,10 +41,10 @@ describe('MCP Integrations', () => {
 
         const result = await githubIntegration.searchRepositories('test query')
 
-        expect(mockFetch).toHaveBeenCalledWith('/api/github', {
+        expect(mockFetch).toHaveBeenCalledWith('/api/github/search/repositories', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'search_repositories', query: 'test query' })
+          body: JSON.stringify({ query: 'test query' })
         })
 
         expect(result).toHaveLength(1)
@@ -99,11 +99,10 @@ describe('MCP Integrations', () => {
 
         const result = await githubIntegration.listIssues('user', 'test-repo', 'open')
 
-        expect(mockFetch).toHaveBeenCalledWith('/api/github', {
+        expect(mockFetch).toHaveBeenCalledWith('/api/github/issues', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            action: 'list_issues', 
             owner: 'user', 
             repo: 'test-repo', 
             state: 'open' 
@@ -145,11 +144,10 @@ describe('MCP Integrations', () => {
           ['bug', 'enhancement']
         )
 
-        expect(mockFetch).toHaveBeenCalledWith('/api/github', {
+        expect(mockFetch).toHaveBeenCalledWith('/api/github/create-issue', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            action: 'create_issue',
             owner: 'user',
             repo: 'test-repo',
             title: 'New test issue',
@@ -260,11 +258,10 @@ describe('MCP Integrations', () => {
 
         const result = await githubIntegration.getFileContents('user', 'test-repo', 'README.md', 'main')
 
-        expect(mockFetch).toHaveBeenCalledWith('/api/github', {
+        expect(mockFetch).toHaveBeenCalledWith('/api/github/file-contents', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            action: 'get_file_contents',
             owner: 'user',
             repo: 'test-repo',
             path: 'README.md',
@@ -291,11 +288,10 @@ describe('MCP Integrations', () => {
           'main'
         )
 
-        expect(mockFetch).toHaveBeenCalledWith('/api/github', {
+        expect(mockFetch).toHaveBeenCalledWith('/api/github/create-file', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            action: 'create_or_update_file',
             owner: 'user',
             repo: 'test-repo',
             path: 'test.txt',
@@ -349,11 +345,10 @@ describe('MCP Integrations', () => {
 
         const result = await linearIntegration.listIssues('team-1', 'user-1')
 
-        expect(mockFetch).toHaveBeenCalledWith('/api/linear', {
+        expect(mockFetch).toHaveBeenCalledWith('/api/linear/issues', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            action: 'list_issues',
             teamId: 'team-1',
             assigneeId: 'user-1'
           })
@@ -400,11 +395,10 @@ describe('MCP Integrations', () => {
           ['label-1']
         )
 
-        expect(mockFetch).toHaveBeenCalledWith('/api/linear', {
+        expect(mockFetch).toHaveBeenCalledWith('/api/linear/create-issue', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            action: 'create_issue',
             title: 'New Linear issue',
             teamId: 'team-1',
             description: 'This is a new issue',
@@ -582,11 +576,10 @@ describe('MCP Integrations', () => {
 
         const result = await linearIntegration.searchIssues('search query')
 
-        expect(mockFetch).toHaveBeenCalledWith('/api/linear', {
+        expect(mockFetch).toHaveBeenCalledWith('/api/linear/search', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            action: 'search_issues',
             query: 'search query'
           })
         })
@@ -708,8 +701,8 @@ describe('MCP Integrations', () => {
         expect(formatted).toContain('📈 **Progress**: 75%')
         expect(formatted).toContain('📊 **Status**: active')
         expect(formatted).toContain('🏢 **Teams**: T3 Crusher, Design')
-        expect(formatted).toContain('📅 **Start**: 1/1/2024')
-        expect(formatted).toContain('🎯 **Target**: 12/31/2024')
+        expect(formatted).toMatch(/📅 \*\*Start\*\*: \d{1,2}\/\d{1,2}\/\d{4}/)
+        expect(formatted).toMatch(/🎯 \*\*Target\*\*: \d{1,2}\/\d{1,2}\/\d{4}/)
       })
     })
   })

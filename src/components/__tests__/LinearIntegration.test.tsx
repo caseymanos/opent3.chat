@@ -20,8 +20,18 @@ jest.mock('@/lib/linear-integration', () => ({
 jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
   },
   AnimatePresence: ({ children }: any) => children,
+}))
+
+// Mock UI components
+jest.mock('../ui/Button', () => ({
+  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+}))
+
+jest.mock('../ui/Card', () => ({
+  Card: ({ children, ...props }: any) => <div {...props}>{children}</div>,
 }))
 
 const mockOnSelect = jest.fn()

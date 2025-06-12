@@ -1,9 +1,58 @@
-import '@testing-library/jest-dom'
-import { TextEncoder, TextDecoder } from 'util'
+require('@testing-library/jest-dom')
+const { TextEncoder, TextDecoder } = require('util')
 
 // Polyfills for Node.js environment
 global.TextEncoder = TextEncoder
 global.TextDecoder = TextDecoder
+
+// Add Request and Response globals for Next.js server components
+if (typeof global.Request === 'undefined') {
+  global.Request = class Request {
+    constructor(input, init) {
+      this.url = typeof input === 'string' ? input : input.url
+      this.method = init?.method || 'GET'
+      this.headers = new Map()
+      this.body = init?.body
+      if (init?.headers) {
+        Object.entries(init.headers).forEach(([key, value]) => {
+          this.headers.set(key, value)
+        })
+      }
+    }
+    async json() {
+      return typeof this.body === 'string' ? JSON.parse(this.body) : this.body
+    }
+    async text() {
+      return typeof this.body === 'string' ? this.body : JSON.stringify(this.body)
+    }
+  }
+}
+
+if (typeof global.Response === 'undefined') {
+  global.Response = class Response {
+    constructor(body, init) {
+      this.body = body
+      this.status = init?.status || 200
+      this.statusText = init?.statusText || 'OK'
+      this.headers = new Map()
+      if (init?.headers) {
+        Object.entries(init.headers).forEach(([key, value]) => {
+          this.headers.set(key, value)
+        })
+      }
+    }
+    async json() {
+      return typeof this.body === 'string' ? JSON.parse(this.body) : this.body
+    }
+    async text() {
+      return typeof this.body === 'string' ? this.body : JSON.stringify(this.body)
+    }
+  }
+}
+
+if (typeof global.Headers === 'undefined') {
+  global.Headers = Map
+}
 
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
@@ -24,24 +73,27 @@ jest.mock('next/navigation', () => ({
 }))
 
 // Mock framer-motion completely
-jest.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, ...props }) => <div {...props}>{children}</div>,
-    button: ({ children, ...props }) => <button {...props}>{children}</button>,
-    section: ({ children, ...props }) => <section {...props}>{children}</section>,
-    h1: ({ children, ...props }) => <h1 {...props}>{children}</h1>,
-    h2: ({ children, ...props }) => <h2 {...props}>{children}</h2>,
-    p: ({ children, ...props }) => <p {...props}>{children}</p>,
-    span: ({ children, ...props }) => <span {...props}>{children}</span>,
-    a: ({ children, ...props }) => <a {...props}>{children}</a>,
-  },
-  AnimatePresence: ({ children }) => children,
-  useAnimation: () => ({
-    start: jest.fn(),
-    set: jest.fn(),
-    stop: jest.fn(),
-  }),
-}))
+jest.mock('framer-motion', () => {
+  const React = require('react')
+  return {
+    motion: {
+      div: jest.fn(({ children, ...props }) => React.createElement('div', props, children)),
+      button: jest.fn(({ children, ...props }) => React.createElement('button', props, children)),
+      section: jest.fn(({ children, ...props }) => React.createElement('section', props, children)),
+      h1: jest.fn(({ children, ...props }) => React.createElement('h1', props, children)),
+      h2: jest.fn(({ children, ...props }) => React.createElement('h2', props, children)),
+      p: jest.fn(({ children, ...props }) => React.createElement('p', props, children)),
+      span: jest.fn(({ children, ...props }) => React.createElement('span', props, children)),
+      a: jest.fn(({ children, ...props }) => React.createElement('a', props, children)),
+    },
+    AnimatePresence: jest.fn(({ children }) => children),
+    useAnimation: () => ({
+      start: jest.fn(),
+      set: jest.fn(),
+      stop: jest.fn(),
+    }),
+  }
+})
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {

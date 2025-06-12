@@ -17,8 +17,23 @@ jest.mock('@/lib/supabase', () => ({
 jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    nav: ({ children, ...props }: any) => <nav {...props}>{children}</nav>,
   },
   AnimatePresence: ({ children }: any) => children,
+}))
+
+// Mock UI components
+jest.mock('../ui/Button', () => ({
+  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+}))
+
+jest.mock('../ui/Card', () => ({
+  Card: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+}))
+
+// Mock @radix-ui/react-slot
+jest.mock('@radix-ui/react-slot', () => ({
+  Slot: ({ children }: any) => children,
 }))
 
 const mockRouter = {

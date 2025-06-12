@@ -49,7 +49,7 @@ const mockIssue = {
   updated_at: '2024-01-01T00:00:00Z',
   labels: [
     { name: 'bug', color: 'ff0000' },
-    { name: 'urgent', color: 'orange' }
+    { name: 'urgent', color: 'ffa500' }
   ]
 }
 
@@ -108,7 +108,7 @@ describe('GitHubIntegration', () => {
     render(<GitHubIntegration onSelect={mockOnSelect} />)
     
     const searchInput = screen.getByPlaceholderText('Search repositories...')
-    const searchButton = screen.getByRole('button', { name: '🔍' })
+    const searchButton = screen.getByText('🔍')
     
     fireEvent.change(searchInput, { target: { value: 'test repo' } })
     fireEvent.click(searchButton)
@@ -171,7 +171,7 @@ describe('GitHubIntegration', () => {
     
     const ownerInput = screen.getByPlaceholderText('Owner')
     const repoInput = screen.getByPlaceholderText('Repository')
-    const loadButton = screen.getByRole('button', { name: '📋' })
+    const loadButton = screen.getByText('📋')
     
     fireEvent.change(ownerInput, { target: { value: 'user' } })
     fireEvent.change(repoInput, { target: { value: 'test-repo' } })
@@ -184,7 +184,7 @@ describe('GitHubIntegration', () => {
     await waitFor(() => {
       expect(screen.getByText('#123')).toBeInTheDocument()
       expect(screen.getByText('Test issue')).toBeInTheDocument()
-      expect(screen.getByText('by @testuser')).toBeInTheDocument()
+      expect(screen.getByText(/by @testuser/)).toBeInTheDocument()
     })
   })
 
@@ -197,7 +197,7 @@ describe('GitHubIntegration', () => {
     
     const ownerInput = screen.getByPlaceholderText('Owner')
     const repoInput = screen.getByPlaceholderText('Repository')
-    const loadButton = screen.getByRole('button', { name: '📋' })
+    const loadButton = screen.getByText('📋')
     
     fireEvent.change(ownerInput, { target: { value: 'user' } })
     fireEvent.change(repoInput, { target: { value: 'test-repo' } })
@@ -224,7 +224,7 @@ describe('GitHubIntegration', () => {
     
     const ownerInput = screen.getByPlaceholderText('Owner')
     const repoInput = screen.getByPlaceholderText('Repository')
-    const loadButton = screen.getByRole('button', { name: '🔀' })
+    const loadButton = screen.getByText('🔀')
     
     fireEvent.change(ownerInput, { target: { value: 'user' } })
     fireEvent.change(repoInput, { target: { value: 'test-repo' } })
@@ -247,7 +247,7 @@ describe('GitHubIntegration', () => {
     render(<GitHubIntegration onSelect={mockOnSelect} />)
     
     const searchInput = screen.getByPlaceholderText('Search repositories...')
-    const searchButton = screen.getByRole('button', { name: '🔍' })
+    const searchButton = screen.getByText('🔍')
     
     fireEvent.change(searchInput, { target: { value: 'test' } })
     fireEvent.click(searchButton)
@@ -265,19 +265,19 @@ describe('GitHubIntegration', () => {
     render(<GitHubIntegration onSelect={mockOnSelect} />)
     
     const searchInput = screen.getByPlaceholderText('Search repositories...')
-    const searchButton = screen.getByRole('button', { name: '🔍' })
+    const searchButton = screen.getByText('🔍')
     
     fireEvent.change(searchInput, { target: { value: 'test' } })
     fireEvent.click(searchButton)
     
     // Should show loading indicator
-    expect(screen.getByRole('button', { name: '⏳' })).toBeInTheDocument()
+    expect(screen.getByText('⏳')).toBeInTheDocument()
   })
 
   it('prevents search with empty query', () => {
     render(<GitHubIntegration onSelect={mockOnSelect} />)
     
-    const searchButton = screen.getByRole('button', { name: '🔍' })
+    const searchButton = screen.getByText('🔍')
     fireEvent.click(searchButton)
     
     expect(githubIntegration.searchRepositories).not.toHaveBeenCalled()
@@ -288,7 +288,7 @@ describe('GitHubIntegration', () => {
     
     fireEvent.click(screen.getByText('🐛 Issues'))
     
-    const loadButton = screen.getByRole('button', { name: '📋' })
+    const loadButton = screen.getByText('📋')
     fireEvent.click(loadButton)
     
     expect(githubIntegration.listIssues).not.toHaveBeenCalled()

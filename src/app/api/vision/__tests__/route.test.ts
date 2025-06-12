@@ -1,7 +1,8 @@
-import { POST, GET } from '../route'
-import { NextRequest } from 'next/server'
+/**
+ * @jest-environment node
+ */
 
-// Mock the AI SDK
+// Mock the AI SDK before importing anything
 jest.mock('@ai-sdk/anthropic', () => ({
   anthropic: jest.fn(() => 'mock-model')
 }))
@@ -9,6 +10,9 @@ jest.mock('@ai-sdk/anthropic', () => ({
 jest.mock('ai', () => ({
   generateObject: jest.fn()
 }))
+
+// Import after mocks are set up
+import { POST, GET } from '../route'
 
 // Mock console methods to avoid test output clutter
 const consoleSpy = jest.spyOn(console, 'log').mockImplementation()
@@ -27,10 +31,15 @@ describe('/api/vision', () => {
   describe('GET /api/vision', () => {
     it('returns API status and capabilities', async () => {
       const response = await GET()
-      const data = await response.json()
-
+      
+      // Check response properties
+      expect(response).toBeDefined()
       expect(response.status).toBe(200)
-      expect(data).toEqual({
+      
+      // Parse the response body
+      const body = await response.json()
+      
+      expect(body).toEqual({
         status: 'Vision API is running',
         capabilities: [
           'Image analysis and description',
@@ -77,18 +86,15 @@ describe('/api/vision', () => {
         object: mockAnalysis
       })
 
-      const request = new NextRequest('http://localhost/api/vision', {
-        method: 'POST',
-        body: JSON.stringify({
+      // Create a mock request
+      const mockRequest = {
+        json: async () => ({
           image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
           task: 'analyze'
-        }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
+        })
+      }
 
-      const response = await POST(request)
+      const response = await POST(mockRequest as any)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -128,18 +134,14 @@ describe('/api/vision', () => {
         object: mockOCRAnalysis
       })
 
-      const request = new NextRequest('http://localhost/api/vision', {
-        method: 'POST',
-        body: JSON.stringify({
+      const mockRequest = {
+        json: async () => ({
           image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
           task: 'ocr'
-        }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
+        })
+      }
 
-      const response = await POST(request)
+      const response = await POST(mockRequest as any)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -163,15 +165,11 @@ describe('/api/vision', () => {
     })
 
     it('returns 400 for missing image', async () => {
-      const request = new NextRequest('http://localhost/api/vision', {
-        method: 'POST',
-        body: JSON.stringify({}),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
+      const mockRequest = {
+        json: async () => ({})
+      }
 
-      const response = await POST(request)
+      const response = await POST(mockRequest as any)
       const data = await response.json()
 
       expect(response.status).toBe(400)
@@ -179,17 +177,13 @@ describe('/api/vision', () => {
     })
 
     it('returns 400 for invalid image format', async () => {
-      const request = new NextRequest('http://localhost/api/vision', {
-        method: 'POST',
-        body: JSON.stringify({
+      const mockRequest = {
+        json: async () => ({
           image: 123 // Should be string
-        }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
+        })
+      }
 
-      const response = await POST(request)
+      const response = await POST(mockRequest as any)
       const data = await response.json()
 
       expect(response.status).toBe(400)
@@ -199,17 +193,13 @@ describe('/api/vision', () => {
     it('handles AI analysis errors gracefully', async () => {
       mockGenerateObject.mockRejectedValue(new Error('AI service unavailable'))
 
-      const request = new NextRequest('http://localhost/api/vision', {
-        method: 'POST',
-        body: JSON.stringify({
+      const mockRequest = {
+        json: async () => ({
           image: 'validbase64data'
-        }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
+        })
+      }
 
-      const response = await POST(request)
+      const response = await POST(mockRequest as any)
       const data = await response.json()
 
       expect(response.status).toBe(500)
@@ -218,15 +208,13 @@ describe('/api/vision', () => {
     })
 
     it('handles malformed JSON gracefully', async () => {
-      const request = new NextRequest('http://localhost/api/vision', {
-        method: 'POST',
-        body: 'invalid json',
-        headers: {
-          'Content-Type': 'application/json'
+      const mockRequest = {
+        json: async () => {
+          throw new Error('Invalid JSON')
         }
-      })
+      }
 
-      const response = await POST(request)
+      const response = await POST(mockRequest as any)
       const data = await response.json()
 
       expect(response.status).toBe(500)

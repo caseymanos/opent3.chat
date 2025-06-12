@@ -45,12 +45,12 @@ class MockFile {
 
   // Add arrayBuffer method for completeness
   async arrayBuffer(): Promise<ArrayBuffer> {
-    return new TextEncoder().encode(this.content).buffer as ArrayBuffer
+    return new TextEncoder().encode(this.content).buffer as ArrayBuffer;
   }
 }
 
 // Replace global File with our mock
-global.File = MockFile as any
+global.File = MockFile as any;
 
 describe('UnifiedRAG System', () => {
   beforeEach(() => {
@@ -189,8 +189,8 @@ describe('UnifiedRAG System', () => {
     it('should track document statistics', async () => {
       expect(unifiedRAG.getStats().documentCount).toBe(0)
 
-      const doc1 = new File(['Test content 1'], 'test1.txt', { type: 'text/plain' })
-      const doc2 = new File(['Test content 2 with more text'], 'test2.txt', { type: 'text/plain' })
+      const doc1 = new File(['This is test content number one with enough text to create at least one chunk in the system.'], 'test1.txt', { type: 'text/plain' })
+      const doc2 = new File(['This is test content number two with even more text to ensure that chunks are created properly in the unified RAG system.'], 'test2.txt', { type: 'text/plain' })
 
       await unifiedRAG.processFile(doc1)
       await unifiedRAG.processFile(doc2)
@@ -198,7 +198,7 @@ describe('UnifiedRAG System', () => {
       const stats = unifiedRAG.getStats()
       expect(stats.documentCount).toBe(2)
       expect(stats.totalChunks).toBeGreaterThan(0)
-      expect(stats.totalSize).toBe(doc1.size + doc2.size)
+      expect(stats.totalSize).toBe(doc1.fileSize + doc2.fileSize)
     })
 
     it('should remove documents correctly', async () => {

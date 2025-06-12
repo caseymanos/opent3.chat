@@ -1,7 +1,8 @@
-import { POST, GET } from '../route'
-import { NextRequest } from 'next/server'
+/**
+ * @jest-environment node
+ */
 
-// Mock the AI SDK
+// Mock the AI SDK before importing anything
 jest.mock('@ai-sdk/anthropic', () => ({
   anthropic: jest.fn(() => 'mock-model')
 }))
@@ -9,6 +10,9 @@ jest.mock('@ai-sdk/anthropic', () => ({
 jest.mock('ai', () => ({
   generateObject: jest.fn()
 }))
+
+// Import after mocks are set up
+import { POST, GET } from '../route'
 
 // Mock console methods
 const consoleSpy = jest.spyOn(console, 'log').mockImplementation()
@@ -90,20 +94,26 @@ describe('/api/pdf', () => {
         object: mockAnalysis
       })
 
-      const pdfBuffer = Buffer.from('fake pdf content')
-      const pdfFile = new File([pdfBuffer], 'test-document.pdf', { 
-        type: 'application/pdf' 
-      })
+      // Create a mock FormData with file
+      const mockFormData = {
+        get: jest.fn((key) => {
+          if (key === 'file') {
+            return {
+              name: 'test-document.pdf',
+              type: 'application/pdf',
+              size: 1000,
+              arrayBuffer: jest.fn().mockResolvedValue(Buffer.from('fake pdf content'))
+            }
+          }
+          return null
+        })
+      }
 
-      const formData = new FormData()
-      formData.append('file', pdfFile)
+      const mockRequest = {
+        formData: jest.fn().mockResolvedValue(mockFormData)
+      }
 
-      const request = new NextRequest('http://localhost/api/pdf', {
-        method: 'POST',
-        body: formData
-      })
-
-      const response = await POST(request)
+      const response = await POST(mockRequest as any)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -117,20 +127,25 @@ describe('/api/pdf', () => {
     it('provides fallback analysis when AI analysis fails', async () => {
       mockGenerateObject.mockRejectedValue(new Error('AI analysis failed'))
 
-      const pdfBuffer = Buffer.from('fake pdf content')
-      const pdfFile = new File([pdfBuffer], 'fallback-test.pdf', { 
-        type: 'application/pdf' 
-      })
+      const mockFormData = {
+        get: jest.fn((key) => {
+          if (key === 'file') {
+            return {
+              name: 'fallback-test.pdf',
+              type: 'application/pdf',
+              size: 1000,
+              arrayBuffer: jest.fn().mockResolvedValue(Buffer.from('fake pdf content'))
+            }
+          }
+          return null
+        })
+      }
 
-      const formData = new FormData()
-      formData.append('file', pdfFile)
+      const mockRequest = {
+        formData: jest.fn().mockResolvedValue(mockFormData)
+      }
 
-      const request = new NextRequest('http://localhost/api/pdf', {
-        method: 'POST',
-        body: formData
-      })
-
-      const response = await POST(request)
+      const response = await POST(mockRequest as any)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -146,14 +161,15 @@ describe('/api/pdf', () => {
     })
 
     it('returns 400 for missing file', async () => {
-      const formData = new FormData()
+      const mockFormData = {
+        get: jest.fn().mockReturnValue(null)
+      }
 
-      const request = new NextRequest('http://localhost/api/pdf', {
-        method: 'POST',
-        body: formData
-      })
+      const mockRequest = {
+        formData: jest.fn().mockResolvedValue(mockFormData)
+      }
 
-      const response = await POST(request)
+      const response = await POST(mockRequest as any)
       const data = await response.json()
 
       expect(response.status).toBe(400)
@@ -161,19 +177,24 @@ describe('/api/pdf', () => {
     })
 
     it('returns 400 for non-PDF file', async () => {
-      const textFile = new File(['not a pdf'], 'test.txt', { 
-        type: 'text/plain' 
-      })
+      const mockFormData = {
+        get: jest.fn((key) => {
+          if (key === 'file') {
+            return {
+              name: 'test.txt',
+              type: 'text/plain',
+              size: 100
+            }
+          }
+          return null
+        })
+      }
 
-      const formData = new FormData()
-      formData.append('file', textFile)
+      const mockRequest = {
+        formData: jest.fn().mockResolvedValue(mockFormData)
+      }
 
-      const request = new NextRequest('http://localhost/api/pdf', {
-        method: 'POST',
-        body: formData
-      })
-
-      const response = await POST(request)
+      const response = await POST(mockRequest as any)
       const data = await response.json()
 
       expect(response.status).toBe(400)
@@ -181,25 +202,25 @@ describe('/api/pdf', () => {
     })
 
     it('handles processing errors gracefully', async () => {
-      // Mock a file that will cause processing to fail
-      const formData = new FormData()
-      
-      // Create a mock file that will cause an error when trying to get arrayBuffer
-      const mockFile = {
-        name: 'error-test.pdf',
-        type: 'application/pdf',
-        size: 1000,
-        arrayBuffer: jest.fn().mockRejectedValue(new Error('File read error'))
-      } as unknown as File
+      const mockFormData = {
+        get: jest.fn((key) => {
+          if (key === 'file') {
+            return {
+              name: 'error-test.pdf',
+              type: 'application/pdf',
+              size: 1000,
+              arrayBuffer: jest.fn().mockRejectedValue(new Error('File read error'))
+            }
+          }
+          return null
+        })
+      }
 
-      formData.append('file', mockFile)
+      const mockRequest = {
+        formData: jest.fn().mockResolvedValue(mockFormData)
+      }
 
-      const request = new NextRequest('http://localhost/api/pdf', {
-        method: 'POST',
-        body: formData
-      })
-
-      const response = await POST(request)
+      const response = await POST(mockRequest as any)
       const data = await response.json()
 
       expect(response.status).toBe(500)
@@ -210,20 +231,25 @@ describe('/api/pdf', () => {
     it('estimates document properties correctly in fallback mode', async () => {
       mockGenerateObject.mockRejectedValue(new Error('AI unavailable'))
 
-      const largePdfBuffer = Buffer.alloc(500000) // 500KB file
-      const pdfFile = new File([largePdfBuffer], 'large-document.pdf', { 
-        type: 'application/pdf' 
-      })
+      const mockFormData = {
+        get: jest.fn((key) => {
+          if (key === 'file') {
+            return {
+              name: 'large-document.pdf',
+              type: 'application/pdf',
+              size: 500000, // 500KB
+              arrayBuffer: jest.fn().mockResolvedValue(Buffer.alloc(500000))
+            }
+          }
+          return null
+        })
+      }
 
-      const formData = new FormData()
-      formData.append('file', pdfFile)
+      const mockRequest = {
+        formData: jest.fn().mockResolvedValue(mockFormData)
+      }
 
-      const request = new NextRequest('http://localhost/api/pdf', {
-        method: 'POST',
-        body: formData
-      })
-
-      const response = await POST(request)
+      const response = await POST(mockRequest as any)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -233,12 +259,11 @@ describe('/api/pdf', () => {
     })
 
     it('handles malformed request data', async () => {
-      const request = new NextRequest('http://localhost/api/pdf', {
-        method: 'POST',
-        body: 'not form data'
-      })
+      const mockRequest = {
+        formData: jest.fn().mockRejectedValue(new Error('Failed to parse form data'))
+      }
 
-      const response = await POST(request)
+      const response = await POST(mockRequest as any)
       const data = await response.json()
 
       expect(response.status).toBe(500)
