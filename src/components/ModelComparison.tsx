@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   ChartBarIcon, 
@@ -37,6 +37,20 @@ export default function ModelComparison({
   const [selectedForComparison, setSelectedForComparison] = useState<string[]>(
     selectedModels.length > 0 ? selectedModels : ['claude-3-5-sonnet-20241022', 'gpt-4o', 'claude-3-haiku-20240307']
   )
+
+  // Sync selectedForComparison with selectedModels prop changes
+  useEffect(() => {
+    if (selectedModels.length > 0) {
+      setSelectedForComparison(prev => {
+        // If the selected model isn't in the comparison, add it
+        const newModel = selectedModels[0]
+        if (!prev.includes(newModel)) {
+          return [newModel, ...prev.slice(0, 3)] // Keep max 4 models
+        }
+        return prev
+      })
+    }
+  }, [selectedModels])
 
   const calculateModelScore = (model: AIModel): ModelScore => {
     // Speed scoring (higher is better)
@@ -142,7 +156,7 @@ export default function ModelComparison({
           <>
             {/* Backdrop */}
             <div 
-              className="fixed inset-0 z-[9998]" 
+              className="fixed inset-0 z-[99998] bg-black/20" 
               onClick={() => setIsOpen(false)}
             />
             <motion.div
@@ -150,10 +164,10 @@ export default function ModelComparison({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
               transition={{ duration: 0.15 }}
-              className="absolute top-full right-0 mt-2 w-[800px] max-w-[90vw] bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl z-[9999] overflow-hidden"
+              className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] max-w-[90vw] max-h-[90vh] bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl z-[99999] flex flex-col"
             >
               {/* Header */}
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
@@ -191,8 +205,10 @@ export default function ModelComparison({
                 </div>
               </div>
 
-              {/* Recommendations */}
-              <div className="p-4 bg-gray-50 dark:bg-gray-800/50">
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto">
+                {/* Recommendations */}
+                <div className="p-4 bg-gray-50 dark:bg-gray-800/50">
                 <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
                   Quick Recommendations
                 </h4>
@@ -201,7 +217,10 @@ export default function ModelComparison({
                     <BoltIcon className="w-4 h-4 text-green-600 dark:text-green-400" />
                     <span className="text-xs text-gray-600 dark:text-gray-400">Fastest:</span>
                     <button
-                      onClick={() => onModelSelect?.(recommendations.fastest.id, recommendations.fastest.provider)}
+                      onClick={() => {
+                        onModelSelect?.(recommendations.fastest.id, recommendations.fastest.provider)
+                        setIsOpen(false)
+                      }}
                       className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline"
                     >
                       {recommendations.fastest.name}
@@ -211,7 +230,10 @@ export default function ModelComparison({
                     <SparklesIcon className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                     <span className="text-xs text-gray-600 dark:text-gray-400">Best Quality:</span>
                     <button
-                      onClick={() => onModelSelect?.(recommendations.highest_quality.id, recommendations.highest_quality.provider)}
+                      onClick={() => {
+                        onModelSelect?.(recommendations.highest_quality.id, recommendations.highest_quality.provider)
+                        setIsOpen(false)
+                      }}
                       className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline"
                     >
                       {recommendations.highest_quality.name}
@@ -221,7 +243,10 @@ export default function ModelComparison({
                     <CurrencyDollarIcon className="w-4 h-4 text-green-600 dark:text-green-400" />
                     <span className="text-xs text-gray-600 dark:text-gray-400">Most Cost-Effective:</span>
                     <button
-                      onClick={() => onModelSelect?.(recommendations.most_cost_effective.id, recommendations.most_cost_effective.provider)}
+                      onClick={() => {
+                        onModelSelect?.(recommendations.most_cost_effective.id, recommendations.most_cost_effective.provider)
+                        setIsOpen(false)
+                      }}
                       className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline"
                     >
                       {recommendations.most_cost_effective.name}
@@ -231,7 +256,10 @@ export default function ModelComparison({
                     <ChartBarIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     <span className="text-xs text-gray-600 dark:text-gray-400">Best Overall:</span>
                     <button
-                      onClick={() => onModelSelect?.(recommendations.best_overall.id, recommendations.best_overall.provider)}
+                      onClick={() => {
+                        onModelSelect?.(recommendations.best_overall.id, recommendations.best_overall.provider)
+                        setIsOpen(false)
+                      }}
                       className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline"
                     >
                       {recommendations.best_overall.name}
@@ -261,7 +289,10 @@ export default function ModelComparison({
                           <td className="p-3">
                             <div className="flex items-center gap-2">
                               <button
-                                onClick={() => onModelSelect?.(model.id, model.provider)}
+                                onClick={() => {
+                                  onModelSelect?.(model.id, model.provider)
+                                  setIsOpen(false)
+                                }}
                                 className="font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                               >
                                 {model.name}
@@ -313,6 +344,7 @@ export default function ModelComparison({
                     })}
                   </tbody>
                 </table>
+              </div>
               </div>
             </motion.div>
           </>
