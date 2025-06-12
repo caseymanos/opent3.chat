@@ -10,6 +10,23 @@ process.env.NODE_ENV = 'test'
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co'
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key'
 
+// Mock AI SDK modules for Node.js tests
+jest.mock('@ai-sdk/openai', () => ({
+  openai: jest.fn().mockReturnValue('mocked-openai-model'),
+}))
+
+jest.mock('@ai-sdk/anthropic', () => ({
+  anthropic: jest.fn().mockReturnValue('mocked-anthropic-model'),
+}))
+
+jest.mock('@ai-sdk/google', () => ({
+  google: jest.fn().mockReturnValue('mocked-google-model'),
+}))
+
+jest.mock('ai', () => ({
+  streamText: jest.fn(),
+}))
+
 // Silence console logs during tests
 global.console = {
   ...console,

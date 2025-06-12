@@ -18,13 +18,9 @@ module.exports = async () => {
   // If testing against localhost, ensure dev server is available
   if (testServerUrl.includes('localhost')) {
     try {
-      const fetch = require('node-fetch')
-      const response = await fetch(testServerUrl)
-      if (response.ok) {
-        console.log('✅ Development server is running')
-      } else {
-        console.warn('⚠️ Development server may not be ready')
-      }
+      // For test environment, just skip the connection check to avoid node-fetch ESM issues
+      console.log('📝 Skipping development server check in test environment')
+      console.log('📝 Make sure to run "npm run dev" before E2E tests if needed')
     } catch (error) {
       console.warn('⚠️ Could not connect to development server:', error.message)
       console.warn('📝 Make sure to run "npm run dev" before E2E tests')

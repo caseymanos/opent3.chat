@@ -2,6 +2,8 @@
  * Simple E2E Test to verify Puppeteer MCP setup works
  */
 
+import { expect } from '@jest/globals'
+
 describe('Simple Puppeteer MCP E2E Test', () => {
   it('should have proper test environment setup', async () => {
     console.log('📍 Test: Simple E2E environment check')

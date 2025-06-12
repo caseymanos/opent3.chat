@@ -3,6 +3,8 @@
  * Tests UI performance, visual correctness, and user interactions
  */
 
+const { expect } = require('expect')
+
 describe('UI Performance and Visual E2E Tests', () => {
   const BASE_URL = process.env.NEXT_PUBLIC_VERCEL_URL 
     ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` 

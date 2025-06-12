@@ -19,6 +19,7 @@ const customJestConfig = {
     '^.+\\.module\\.(css|sass|scss)$': 'identity-obj-proxy',
   },
   testEnvironment: 'jest-environment-jsdom',
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
   projects: [
     // API route tests (Node environment)
     {
@@ -39,6 +40,10 @@ const customJestConfig = {
       transform: {
         '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }],
       },
+      extensionsToTreatAsEsm: ['.ts', '.tsx'],
+      transformIgnorePatterns: [
+        '/node_modules/(?!(node-fetch)/)',
+      ],
     },
     // Unit and integration tests
     {
@@ -64,6 +69,13 @@ const customJestConfig = {
         '^@/app/(.*)$': '<rootDir>/src/app/$1',
         '^.+\\.module\\.(css|sass|scss)$': 'identity-obj-proxy',
       },
+      extensionsToTreatAsEsm: ['.ts', '.tsx'],
+      transform: {
+        '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }],
+      },
+      transformIgnorePatterns: [
+        '/node_modules/(?!(node-fetch)/)',
+      ],
     },
     // E2E tests with Puppeteer MCP
     {
@@ -85,6 +97,7 @@ const customJestConfig = {
         '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }],
       },
       moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+      extensionsToTreatAsEsm: ['.ts', '.tsx'],
       transformIgnorePatterns: [
         '/node_modules/(?!(node-fetch)/)',
       ],
@@ -100,14 +113,6 @@ const customJestConfig = {
     '!src/**/__tests__/**',
     '!src/**/*.{test,spec}.{js,jsx,ts,tsx}',
     '!src/**/*.e2e.{test,spec}.{js,jsx,ts,tsx}',
-  ],
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  transform: {
-    '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }],
-  },
-  transformIgnorePatterns: [
-    '/node_modules/',
-    '^.+\\.module\\.(css|sass|scss)$',
   ],
 }
 

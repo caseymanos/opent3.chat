@@ -3,6 +3,8 @@
  * Tests the critical navigation flows that were recently fixed
  */
 
+const { expect } = require('expect')
+
 describe('Navigation Flow E2E Tests', () => {
   const BASE_URL = process.env.NEXT_PUBLIC_VERCEL_URL 
     ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` 

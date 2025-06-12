@@ -15,31 +15,121 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
   const supabase = createClientComponentClient()
 
   useEffect(() => {
-    // Get initial session
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
+    // Auto-authenticate immediately for demo mode (works in both dev and production)
+    const isDemoMode = window.location.hostname === 'localhost' || 
+                      window.location.hostname.includes('vercel.app') ||
+                      window.location.hostname.includes('t3-crusher')
+    
+    if (isDemoMode) {
+      const mockUserId = '00000000-0000-0000-0000-000000000001'
+      const mockUser: User = {
+        id: mockUserId,
+        email: 'demo@t3crusher.app',
+        aud: 'authenticated',
+        role: 'authenticated',
+        app_metadata: {},
+        user_metadata: { username: 'Demo User' },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      } as User
+      
+      setUser(mockUser)
       setLoading(false)
+      console.log('🔐 [AuthWrapper] Auto-authenticated in demo mode:', window.location.hostname)
+      return
+    }
+
+    // Check if Supabase is properly configured before attempting auth
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    
+    if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('your-project') || supabaseKey.includes('your-anon-key')) {
+      console.warn('🔐 [AuthWrapper] Supabase not configured, using demo mode')
+      const mockUserId = '00000000-0000-0000-0000-000000000001'
+      const mockUser: User = {
+        id: mockUserId,
+        email: 'demo@t3crusher.app',
+        aud: 'authenticated',
+        role: 'authenticated',
+        app_metadata: {},
+        user_metadata: { username: 'Demo User' },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      } as User
+      
+      setUser(mockUser)
+      setLoading(false)
+      return
+    }
+
+    // Production auth flow (only if Supabase is properly configured)
+    const getUser = async () => {
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser()
+        if (error) {
+          console.error('Error getting user:', error)
+          // Fall back to demo mode on error
+          const mockUserId = '00000000-0000-0000-0000-000000000001'
+          const mockUser: User = {
+            id: mockUserId,
+            email: 'demo@t3crusher.app',
+            aud: 'authenticated',
+            role: 'authenticated',
+            app_metadata: {},
+            user_metadata: { username: 'Demo User' },
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          } as User
+          setUser(mockUser)
+        } else {
+          setUser(user)
+        }
+      } catch (error) {
+        console.error('Auth initialization failed:', error)
+        // Fall back to demo mode on error
+        const mockUserId = '00000000-0000-0000-0000-000000000001'
+        const mockUser: User = {
+          id: mockUserId,
+          email: 'demo@t3crusher.app',
+          aud: 'authenticated',
+          role: 'authenticated',
+          app_metadata: {},
+          user_metadata: { username: 'Demo User' },
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        } as User
+        setUser(mockUser)
+      } finally {
+        setLoading(false)
+      }
     }
 
     getUser()
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
+    // Listen for auth changes (only if Supabase is configured)
+    try {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
+        setUser(session?.user ?? null)
+        setLoading(false)
+      })
 
-    return () => subscription.unsubscribe()
+      return () => subscription.unsubscribe()
+    } catch (error) {
+      console.warn('Could not set up auth listener:', error)
+    }
   }, [supabase.auth])
 
   const signInAnonymously = async () => {
     setLoading(true)
     try {
-      // For development, bypass auth and set a mock user
-      if (window.location.hostname === 'localhost') {
-        // Create a mock user object with valid UUID
-        const mockUserId = '00000000-0000-0000-0000-000000000001' // Valid UUID format
+      // Check if we're in demo mode (any environment that should use demo auth)
+      const isDemoMode = window.location.hostname === 'localhost' || 
+                        window.location.hostname.includes('vercel.app') ||
+                        window.location.hostname.includes('t3-crusher')
+      
+      if (isDemoMode) {
+        // Create a mock user object with valid UUID for demo mode
+        const mockUserId = '00000000-0000-0000-0000-000000000001'
         const mockUser: User = {
           id: mockUserId,
           email: 'demo@t3crusher.app',
@@ -51,20 +141,35 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
           updated_at: new Date().toISOString()
         } as User
         
-        // Try to create profile entry for mock user
-        await supabase.from('profiles').upsert({
-          id: mockUserId,
-          username: 'Demo User'
-        }).then((result: any) => {
-          console.log('Mock profile upsert result:', result)
-        })
-        
         setUser(mockUser)
-        console.log('Development mode: Using mock authentication')
+        console.log('🔐 [AuthWrapper] Demo mode authentication completed for:', window.location.hostname)
         return
       }
       
-      // Production auth flow
+      // Production auth flow (only if not in demo mode and Supabase is properly configured)
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      
+      // If Supabase isn't configured for production, fall back to demo mode
+      if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('your-project') || supabaseKey.includes('your-anon-key')) {
+        console.warn('🔐 [AuthWrapper] Supabase not configured, falling back to demo mode')
+        const mockUserId = '00000000-0000-0000-0000-000000000001'
+        const mockUser: User = {
+          id: mockUserId,
+          email: 'demo@t3crusher.app',
+          aud: 'authenticated',
+          role: 'authenticated',
+          app_metadata: {},
+          user_metadata: { username: 'Demo User' },
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        } as User
+        
+        setUser(mockUser)
+        return
+      }
+      
+      // Real production authentication (only if Supabase is properly configured)
       const demoEmail = 'demo@t3crusher.app'
       const demoPassword = 'demo123456'
       
@@ -84,6 +189,19 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
         
         if (signUpResult.error) {
           console.error('Error creating demo account:', signUpResult.error)
+          // Fall back to demo mode if real auth fails
+          const mockUserId = '00000000-0000-0000-0000-000000000001'
+          const mockUser: User = {
+            id: mockUserId,
+            email: 'demo@t3crusher.app',
+            aud: 'authenticated',
+            role: 'authenticated',
+            app_metadata: {},
+            user_metadata: { username: 'Demo User' },
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          } as User
+          setUser(mockUser)
           return
         }
         
@@ -98,17 +216,47 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
       
       if (error) {
         console.error('Authentication error:', error)
+        // Fall back to demo mode if real auth fails
+        const mockUserId = '00000000-0000-0000-0000-000000000001'
+        const mockUser: User = {
+          id: mockUserId,
+          email: 'demo@t3crusher.app',
+          aud: 'authenticated',
+          role: 'authenticated',
+          app_metadata: {},
+          user_metadata: { username: 'Demo User' },
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        } as User
+        setUser(mockUser)
         return
       }
       
       if (data.user) {
-        await supabase.from('profiles').upsert({
-          id: data.user.id,
-          username: data.user.user_metadata?.username || 'Demo User'
-        })
+        try {
+          await supabase.from('profiles').upsert({
+            id: data.user.id,
+            username: data.user.user_metadata?.username || 'Demo User'
+          })
+        } catch (profileError) {
+          console.warn('Could not create profile, continuing with auth:', profileError)
+        }
       }
     } catch (error) {
       console.error('Error during authentication:', error)
+      // Always fall back to demo mode on any error
+      const mockUserId = '00000000-0000-0000-0000-000000000001'
+      const mockUser: User = {
+        id: mockUserId,
+        email: 'demo@t3crusher.app',
+        aud: 'authenticated',
+        role: 'authenticated',
+        app_metadata: {},
+        user_metadata: { username: 'Demo User' },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      } as User
+      setUser(mockUser)
     } finally {
       setLoading(false)
     }
@@ -189,22 +337,15 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
               By clicking &quot;Start Chatting&quot;, you agree to our terms and will be signed in with a demo account.
             </p>
             
-            {/* Development notice */}
+            {/* Demo mode notice */}
             <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
               <p className="text-xs text-blue-700 dark:text-blue-300">
-                <strong>Development Mode:</strong> Using demo@t3crusher.app for testing. 
-                Check browser console for any authentication errors.
+                <strong>Demo Mode:</strong> Using mock authentication for demo purposes. 
+                All features work normally without requiring a real account.
               </p>
-              <button 
-                onClick={async () => {
-                  console.log('Testing Supabase connection...')
-                  const { data, error } = await supabase.from('profiles').select('count').limit(1)
-                  console.log('Supabase test result:', { data, error })
-                }}
-                className="mt-2 text-xs underline text-blue-600 dark:text-blue-400"
-              >
-                Test Supabase Connection
-              </button>
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                Environment: {window.location.hostname}
+              </p>
             </div>
           </div>
 

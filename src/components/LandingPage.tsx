@@ -15,32 +15,35 @@ export default function LandingPage() {
     setIsStarting(true)
     
     try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser()
-      const userId = user?.id || '00000000-0000-0000-0000-000000000001'
+      console.log('🚀 [LandingPage] Creating new conversation...')
       
-      // Create a new conversation
-      const { data, error } = await supabase
-        .from('conversations')
-        .insert({
+      // Create conversation via API endpoint
+      const response = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           title: 'New Chat',
-          user_id: userId,
           model_provider: 'anthropic',
           model_name: 'claude-3-5-sonnet-20241022'
-        })
-        .select()
-        .single()
+        }),
+      })
 
-      if (data?.id) {
-        console.log('✅ [LandingPage] Created conversation, navigating to:', data.id)
-        router.push(`/chat/${data.id}`)
+      const result = await response.json()
+      
+      if (response.ok && result.success && result.data?.id) {
+        console.log('✅ [LandingPage] Created conversation, navigating to:', result.data.id)
+        router.push(`/chat/${result.data.id}`)
       } else {
-        console.error('❌ [LandingPage] Failed to create conversation:', error)
-        alert('Failed to create conversation. Please try again.')
+        console.error('❌ [LandingPage] Failed to create conversation:', result)
+        alert(`Failed to create conversation: ${result.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('❌ [LandingPage] Error creating conversation:', error)
       alert('Error creating conversation. Please check your connection and try again.')
+    } finally {
+      setIsStarting(false)
     }
   }
 

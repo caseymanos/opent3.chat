@@ -15,7 +15,13 @@ interface ChatInterfaceProps {
 export default function ChatInterface({ initialConversationId }: ChatInterfaceProps) {
   const router = useRouter()
   const [currentConversationId, setCurrentConversationId] = useState<string>('')
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    // Start with sidebar closed on mobile
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 768
+    }
+    return true
+  })
   const [creatingConversation, setCreatingConversation] = useState(false)
   const [sidebarKey, setSidebarKey] = useState(0) // Force sidebar refresh
   // Model selection state - moved up from ChatMain to ensure new conversations use current model
@@ -94,6 +100,11 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
     // Set the conversation ID directly for better UX
     setCurrentConversationId(conversationId)
     console.log('🔄 [ChatInterface] Selected conversation:', conversationId)
+    
+    // Close sidebar on mobile after selection
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setSidebarOpen(false)
+    }
   }
 
   const handleDeleteConversation = async (conversationId: string) => {
@@ -123,26 +134,34 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+      {/* Mobile Sidebar Backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-20 bg-black/20 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
       {/* Sidebar */}
       <div className={`
-        ${sidebarOpen ? 'w-80' : 'w-0'} 
+        fixed lg:static inset-y-0 left-0 z-30
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} 
+        ${sidebarOpen ? 'w-80' : 'lg:w-0'} 
         transition-all duration-300 ease-in-out 
         border-r border-gray-200/50 dark:border-gray-700/50
         bg-white/80 dark:bg-gray-900/80 
         backdrop-blur-2xl
         flex-shrink-0
-        shadow-sm
+        shadow-lg lg:shadow-sm
       `}>
-        {sidebarOpen && (
-          <ChatSidebar
-            key={sidebarKey}
-            currentConversationId={currentConversationId}
-            onConversationSelect={handleConversationSelect}
-            onNewConversation={handleNewConversation}
-            onDeleteConversation={handleDeleteConversation}
-            onClearAllConversations={handleClearAll}
-          />
-        )}
+        <ChatSidebar
+          key={sidebarKey}
+          currentConversationId={currentConversationId}
+          onConversationSelect={handleConversationSelect}
+          onNewConversation={handleNewConversation}
+          onDeleteConversation={handleDeleteConversation}
+          onClearAllConversations={handleClearAll}
+        />
       </div>
 
       {/* Main Chat Area */}
