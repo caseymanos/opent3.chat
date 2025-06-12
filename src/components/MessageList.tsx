@@ -73,10 +73,10 @@ export default function MessageList({ messages, aiMessages = [], onCreateBranch 
             </svg>
           </div>
           <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
-            Ready to chat!
+            Start a conversation
           </h3>
           <p className="text-slate-600 dark:text-slate-400">
-            Send your first message to get started with AI-powered conversations.
+            Send a message to begin.
           </p>
         </div>
       </div>
@@ -168,7 +168,7 @@ function MessageBubble({ message, onCreateBranch }: MessageBubbleProps) {
             }
           `}
         >
-          {isUser ? 'U' : 'AI'}
+          {isUser ? 'U' : 'A'}
         </div>
 
         {/* Message Content */}
@@ -279,7 +279,7 @@ function MessageBubble({ message, onCreateBranch }: MessageBubbleProps) {
               <>
                 <span>•</span>
                 <span>
-                  {(message.model_metadata as { model?: string }).model || 'AI'}
+                  {(message.model_metadata as { model?: string }).model || 'Assistant'}
                 </span>
               </>
             )}

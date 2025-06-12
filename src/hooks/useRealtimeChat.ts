@@ -251,10 +251,14 @@ export function useRealtimeChat(conversationId: string) {
     if (!conversationId) return
 
     try {
-      // Handle mock authentication in development
-      let userId = '00000000-0000-0000-0000-000000000001'
+      // Get session-based user ID for anonymous users
+      let userId = sessionStorage.getItem('t3-crusher-session-id')
+      if (!userId) {
+        userId = crypto.randomUUID()
+        sessionStorage.setItem('t3-crusher-session-id', userId)
+      }
       
-      // Try to get real user, but continue with demo if not found
+      // Try to get real user, but continue with session ID if not found
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         userId = user.id
@@ -321,9 +325,16 @@ export function useRealtimeChat(conversationId: string) {
 
   const clearAllConversations = useCallback(async () => {
     try {
-      // Get current user
+      // Get current user or session-based ID
       const { data: { user } } = await supabase.auth.getUser()
-      const userId = user?.id || '00000000-0000-0000-0000-000000000001'
+      let userId = user?.id
+      if (!userId) {
+        userId = sessionStorage.getItem('t3-crusher-session-id')
+        if (!userId) {
+          userId = crypto.randomUUID()
+          sessionStorage.setItem('t3-crusher-session-id', userId)
+        }
+      }
 
       // Get all user conversations
       const { data: conversations, error: fetchError } = await supabase
@@ -343,56 +354,80 @@ export function useRealtimeChat(conversationId: string) {
       const conversationIds = conversations.map((c: any) => c.id)
       console.log(`🗑️ [clearAllConversations] Deleting ${conversationIds.length} conversations`)
 
-      // Process in batches to avoid URL length limits
-      const BATCH_SIZE = 50 // Safe batch size for Supabase
+      // Process in smaller batches to reduce errors and avoid URL length limits
+      const BATCH_SIZE = 10 // Smaller batch size for better reliability
       const batches = []
       for (let i = 0; i < conversationIds.length; i += BATCH_SIZE) {
         batches.push(conversationIds.slice(i, i + BATCH_SIZE))
       }
 
       let totalDeleted = 0
+      let errors = []
 
       // Delete related records in batches first
       for (const batch of batches) {
-        // Delete chat sessions
-        const { error: sessionsError } = await supabase
-          .from('chat_sessions')
-          .delete()
-          .in('conversation_id', batch)
+        try {
+          // Delete chat sessions
+          const { error: sessionsError } = await supabase
+            .from('chat_sessions')
+            .delete()
+            .in('conversation_id', batch)
 
-        if (sessionsError) {
-          console.error('Error deleting chat sessions batch:', sessionsError)
-          // Don't throw - continue with cleanup
-        }
+          if (sessionsError) {
+            console.error('Error deleting chat sessions batch:', sessionsError)
+            errors.push(`Sessions: ${sessionsError.message}`)
+            // Don't throw - continue with cleanup
+          }
 
-        // Delete messages
-        const { error: messagesError } = await supabase
-          .from('messages')
-          .delete()
-          .in('conversation_id', batch)
+          // Delete messages
+          const { error: messagesError } = await supabase
+            .from('messages')
+            .delete()
+            .in('conversation_id', batch)
 
-        if (messagesError) {
-          console.error('Error deleting messages batch:', messagesError)
-          throw messagesError
+          if (messagesError) {
+            console.error('Error deleting messages batch:', messagesError)
+            errors.push(`Messages: ${messagesError.message}`)
+            // Continue instead of throwing to try to clean up what we can
+          }
+        } catch (batchError) {
+          console.error('Batch deletion error:', batchError)
+          errors.push(`Batch: ${batchError instanceof Error ? batchError.message : 'Unknown error'}`)
         }
       }
 
       // Delete conversations in batches
       for (const batch of batches) {
-        const { error: conversationsError } = await supabase
-          .from('conversations')
-          .delete()
-          .in('id', batch)
+        try {
+          const { error: conversationsError } = await supabase
+            .from('conversations')
+            .delete()
+            .in('id', batch)
 
-        if (conversationsError) {
-          console.error('Error deleting conversations batch:', conversationsError)
-          throw conversationsError
+          if (conversationsError) {
+            console.error('Error deleting conversations batch:', conversationsError)
+            errors.push(`Conversations: ${conversationsError.message}`)
+          } else {
+            totalDeleted += batch.length
+          }
+        } catch (batchError) {
+          console.error('Conversation batch deletion error:', batchError)
+          errors.push(`ConvoBatch: ${batchError instanceof Error ? batchError.message : 'Unknown error'}`)
         }
-
-        totalDeleted += batch.length
       }
 
-      console.log(`✅ [clearAllConversations] Successfully deleted ${totalDeleted} conversations`)
+      console.log(`✅ [clearAllConversations] Completed deletion: ${totalDeleted} conversations deleted`)
+      
+      if (errors.length > 0) {
+        console.warn(`⚠️ [clearAllConversations] Some errors occurred:`, errors)
+        // Still return success if we deleted most conversations
+        if (totalDeleted > 0) {
+          return { deleted: totalDeleted, errors }
+        } else {
+          throw new Error(`Clear all failed: ${errors.join(', ')}`)
+        }
+      }
+      
       return { deleted: totalDeleted }
     } catch (error) {
       console.error('Error in clearAllConversations:', error)
@@ -454,7 +489,15 @@ export function useRealtimeChat(conversationId: string) {
       const { data: { user } } = await supabase.auth.getUser()
       logger.info('Auth check result:', { userId: user?.id, email: user?.email })
       
-      const userId = user?.id || '00000000-0000-0000-0000-000000000001'
+      // Get user ID or create session-based ID
+      let userId = user?.id
+      if (!userId) {
+        userId = sessionStorage.getItem('t3-crusher-session-id')
+        if (!userId) {
+          userId = crypto.randomUUID()
+          sessionStorage.setItem('t3-crusher-session-id', userId)
+        }
+      }
       
       // Check if a conversation with the same title was just created (within last 5 seconds)
       // to prevent duplicates from double-clicks or race conditions

@@ -41,13 +41,35 @@ export default function MessageInput({
   }, [value])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    console.log('⌨️ [MessageInput] Key pressed:', { 
+      key: e.key, 
+      shiftKey: e.shiftKey, 
+      isComposing, 
+      disabled,
+      hasValue: !!value.trim()
+    })
+    
     if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
       e.preventDefault()
+      console.log('✅ [MessageInput] Enter key conditions met, calling handleSend')
       handleSend()
     }
   }
 
   const handleSend = () => {
+    console.log('📤 [MessageInput] handleSend called', { 
+      value: value.trim(), 
+      hasValue: !!value.trim(), 
+      attachedFiles: attachedFiles.length,
+      disabled 
+    })
+    
+    // Don't send if disabled or if there's no content
+    if (disabled || (!value.trim() && attachedFiles.length === 0)) {
+      console.log('❌ [MessageInput] Send blocked - disabled or no content')
+      return
+    }
+    
     // Convert attached files to FileList for AI SDK
     const fileList = attachedFiles.length > 0 ? createFileList(attachedFiles.map(af => af.file)) : null
     onSend(fileList)

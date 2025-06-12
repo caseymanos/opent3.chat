@@ -43,47 +43,19 @@ export default function CostTracker({ conversationId, className = '' }: CostTrac
   })
   const [recentUsage, setRecentUsage] = useState<TokenUsage[]>([])
 
-  // Simulate cost tracking (in a real app, this would come from the backend)
+  // Cost tracking - currently not implemented, showing placeholder
   useEffect(() => {
     const loadCostData = () => {
-      // Mock data for demonstration
-      const mockSummary: CostSummary = {
-        totalCost: 0.047,
-        messagesCount: 12,
-        tokenUsage: { input: 2840, output: 1650, total: 4490 },
-        byModel: {
-          'claude-3-haiku-20240307': { cost: 0.012, tokens: 1500, messages: 5 },
-          'claude-3-5-sonnet-20241022': { cost: 0.028, tokens: 2200, messages: 4 },
-          'gpt-4o': { cost: 0.007, tokens: 790, messages: 3 }
-        }
+      // Real cost tracking not yet implemented
+      const emptySummary: CostSummary = {
+        totalCost: 0,
+        messagesCount: 0,
+        tokenUsage: { input: 0, output: 0, total: 0 },
+        byModel: {}
       }
 
-      const mockRecentUsage: TokenUsage[] = [
-        {
-          inputTokens: 180,
-          outputTokens: 320,
-          totalCost: 0.0084,
-          modelId: 'claude-3-5-sonnet-20241022',
-          timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString()
-        },
-        {
-          inputTokens: 95,
-          outputTokens: 140,
-          totalCost: 0.0035,
-          modelId: 'gpt-4o',
-          timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString()
-        },
-        {
-          inputTokens: 220,
-          outputTokens: 85,
-          totalCost: 0.0018,
-          modelId: 'claude-3-haiku-20240307',
-          timestamp: new Date(Date.now() - 8 * 60 * 1000).toISOString()
-        }
-      ]
-
-      setCostSummary(mockSummary)
-      setRecentUsage(mockRecentUsage)
+      setCostSummary(emptySummary)
+      setRecentUsage([])
     }
 
     loadCostData()
@@ -118,14 +90,11 @@ export default function CostTracker({ conversationId, className = '' }: CostTrac
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 hover:border-green-500 dark:hover:border-green-400 transition-all duration-200 text-sm shadow-sm hover:shadow-md"
-        title="View cost breakdown"
+        title="Cost tracking not yet implemented"
       >
-        <CurrencyDollarIcon className="w-4 h-4 text-green-600 dark:text-green-400" />
-        <span className={`font-medium ${getCostColor(costSummary.totalCost)}`}>
-          {formatCost(costSummary.totalCost)}
-        </span>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
-          {costSummary.messagesCount} msgs
+        <CurrencyDollarIcon className="w-4 h-4 text-gray-400" />
+        <span className="font-medium text-gray-500 dark:text-gray-400">
+          Not tracking
         </span>
       </button>
 
@@ -159,90 +128,14 @@ export default function CostTracker({ conversationId, className = '' }: CostTrac
 
               {/* Summary */}
               <div className="p-4 bg-gray-50 dark:bg-gray-800/50">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                      {formatCost(costSummary.totalCost)}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Total Cost</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                      {costSummary.tokenUsage.total.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Total Tokens</div>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4 mt-3">
-                  <div className="text-center">
-                    <div className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                      {costSummary.tokenUsage.input.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Input</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-sm font-medium text-purple-600 dark:text-purple-400">
-                      {costSummary.tokenUsage.output.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Output</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* By Model */}
-              <div className="p-4">
-                <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">
-                  Usage by Model
-                </h4>
-                <div className="space-y-2">
-                  {Object.entries(costSummary.byModel).map(([modelId, usage]) => {
-                    const model = getModelById(modelId)
-                    return (
-                      <div key={modelId} className="flex items-center justify-between p-2 rounded-md bg-gray-50 dark:bg-gray-800">
-                        <div className="flex-1">
-                          <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                            {model?.name || modelId}
-                          </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">
-                            {usage.messages} messages • {usage.tokens.toLocaleString()} tokens
-                          </div>
-                        </div>
-                        <div className={`text-sm font-medium ${getCostColor(usage.cost)}`}>
-                          {formatCost(usage.cost)}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Recent Usage */}
-              <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-                <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                  <ClockIcon className="w-4 h-4" />
-                  Recent Activity
-                </h4>
-                <div className="space-y-2 max-h-32 overflow-y-auto">
-                  {recentUsage.map((usage, index) => {
-                    const model = getModelById(usage.modelId)
-                    return (
-                      <div key={index} className="flex items-center justify-between text-xs">
-                        <div className="flex-1">
-                          <div className="font-medium text-gray-900 dark:text-gray-100">
-                            {model?.name}
-                          </div>
-                          <div className="text-gray-500 dark:text-gray-400">
-                            {usage.inputTokens + usage.outputTokens} tokens • {formatTime(usage.timestamp)}
-                          </div>
-                        </div>
-                        <div className={`font-medium ${getCostColor(usage.totalCost)}`}>
-                          {formatCost(usage.totalCost)}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
+                <div className="text-center py-8">
+                  <ChartBarIcon className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                    Cost Tracking Not Active
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Cost tracking will be implemented in a future update to monitor token usage and API costs.
+                  </p>
               </div>
             </motion.div>
           </>

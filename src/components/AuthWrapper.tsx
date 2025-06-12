@@ -21,21 +21,29 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
                       window.location.hostname.includes('t3-crusher')
     
     if (isDemoMode) {
-      const mockUserId = '00000000-0000-0000-0000-000000000001'
+      // Create a unique session-based user ID that doesn't persist across sessions
+      // This ensures anonymous users don't see each other's conversations
+      let sessionUserId = sessionStorage.getItem('t3-crusher-session-id')
+      if (!sessionUserId) {
+        // Generate a unique UUID for this session
+        sessionUserId = crypto.randomUUID()
+        sessionStorage.setItem('t3-crusher-session-id', sessionUserId)
+      }
+      
       const mockUser: User = {
-        id: mockUserId,
-        email: 'demo@t3crusher.app',
+        id: sessionUserId,
+        email: 'anonymous@t3crusher.app',
         aud: 'authenticated',
         role: 'authenticated',
         app_metadata: {},
-        user_metadata: { username: 'Demo User' },
+        user_metadata: { username: 'Anonymous User' },
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       } as User
       
       setUser(mockUser)
       setLoading(false)
-      console.log('🔐 [AuthWrapper] Auto-authenticated in demo mode:', window.location.hostname)
+      console.log('🔐 [AuthWrapper] Auto-authenticated with session ID:', sessionUserId.slice(0, 8))
       return
     }
 
@@ -44,15 +52,20 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     
     if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('your-project') || supabaseKey.includes('your-anon-key')) {
-      console.warn('🔐 [AuthWrapper] Supabase not configured, using demo mode')
-      const mockUserId = '00000000-0000-0000-0000-000000000001'
+      console.warn('🔐 [AuthWrapper] Supabase not configured, using session-based mode')
+      let sessionUserId = sessionStorage.getItem('t3-crusher-session-id')
+      if (!sessionUserId) {
+        sessionUserId = crypto.randomUUID()
+        sessionStorage.setItem('t3-crusher-session-id', sessionUserId)
+      }
+      
       const mockUser: User = {
-        id: mockUserId,
-        email: 'demo@t3crusher.app',
+        id: sessionUserId,
+        email: 'anonymous@t3crusher.app',
         aud: 'authenticated',
         role: 'authenticated',
         app_metadata: {},
-        user_metadata: { username: 'Demo User' },
+        user_metadata: { username: 'Anonymous User' },
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       } as User
@@ -68,15 +81,20 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
         const { data: { user }, error } = await supabase.auth.getUser()
         if (error) {
           console.error('Error getting user:', error)
-          // Fall back to demo mode on error
-          const mockUserId = '00000000-0000-0000-0000-000000000001'
+          // Fall back to session-based mode on error
+          let sessionUserId = sessionStorage.getItem('t3-crusher-session-id')
+          if (!sessionUserId) {
+            sessionUserId = crypto.randomUUID()
+            sessionStorage.setItem('t3-crusher-session-id', sessionUserId)
+          }
+          
           const mockUser: User = {
-            id: mockUserId,
-            email: 'demo@t3crusher.app',
+            id: sessionUserId,
+            email: 'anonymous@t3crusher.app',
             aud: 'authenticated',
             role: 'authenticated',
             app_metadata: {},
-            user_metadata: { username: 'Demo User' },
+            user_metadata: { username: 'Anonymous User' },
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           } as User
@@ -86,15 +104,20 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
         }
       } catch (error) {
         console.error('Auth initialization failed:', error)
-        // Fall back to demo mode on error
-        const mockUserId = '00000000-0000-0000-0000-000000000001'
+        // Fall back to session-based mode on error
+        let sessionUserId = sessionStorage.getItem('t3-crusher-session-id')
+        if (!sessionUserId) {
+          sessionUserId = crypto.randomUUID()
+          sessionStorage.setItem('t3-crusher-session-id', sessionUserId)
+        }
+        
         const mockUser: User = {
-          id: mockUserId,
-          email: 'demo@t3crusher.app',
+          id: sessionUserId,
+          email: 'anonymous@t3crusher.app',
           aud: 'authenticated',
           role: 'authenticated',
           app_metadata: {},
-          user_metadata: { username: 'Demo User' },
+          user_metadata: { username: 'Anonymous User' },
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         } as User
@@ -128,21 +151,26 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
                         window.location.hostname.includes('t3-crusher')
       
       if (isDemoMode) {
-        // Create a mock user object with valid UUID for demo mode
-        const mockUserId = '00000000-0000-0000-0000-000000000001'
+        // Create a session-based user for anonymous access
+        let sessionUserId = sessionStorage.getItem('t3-crusher-session-id')
+        if (!sessionUserId) {
+          sessionUserId = crypto.randomUUID()
+          sessionStorage.setItem('t3-crusher-session-id', sessionUserId)
+        }
+        
         const mockUser: User = {
-          id: mockUserId,
-          email: 'demo@t3crusher.app',
+          id: sessionUserId,
+          email: 'anonymous@t3crusher.app',
           aud: 'authenticated',
           role: 'authenticated',
           app_metadata: {},
-          user_metadata: { username: 'Demo User' },
+          user_metadata: { username: 'Anonymous User' },
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         } as User
         
         setUser(mockUser)
-        console.log('🔐 [AuthWrapper] Demo mode authentication completed for:', window.location.hostname)
+        console.log('🔐 [AuthWrapper] Session-based authentication completed for:', window.location.hostname)
         return
       }
       

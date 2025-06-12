@@ -91,11 +91,21 @@ export default function ChatSidebar({
     if (!onClearAllConversations) return
 
     try {
+      console.log('🗑️ [ChatSidebar] Starting clear all operation')
       await onClearAllConversations()
+      console.log('✅ [ChatSidebar] Clear all completed successfully')
+      
+      // Clear local state
       setConversations([])
       setShowClearConfirm(false)
     } catch (error) {
-      console.error('Failed to clear conversations:', error)
+      console.error('❌ [ChatSidebar] Failed to clear conversations:', error)
+      // Don't clear local state if the operation failed
+      // Keep the confirmation modal closed though
+      setShowClearConfirm(false)
+      
+      // Show error to user (you could add a toast notification here)
+      console.warn('Clear all operation failed. Please try again.')
     }
   }
 

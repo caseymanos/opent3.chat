@@ -139,7 +139,7 @@ export function useCollaborativeChat(conversationId: string) {
             last_active: new Date().toISOString(),
             profiles: {
               id: 'demo-user-2',
-              username: 'AI Assistant',
+              username: 'Assistant',
               avatar_url: null
             }
           }
@@ -174,7 +174,7 @@ export function useCollaborativeChat(conversationId: string) {
           updated_at: new Date().toISOString(),
           profiles: {
             id: 'demo-user-2',
-            username: 'AI Assistant',
+            username: 'Assistant',
             avatar_url: null
           }
         }

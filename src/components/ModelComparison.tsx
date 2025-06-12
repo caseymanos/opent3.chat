@@ -49,7 +49,11 @@ export default function ModelComparison({
 
     // Cost scoring (lower cost = higher score)
     const avgCost = (model.pricing.input + model.pricing.output) / 2
-    const costScore = Math.max(0, 100 - (avgCost * 1000)) // Normalize to 0-100
+    // Use inverse scoring with reasonable range (most expensive models around $0.075, cheapest around $0.001)
+    const maxCost = 0.075
+    const minCost = 0.0005
+    const normalizedCost = Math.min(Math.max(avgCost, minCost), maxCost)
+    const costScore = Math.round(100 * (1 - (normalizedCost - minCost) / (maxCost - minCost)))
 
     // Capabilities scoring
     const capabilitiesCount = Object.values(model.capabilities).filter(Boolean).length
@@ -62,7 +66,7 @@ export default function ModelComparison({
       overall: Math.round(overall),
       speed: speedScore,
       quality: qualityScore,
-      cost: Math.round(costScore),
+      cost: costScore,
       capabilities: Math.round(capabilitiesScore)
     }
   }
@@ -158,6 +162,9 @@ export default function ModelComparison({
                     </h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                       Compare performance, cost, and capabilities
+                    </p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                      * Data current as of December 2024. Pricing subject to change.
                     </p>
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">

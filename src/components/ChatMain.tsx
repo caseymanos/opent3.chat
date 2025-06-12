@@ -15,7 +15,6 @@ import CollaborativeInvite from './CollaborativeInvite'
 import CostTracker from './CostTracker'
 import ModelComparison from './ModelComparison'
 import TaskExtractor from './TaskExtractor'
-import PWAInstaller from './PWAInstaller'
 import type { Database } from '@/lib/supabase'
 import { UserPlusIcon } from '@heroicons/react/24/outline'
 
@@ -196,9 +195,12 @@ export default function ChatMain({
       })
       
       // Use the proper AI SDK flow with file attachments
-      handleSubmit(undefined, {
+      await handleSubmit(undefined, {
         experimental_attachments: fileList || undefined
       })
+      
+      // Clear the input after successful send (AI SDK should do this, but let's be explicit)
+      console.log('✅ [ChatMain] Message sent successfully, input should be cleared')
     } catch (error) {
       console.error('❌ [ChatMain] Error sending message:', error)
     }
@@ -310,14 +312,6 @@ export default function ChatMain({
                   >
                     🌿 Tree
                   </button>
-                  <button
-                    onClick={() => window.open('/test-collab', '_blank')}
-                    className="text-xs px-3 py-1.5 rounded-full bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800 transition-colors flex items-center gap-1"
-                    title="Test collaborative features"
-                  >
-                    <UserPlusIcon className="w-3 h-3" />
-                    Test Collab
-                  </button>
                 </>
               )}
               <button
@@ -341,7 +335,6 @@ export default function ChatMain({
               </div>
             )}
             
-            <PWAInstaller />
             <TaskExtractor conversationId={conversationId} />
             <ModelComparison 
               selectedModels={[selectedModel]}

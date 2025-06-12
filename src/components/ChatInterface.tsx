@@ -122,13 +122,24 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
 
   const handleClearAll = async () => {
     try {
+      console.log('🗑️ [ChatInterface] Starting clear all conversations')
       await clearAllConversations()
-      setSidebarKey(prev => prev + 1) // Force sidebar refresh
-      // Clear current conversation and create a new one
+      console.log('✅ [ChatInterface] Clear all completed, refreshing UI')
+      
+      // First clear the current conversation to prevent using deleted conversation
       setCurrentConversationId('')
-      handleNewConversation()
+      
+      // Force sidebar refresh
+      setSidebarKey(prev => prev + 1)
+      
+      // Wait a bit before creating new conversation to avoid race conditions
+      setTimeout(() => {
+        console.log('🆕 [ChatInterface] Creating new conversation after clear all')
+        handleNewConversation()
+      }, 100)
     } catch (error) {
-      console.error('Failed to clear conversations:', error)
+      console.error('❌ [ChatInterface] Failed to clear conversations:', error)
+      // Don't create new conversation if clear failed
     }
   }
 
