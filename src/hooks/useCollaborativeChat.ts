@@ -83,8 +83,8 @@ export function useCollaborativeChat(conversationId: string) {
     }
   })
   
-  const cursorUpdateTimeout = useRef<NodeJS.Timeout>()
-  const typingTimeout = useRef<NodeJS.Timeout>()
+  const cursorUpdateTimeout = useRef<NodeJS.Timeout | null>(null)
+  const typingTimeout = useRef<NodeJS.Timeout | null>(null)
 
   // Initialize current user
   useEffect(() => {
@@ -113,7 +113,7 @@ export function useCollaborativeChat(conversationId: string) {
         // For demo purposes, simulate collaborative data
         // In a real implementation, these would query the collaborative tables
         
-        // Simulate some participants
+        // Simulate some participants - add multiple for demo
         const mockParticipants: ConversationParticipant[] = [
           {
             id: '1',
@@ -125,7 +125,21 @@ export function useCollaborativeChat(conversationId: string) {
             last_active: new Date().toISOString(),
             profiles: {
               id: 'demo-user-1',
-              username: 'Demo User',
+              username: 'You',
+              avatar_url: null
+            }
+          },
+          {
+            id: '2',
+            conversation_id: conversationId,
+            user_id: 'demo-user-2',
+            role: 'collaborator',
+            permissions: { read: true, write: true, share: false },
+            joined_at: new Date().toISOString(),
+            last_active: new Date().toISOString(),
+            profiles: {
+              id: 'demo-user-2',
+              username: 'AI Assistant',
               avatar_url: null
             }
           }
@@ -151,12 +165,12 @@ export function useCollaborativeChat(conversationId: string) {
 
     // For demo, simulate live cursor updates
     const simulateCollaboration = () => {
-      if (Math.random() > 0.7) { // 30% chance
+      if (Math.random() > 0.3) { // 70% chance for better visibility
         const mockCursor: LiveCursor = {
           id: `cursor-${Date.now()}`,
           conversation_id: conversationId,
           user_id: 'demo-user-2',
-          is_typing: Math.random() > 0.5,
+          is_typing: Math.random() > 0.6, // More frequent typing
           updated_at: new Date().toISOString(),
           profiles: {
             id: 'demo-user-2',
@@ -181,7 +195,10 @@ export function useCollaborativeChat(conversationId: string) {
     }
 
     // Simulate occasional collaborative activity
-    const interval = setInterval(simulateCollaboration, 10000) // Every 10 seconds
+    const interval = setInterval(simulateCollaboration, 3000) // Every 3 seconds for better visibility
+    
+    // Trigger immediate simulation
+    setTimeout(simulateCollaboration, 1000)
 
     return () => {
       clearInterval(interval)

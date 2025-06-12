@@ -9,40 +9,188 @@
    - Environments: .env.local, .env.development
 
  ✓ Starting...
- ✓ Compiled middleware in 106ms
- ✓ Ready in 926ms
+ ✓ Compiled middleware in 96ms
+ ✓ Ready in 833ms
  ○ Compiling / ...
- ✓ Compiled / in 1179ms
- GET / 200 in 1343ms
- GET / 200 in 86ms
- ○ Compiling /_not-found/page ...
- ✓ Compiled /_not-found/page in 558ms
- GET /.well-known/appspecific/com.chrome.devtools.json 404 in 580ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 625ms
+ ✓ Compiled / in 1417ms
+ GET / 200 in 1628ms
+ ✓ Compiled /_not-found/page in 404ms
+ GET /chat/invite/demo-token-1749535476939 404 in 436ms
+ GET /chat/invite/demo-token-1749535476939 404 in 26ms
+ ✓ Compiled /favicon.ico in 208ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 447ms
+ GET / 200 in 50ms
 [Middleware] POST /api/chat
- ✓ Compiled /api/chat in 297ms
-Attempting Anthropic API call...
-Anthropic API call successful
- POST /api/chat 200 in 461ms
- GET / 200 in 80ms
- GET /.well-known/appspecific/com.chrome.devtools.json 404 in 111ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 224ms
+ ✓ Compiled /api/chat in 355ms
+🚀 [CHAT API] Request received at 2025-06-10T12:53:56.134Z
+📝 [CHAT API] Request details: {
+  messagesCount: 1,
+  conversationId: '19b7195c-81d6-4564-b598-7585bae1bc95',
+  model: 'claude-3-haiku-20240307',
+  provider: 'anthropic',
+  firstMessage: 'hi...',
+  requestBody: '{\n' +
+    '  "id": "b2JM12HE5m9JxOxj",\n' +
+    '  "messages": [\n' +
+    '    {\n' +
+    '      "role": "user",\n' +
+    '      "content": "hi",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "hi"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    }\n' +
+    '  ],\n' +
+    '  "conversationId": "19b7195c-81d6-4564-b598-7585bae1bc95",\n' +
+    '  "model": "claude-3-haiku-20240307",\n' +
+    '  "provider": "anthropic"\n' +
+    '}'
+}
+🔑 [ANTHROPIC] API Key check: {
+  hasKey: true,
+  keyPrefix: 'sk-ant-api...',
+  keyLength: 108,
+  startsWithCorrectPrefix: true
+}
+🤖 [ANTHROPIC] Starting API call with model: claude-3-haiku-20240307
+✅ [ANTHROPIC] API call successful, returning stream response
+⏱️ [CHAT API] Total request time: 4 ms
+📤 [CHAT API] Response headers: {
+  'content-type': 'text/plain; charset=utf-8',
+  'x-vercel-ai-data-stream': 'v1'
+}
+ POST /api/chat 200 in 1707ms
 [Middleware] POST /api/chat
-Attempting Anthropic API call...
-Anthropic API call successful
- POST /api/chat 200 in 152ms
- GET / 200 in 87ms
- GET /.well-known/appspecific/com.chrome.devtools.json 404 in 146ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 323ms
- GET / 200 in 95ms
- GET /.well-known/appspecific/com.chrome.devtools.json 404 in 84ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 258ms
- GET / 200 in 86ms
- GET /.well-known/appspecific/com.chrome.devtools.json 404 in 143ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 283ms
- ✓ Compiled in 238ms
- ✓ Compiled in 91ms
- ✓ Compiled in 184ms
+🚀 [CHAT API] Request received at 2025-06-10T12:54:26.273Z
+📝 [CHAT API] Request details: {
+  messagesCount: 3,
+  conversationId: 'c32c0c43-6e65-4370-9e20-a66b6c1145e6',
+  model: 'claude-3-haiku-20240307',
+  provider: 'anthropic',
+  firstMessage: 'hi...',
+  requestBody: '{\n' +
+    '  "id": "b2JM12HE5m9JxOxj",\n' +
+    '  "messages": [\n' +
+    '    {\n' +
+    '      "role": "user",\n' +
+    '      "content": "hi",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "hi"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    },\n' +
+    '    {\n' +
+    '      "role": "assistant",\n' +
+    '      "content": "Hello! How can I assist you today?",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "step-start"\n' +
+    '        },\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "Hello! How can I assist you today?"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    },\n' +
+    '    {\n' +
+    '      "role": "user",\n' +
+    '      "content": "herlp",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "herlp"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    }\n' +
+    '  ],\n' +
+    '  "conversationId": "c32c0c43-6e65-4370-9e20-a66b6c1145e6",\n' +
+    '  "model": "claude-3-haiku-20240307",\n' +
+    '  "provider": "anthropic"\n' +
+    '}'
+}
+🔑 [ANTHROPIC] API Key check: {
+  hasKey: true,
+  keyPrefix: 'sk-ant-api...',
+  keyLength: 108,
+  startsWithCorrectPrefix: true
+}
+🤖 [ANTHROPIC] Starting API call with model: claude-3-haiku-20240307
+✅ [ANTHROPIC] API call successful, returning stream response
+⏱️ [CHAT API] Total request time: 3 ms
+📤 [CHAT API] Response headers: {
+  'content-type': 'text/plain; charset=utf-8',
+  'x-vercel-ai-data-stream': 'v1'
+}
+ POST /api/chat 200 in 1145ms
+ ✓ Compiled in 166ms
+ ✓ Compiled in 76ms
+ ✓ Compiled in 94ms
+ ✓ Compiled in 64ms
+ ✓ Compiled in 127ms
  ✓ Compiled in 79ms
- GET / 200 in 201ms
+ ✓ Compiled in 92ms
+ ✓ Compiled in 66ms
+ ✓ Compiled in 91ms
+ ✓ Compiled in 85ms
+ ✓ Compiled / in 56ms
+ GET / 200 in 221ms
+ ✓ Compiled in 99ms
+ ✓ Compiled in 150ms
+ ✓ Compiled in 125ms
+ ✓ Compiled in 162ms
+ ✓ Compiled in 237ms
+ ✓ Compiled in 190ms
+ ✓ Compiled / in 40ms
+ GET / 200 in 171ms
+ ✓ Compiled in 147ms
+ ✓ Compiled in 151ms
+ ✓ Compiled in 84ms
+ GET / 200 in 482ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 258ms
+[Middleware] POST /api/chat
+🚀 [CHAT API] Request received at 2025-06-10T13:03:21.884Z
+📝 [CHAT API] Request details: {
+  messagesCount: 1,
+  conversationId: '8346e4ec-87d4-4f29-bf31-5e0811c6516e',
+  model: 'claude-3-haiku-20240307',
+  provider: 'anthropic',
+  firstMessage: 'hi...',
+  requestBody: '{\n' +
+    '  "id": "atKXsaJikztfkTbN",\n' +
+    '  "messages": [\n' +
+    '    {\n' +
+    '      "role": "user",\n' +
+    '      "content": "hi",\n' +
+    '      "parts": [\n' +
+    '        {\n' +
+    '          "type": "text",\n' +
+    '          "text": "hi"\n' +
+    '        }\n' +
+    '      ]\n' +
+    '    }\n' +
+    '  ],\n' +
+    '  "conversationId": "8346e4ec-87d4-4f29-bf31-5e0811c6516e",\n' +
+    '  "model": "claude-3-haiku-20240307",\n' +
+    '  "provider": "anthropic"\n' +
+    '}'
+}
+🔑 [ANTHROPIC] API Key check: {
+  hasKey: true,
+  keyPrefix: 'sk-ant-api...',
+  keyLength: 108,
+  startsWithCorrectPrefix: true
+}
+🤖 [ANTHROPIC] Starting API call with model: claude-3-haiku-20240307
+✅ [ANTHROPIC] API call successful, returning stream response
+⏱️ [CHAT API] Total request time: 2 ms
+📤 [CHAT API] Response headers: {
+  'content-type': 'text/plain; charset=utf-8',
+  'x-vercel-ai-data-stream': 'v1'
+}
+ POST /api/chat 200 in 1605ms
+ GET / 200 in 69ms
 [?25h

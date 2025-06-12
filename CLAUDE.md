@@ -72,3 +72,5 @@ psql -f supabase/seed.sql
 - Demo mode with mock user ID for development without auth
 - Extensive logging via custom logger (`src/lib/logger.ts`)
 - Type-safe database access with generated Supabase types
+
+- check initial_chat file occasionally to stay focused on the overall goals

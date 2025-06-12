@@ -58,7 +58,7 @@ export default function EnhancedChainOfThought({
   const [playbackSpeed] = useState(1)
   const [voiceEnabled, setVoiceEnabled] = useState(enableVoice)
   const [showComplexity, setShowComplexity] = useState(false)
-  const intervalRef = useRef<NodeJS.Timeout>()
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // Auto-play functionality
   useEffect(() => {

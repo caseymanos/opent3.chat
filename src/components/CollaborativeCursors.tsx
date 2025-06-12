@@ -190,30 +190,17 @@ export default function CollaborativeCursors({ conversationId }: CollaborativeCu
         ))}
       </AnimatePresence>
 
-      {/* Participants List in Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl">
-        <ParticipantsList participants={participants} />
-        
-        <div className="flex items-center gap-2">
-          <motion.div
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="w-2 h-2 bg-green-400 rounded-full"
-          />
-          <span className="text-xs text-slate-500 dark:text-slate-400">
-            Live collaboration
-          </span>
-        </div>
-      </div>
-
       {/* Typing Indicator */}
       <AnimatePresence>
         {typingParticipants.length > 0 && (
-          <TypingIndicator typingParticipants={typingParticipants} />
+          <div className="absolute bottom-20 left-4 z-50">
+            <TypingIndicator typingParticipants={typingParticipants} />
+          </div>
         )}
       </AnimatePresence>
     </>
   )
 }
 
-export { useCollaborativeChat }
+// Export ParticipantsList for use in ChatMain
+export { ParticipantsList, getColorForUser }

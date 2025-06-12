@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@/lib/supabase'
 import { Button } from './ui/Button'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'
+import { ScrollArea } from './ui/ScrollArea'
+import { cn } from '@/lib/utils'
 import { PlusIcon, ChatBubbleLeftIcon, TrashIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import type { Database } from '@/lib/supabase'
 
@@ -31,6 +34,21 @@ export default function ChatSidebar({
 
   useEffect(() => {
     loadConversations()
+    
+    // For now, disable real-time subscriptions to eliminate errors
+    // We'll use the sidebar key refresh mechanism instead
+    console.log('🔌 [ChatSidebar] Skipping real-time subscription (using manual refresh)')
+    
+    // Polling fallback every 5 seconds when tab is visible
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        loadConversations()
+      }
+    }, 5000)
+
+    return () => {
+      clearInterval(interval)
+    }
   }, [])  // loadConversations is defined inline, so it's stable
 
   const loadConversations = async () => {

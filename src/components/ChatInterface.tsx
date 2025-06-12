@@ -1,17 +1,35 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useRealtimeChat } from '@/hooks/useRealtimeChat'
 import ChatSidebar from './ChatSidebar'
 import ChatMain from './ChatMain'
 import { Button } from './ui/Button'
 import { PlusIcon } from '@heroicons/react/24/outline'
 
-export default function ChatInterface() {
+interface ChatInterfaceProps {
+  initialConversationId?: string
+}
+
+export default function ChatInterface({ initialConversationId }: ChatInterfaceProps) {
+  const router = useRouter()
   const [currentConversationId, setCurrentConversationId] = useState<string>('')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [creatingConversation, setCreatingConversation] = useState(false)
+  const [sidebarKey, setSidebarKey] = useState(0) // Force sidebar refresh
+  // Model selection state - moved up from ChatMain to ensure new conversations use current model
+  const [selectedModel, setSelectedModel] = useState('claude-3-haiku-20240307')
+  const [selectedProvider, setSelectedProvider] = useState('anthropic')
   
+  // Initialize with provided conversation ID
+  useEffect(() => {
+    if (initialConversationId && initialConversationId !== currentConversationId) {
+      console.log('🔄 [ChatInterface] Setting initial conversation ID:', initialConversationId)
+      setCurrentConversationId(initialConversationId)
+    }
+  }, [initialConversationId, currentConversationId])
+
   // Debug conversation ID changes
   useEffect(() => {
     console.log('🔄 [ChatInterface] Conversation ID changed:', currentConversationId)
@@ -32,17 +50,14 @@ export default function ChatInterface() {
     try {
       setCreatingConversation(true)
       console.log('🆕 [ChatInterface] handleNewConversation called')
-      const newConversation = await createNewConversation('New Chat')
+      const newConversation = await createNewConversation('New Chat', selectedProvider, selectedModel)
       console.log('✅ [ChatInterface] New conversation created:', newConversation)
       if (newConversation && newConversation.id) {
-        console.log('🔄 [ChatInterface] Setting conversation ID:', newConversation.id)
-        // Clear current conversation first to prevent issues
-        setCurrentConversationId('')
-        // Use setTimeout to prevent React batching issues
-        setTimeout(() => {
-          setCurrentConversationId(newConversation.id)
-          console.log('✅ [ChatInterface] Conversation ID set to:', newConversation.id)
-        }, 100)
+        console.log('🔄 [ChatInterface] Setting new conversation ID:', newConversation.id)
+        // Set the conversation ID directly without navigation for better UX
+        setCurrentConversationId(newConversation.id)
+        setSidebarKey(prev => prev + 1) // Force sidebar to re-render and reload conversations
+        console.log('✅ [ChatInterface] Set conversation ID to:', newConversation.id)
       } else {
         console.error('❌ [ChatInterface] No conversation ID returned:', newConversation)
       }
@@ -55,20 +70,36 @@ export default function ChatInterface() {
     }
   }
 
-  // Create initial conversation on first load
+  // Only create initial conversation if no initial ID provided
   useEffect(() => {
-    if (!currentConversationId) {
+    if (!initialConversationId && !currentConversationId && !creatingConversation) {
+      console.log('🔄 [ChatInterface] Creating initial conversation')
       handleNewConversation()
     }
-  }, []) // Remove currentConversationId dependency to prevent infinite loop
+  }, [initialConversationId, currentConversationId, creatingConversation]) // Only run once on mount
+  
+  // Handle invalid conversation IDs
+  if (initialConversationId === 'default' || currentConversationId === 'default') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600 dark:text-slate-400">Initializing chat...</p>
+        </div>
+      </div>
+    )
+  }
 
   const handleConversationSelect = (conversationId: string) => {
+    // Set the conversation ID directly for better UX
     setCurrentConversationId(conversationId)
+    console.log('🔄 [ChatInterface] Selected conversation:', conversationId)
   }
 
   const handleDeleteConversation = async (conversationId: string) => {
     try {
       await deleteConversation(conversationId)
+      setSidebarKey(prev => prev + 1) // Force sidebar refresh
       // If we deleted the current conversation, create a new one
       if (conversationId === currentConversationId) {
         handleNewConversation()
@@ -81,7 +112,9 @@ export default function ChatInterface() {
   const handleClearAll = async () => {
     try {
       await clearAllConversations()
-      // Create a new conversation after clearing all
+      setSidebarKey(prev => prev + 1) // Force sidebar refresh
+      // Clear current conversation and create a new one
+      setCurrentConversationId('')
       handleNewConversation()
     } catch (error) {
       console.error('Failed to clear conversations:', error)
@@ -89,17 +122,20 @@ export default function ChatInterface() {
   }
 
   return (
-    <div className="flex h-screen w-full">
+    <div className="flex h-screen w-full overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
       {/* Sidebar */}
       <div className={`
         ${sidebarOpen ? 'w-80' : 'w-0'} 
         transition-all duration-300 ease-in-out 
-        border-r border-slate-200 dark:border-slate-700
-        bg-white/70 dark:bg-slate-900/70 
-        backdrop-blur-xl
+        border-r border-gray-200/50 dark:border-gray-700/50
+        bg-white/80 dark:bg-gray-900/80 
+        backdrop-blur-2xl
+        flex-shrink-0
+        shadow-sm
       `}>
         {sidebarOpen && (
           <ChatSidebar
+            key={sidebarKey}
             currentConversationId={currentConversationId}
             onConversationSelect={handleConversationSelect}
             onNewConversation={handleNewConversation}
@@ -110,9 +146,9 @@ export default function ChatInterface() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header */}
-        <div className="h-16 border-b border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl flex items-center justify-between px-6">
+        <div className="h-16 border-b border-gray-200/30 dark:border-gray-700/30 bg-white/60 dark:bg-gray-900/60 backdrop-blur-2xl flex items-center justify-between px-6 shadow-sm">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
@@ -134,7 +170,7 @@ export default function ChatInterface() {
                 />
               </svg>
             </Button>
-            <h1 className="text-lg font-semibold text-slate-800 dark:text-slate-200">
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
               {conversation?.title || 'T3 Crusher'}
             </h1>
           </div>
@@ -171,6 +207,12 @@ export default function ChatInterface() {
             conversationId={currentConversationId}
             messages={messages}
             isLoading={isLoading}
+            selectedModel={selectedModel}
+            selectedProvider={selectedProvider}
+            onModelChange={(model, provider) => {
+              setSelectedModel(model)
+              setSelectedProvider(provider)
+            }}
           />
         </div>
       </div>

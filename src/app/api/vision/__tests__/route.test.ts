@@ -80,7 +80,7 @@ describe('/api/vision', () => {
       const request = new NextRequest('http://localhost/api/vision', {
         method: 'POST',
         body: JSON.stringify({
-          image: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
+          image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
           task: 'analyze'
         }),
         headers: {
@@ -131,7 +131,7 @@ describe('/api/vision', () => {
       const request = new NextRequest('http://localhost/api/vision', {
         method: 'POST',
         body: JSON.stringify({
-          image: 'base64imagedata',
+          image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
           task: 'ocr'
         }),
         headers: {

@@ -15,11 +15,26 @@ export function useRealtimeChat(conversationId: string) {
   const [isLoading, setIsLoading] = useState(true)
   const [isTyping, setIsTyping] = useState(false)
 
+  // Helper function to validate UUID format
+  const isValidUUID = (uuid: string) => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    return uuidRegex.test(uuid)
+  }
+
   // Load initial messages and conversation
   useEffect(() => {
-    if (!conversationId) {
-      setMessages([])
-      setConversation(null)
+    // Immediately clear messages when conversation changes to prevent showing old messages
+    setMessages([])
+    setConversation(null)
+    
+    if (!conversationId || conversationId === '' || conversationId === 'default') {
+      setIsLoading(false)
+      return
+    }
+
+    // Check if conversationId is a valid UUID
+    if (!isValidUUID(conversationId)) {
+      console.error('Invalid conversation ID format:', conversationId)
       setIsLoading(false)
       return
     }
@@ -64,72 +79,160 @@ export function useRealtimeChat(conversationId: string) {
     loadInitialData()
   }, [conversationId, supabase])
 
-  // Set up real-time subscriptions - simplified to avoid multiple subscription errors
+  // Enable real-time subscriptions for enhanced collaboration
   useEffect(() => {
-    if (!conversationId) return
-
-    let messagesChannel: any = null
-
-    try {
-      // Only subscribe to messages, disable typing for now to reduce complexity
-      const timestamp = Date.now()
-      const channelName = `conv_${conversationId}_${timestamp}`
-      
-      messagesChannel = supabase
-        .channel(channelName)
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'messages',
-            filter: `conversation_id=eq.${conversationId}`
-          },
-          (payload: { new: Message }) => {
-            const newMessage = payload.new as Message
-            setMessages(prev => {
-              // Avoid duplicates
-              if (prev.some(msg => msg.id === newMessage.id)) {
-                return prev
-              }
-              return [...prev, newMessage]
-            })
-          }
-        )
-        .subscribe()
-      
-    } catch (error) {
-      // Silently handle subscription errors to avoid console spam
-      console.warn('Subscription setup failed, continuing without real-time updates')
+    // Only set up subscriptions for valid UUIDs, not empty strings or 'default'
+    if (!conversationId || conversationId === '' || conversationId === 'default' || !isValidUUID(conversationId)) {
+      console.log('🔌 [useRealtimeChat] Skipping subscription setup for invalid conversation ID:', conversationId)
+      return
     }
 
-    return () => {
-      try {
-        if (messagesChannel) {
-          supabase.removeChannel(messagesChannel)
+    console.log('🔌 [useRealtimeChat] Setting up real-time subscription for conversation:', conversationId)
+    
+    // Set up real-time subscription for new messages
+    const channel = supabase
+      .channel(`conversation:${conversationId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${conversationId}`
+        },
+        (payload: any) => {
+          console.log('📨 [useRealtimeChat] New message received:', payload.new)
+          setMessages(currentMessages => {
+            // Check if message already exists to prevent duplicates
+            const exists = currentMessages.some(msg => msg.id === payload.new.id)
+            if (exists) return currentMessages
+            
+            // Add new message in correct chronological order
+            const newMessage = payload.new as Message
+            const updatedMessages = [...currentMessages, newMessage].sort(
+              (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+            )
+            return updatedMessages
+          })
         }
-      } catch (error) {
-        // Silent cleanup
-      }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${conversationId}`
+        },
+        (payload: any) => {
+          console.log('✏️ [useRealtimeChat] Message updated:', payload.new)
+          setMessages(currentMessages => 
+            currentMessages.map(msg => 
+              msg.id === payload.new.id ? payload.new as Message : msg
+            )
+          )
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${conversationId}`
+        },
+        (payload: any) => {
+          console.log('🗑️ [useRealtimeChat] Message deleted:', payload.old)
+          setMessages(currentMessages => 
+            currentMessages.filter(msg => msg.id !== payload.old.id)
+          )
+        }
+      )
+      .subscribe((status: any) => {
+        console.log('🔌 [useRealtimeChat] Subscription status:', status)
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ [useRealtimeChat] Successfully subscribed to real-time updates')
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('❌ [useRealtimeChat] Real-time subscription error, falling back to polling')
+          // Fallback to polling if real-time fails
+          setupPollingFallback()
+        }
+      })
+
+    // Polling fallback function
+    const setupPollingFallback = () => {
+      const interval = setInterval(async () => {
+        if (document.visibilityState === 'visible') {
+          try {
+            const { data: newMessages, error } = await supabase
+              .from('messages')
+              .select('*')
+              .eq('conversation_id', conversationId)
+              .order('created_at', { ascending: true })
+
+            if (!error && newMessages) {
+              setMessages(newMessages)
+            }
+          } catch (error) {
+            console.warn('⚠️ [useRealtimeChat] Polling failed:', error)
+          }
+        }
+      }, 5000) // Poll every 5 seconds as fallback
+
+      return interval
+    }
+
+    // Cleanup function
+    return () => {
+      console.log('🔌 [useRealtimeChat] Cleaning up subscription for:', conversationId)
+      supabase.removeChannel(channel)
     }
   }, [conversationId, supabase])
 
-  const sendMessage = useCallback(async (content: string, role: 'user' | 'assistant' = 'user') => {
+  const sendMessage = useCallback(async (
+    content: string, 
+    role: 'user' | 'assistant' = 'user',
+    parentId?: string,
+    branchIndex?: number
+  ) => {
     if (!conversationId) return
 
     try {
+      // Calculate branch index if not provided
+      let finalBranchIndex = branchIndex
+      if (parentId && finalBranchIndex === undefined) {
+        // Find existing siblings to determine next branch index
+        const { data: siblings } = await supabase
+          .from('messages')
+          .select('branch_index')
+          .eq('conversation_id', conversationId)
+          .eq('parent_id', parentId)
+        
+        finalBranchIndex = siblings ? Math.max(...siblings.map((s: any) => s.branch_index || 0), -1) + 1 : 0
+      }
+
+      const messageData: any = {
+        conversation_id: conversationId,
+        content: { text: content },
+        role
+      }
+
+      // Add branching info if this is a branch message
+      if (parentId) {
+        messageData.parent_id = parentId
+        messageData.branch_index = finalBranchIndex || 0
+      }
+
       const { error } = await supabase
         .from('messages')
-        .insert({
-          conversation_id: conversationId,
-          content: { text: content },
-          role
-        })
+        .insert(messageData)
 
       if (error) {
         console.error('Error sending message:', error)
         throw error
       }
+
+      console.log('✅ Message sent with branching info:', { parentId, branchIndex: finalBranchIndex })
     } catch (error) {
       console.error('Error sending message:', error)
       throw error
@@ -334,7 +437,7 @@ export function useRealtimeChat(conversationId: string) {
     }
   }, [supabase])
 
-  const createNewConversation = useCallback(async (title?: string) => {
+  const createNewConversation = useCallback(async (title?: string, modelProvider?: string, modelName?: string) => {
     try {
       logger.group('createNewConversation')
       logger.info('Starting conversation creation', { title })
@@ -345,18 +448,34 @@ export function useRealtimeChat(conversationId: string) {
       
       const userId = user?.id || '00000000-0000-0000-0000-000000000001'
       
+      // Check if a conversation with the same title was just created (within last 5 seconds)
+      // to prevent duplicates from double-clicks or race conditions
+      const recentThreshold = new Date(Date.now() - 5000).toISOString()
+      const { data: recentConversations } = await supabase
+        .from('conversations')
+        .select('id, title, created_at')
+        .eq('user_id', userId)
+        .eq('title', title || 'New Chat')
+        .gte('created_at', recentThreshold)
+        .limit(1)
+      
+      if (recentConversations && recentConversations.length > 0) {
+        console.log('🔄 [createNewConversation] Found recent duplicate, using existing:', recentConversations[0])
+        return recentConversations[0]
+      }
+      
       // Clean up old conversations automatically to prevent accumulation
-      // Keep only the most recent 50 conversations per user
+      // Keep only the most recent 100 conversations per user
       try {
         const { data: oldConversations } = await supabase
           .from('conversations')
           .select('id')
           .eq('user_id', userId)
           .order('created_at', { ascending: false })
-          .range(50, 1000) // Skip first 50, get next 950
+          .range(100, 1000) // Skip first 100, get next 900
         
         if (oldConversations && oldConversations.length > 0) {
-          const oldIds = oldConversations.map(c => c.id)
+          const oldIds = oldConversations.map((c: any) => c.id)
           console.log(`🧹 [createNewConversation] Auto-cleaning ${oldIds.length} old conversations`)
           
           // Process in small batches
@@ -383,21 +502,24 @@ export function useRealtimeChat(conversationId: string) {
           .from('conversations')
           .insert({
             title: title || 'New Conversation',
-            user_id: userId
+            user_id: userId,
+            model_provider: modelProvider || 'anthropic',
+            model_name: modelName || 'claude-3-haiku-20240307'
           })
           .select()
           .single()
 
         if (error) {
           logger.error('Error creating conversation without auth:', error)
-          // Create a mock conversation for development
-          const mockId = `00000000-0000-0000-0000-${Date.now().toString().padStart(12, '0').slice(-12)}`
+          // Create a mock conversation for development with proper UUID format
+          const timestamp = Date.now().toString(16).padStart(12, '0').slice(-12)
+          const mockId = `00000000-0000-4000-8000-${timestamp}`
           return {
             id: mockId,
             title: title || 'New Conversation',
             user_id: userId,
-            model_provider: 'openai',
-            model_name: 'gpt-4',
+            model_provider: modelProvider || 'anthropic',
+            model_name: modelName || 'claude-3-haiku-20240307',
             system_prompt: null,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
@@ -412,7 +534,9 @@ export function useRealtimeChat(conversationId: string) {
         .from('conversations')
         .insert({
           title: title || 'New Conversation',
-          user_id: user.id
+          user_id: user.id,
+          model_provider: modelProvider || 'anthropic',
+          model_name: modelName || 'claude-3-haiku-20240307'
         })
         .select()
         .single()

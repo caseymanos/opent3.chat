@@ -1,0 +1,11 @@
+This is a test document for native AI file analysis.
+
+The company offers these employee benefits:
+- Health insurance with $500 deductible
+- Vision and dental coverage
+- 15 vacation days per year
+- 401k matching up to 4%
+- Life insurance coverage
+- Flexible work arrangements
+
+The AI should be able to analyze this file directly and answer questions about the benefits without needing a complex RAG system.

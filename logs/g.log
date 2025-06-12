@@ -1,0 +1,990 @@
+conversations:1  Failed to load resource: the server responded with a status of 400 ()
+ Error loading conversation: Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+conversations:1  Failed to load resource: the server responded with a status of 400 ()
+ Error loading conversation: Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+nhadlfbxbivlhtkbolve.supabase.co/rest/v1/chat_sessions:1  Failed to load resource: the server responded with a status of 400 ()
+ Error updating typing status: Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+nhadlfbxbivlhtkbolve.supabase.co/rest/v1/chat_sessions:1  Failed to load resource: the server responded with a status of 400 ()
+ Error updating typing status: Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages:1  Failed to load resource: the server responded with a status of 400 ()
+ Error sending message: Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Error sending message: Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ ❌ [ChatMain] Error sending message: Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages:1  Failed to load resource: the server responded with a status of 400 ()
+ Error sending message: Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Error sending message: Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ ❌ [ChatMain] Error sending message: Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+conversations:1  Failed to load resource: the server responded with a status of 400 ()
+ Error loading conversation: Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+conversations:1  Failed to load resource: the server responded with a status of 400 ()
+ Error loading conversation: Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+conversations:1  Failed to load resource: the server responded with a status of 400 ()
+ Error loading conversation: Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+conversations:1  Failed to load resource: the server responded with a status of 400 ()
+ Error loading conversation: Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+messages:1  Failed to load resource: the server responded with a status of 400 ()
+nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages:1  Failed to load resource: the server responded with a status of 400 ()
+ Error sending message: Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Error sending message: Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ ❌ [ChatMain] Error sending message: Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+messages:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()
+messages:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()
+messages:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()
+messages:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()
+messages:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()
+messages:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()
+messages:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()
+messages:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages?select=*&conversation_id=eq.collab-test-mbr7wz54&order=created_at.asc 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages?select=*&conversation_id=eq.collab-test-mbr7wz54&order=created_at.asc 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages?select=*&conversation_id=eq.collab-test-mbr7wz54&order=created_at.asc 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages?select=*&conversation_id=eq.collab-test-mbr7wz54&order=created_at.asc 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages?select=*&conversation_id=eq.collab-test-mbr7wz54&order=created_at.asc 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages?select=*&conversation_id=eq.collab-test-mbr7wz54&order=created_at.asc 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages?select=*&conversation_id=eq.collab-test-mbr7wz54&order=created_at.asc 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages?select=*&conversation_id=eq.collab-test-mbr7wz54&order=created_at.asc 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+ ReferenceError: getChunkTypeIcon is not defined
+    at VisualRAGInterface.tsx:395:44
+    at Array.map (<anonymous>)
+    at ChunksView (VisualRAGInterface.tsx:380:17)
+    at react-stack-bottom-frame (:3001/_next/static/c…9398a._.js:14911:24)
+    at renderWithHooks (:3001/_next/static/c…e9398a._.js:6201:24)
+    at updateFunctionComponent (:3001/_next/static/c…e9398a._.js:7543:21)
+    at beginWork (:3001/_next/static/c…e9398a._.js:8142:24)
+    at runWithFiberInDEV (:3001/_next/static/c…e9398a._.js:3073:74)
+    at performUnitOfWork (:3001/_next/static/c…9398a._.js:10243:97)
+    at workLoopSync (:3001/_next/static/c…9398a._.js:10135:40)
+    at renderRootSync (:3001/_next/static/c…9398a._.js:10118:13)
+    at performWorkOnRoot (:3001/_next/static/c…e9398a._.js:9877:56)
+    at performWorkOnRootViaSchedulerTask (:3001/_next/static/c…e9398a._.js:10826:9)
+    at MessagePort.performWorkUntilDeadline (:3001/_next/static/c…e9398a._.js:1982:64)
+
+The above error occurred in the <ChunksView> component. It was handled by the <ErrorBoundary> error boundary.
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+onCaughtError @ :3001/_next/static/c…_8f19e6fb._.js:1864
+logCaughtError @ :3001/_next/static/c…_2ce9398a._.js:7332
+runWithFiberInDEV @ :3001/_next/static/c…_2ce9398a._.js:3073
+inst.componentDidCatch.update.callback @ :3001/_next/static/c…_2ce9398a._.js:7373
+callCallback @ :3001/_next/static/c…_2ce9398a._.js:6081
+commitCallbacks @ :3001/_next/static/c…_2ce9398a._.js:6089
+runWithFiberInDEV @ :3001/_next/static/c…_2ce9398a._.js:3073
+commitClassCallbacks @ :3001/_next/static/c…_2ce9398a._.js:8683
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8992
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8984
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8984
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8984
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9020
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9020
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8984
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8984
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8984
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8984
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8997
+flushLayoutEffects @ :3001/_next/static/c…2ce9398a._.js:10469
+commitRoot @ :3001/_next/static/c…2ce9398a._.js:10391
+commitRootWhenReady @ :3001/_next/static/c…_2ce9398a._.js:9950
+performWorkOnRoot @ :3001/_next/static/c…_2ce9398a._.js:9928
+performWorkOnRootViaSchedulerTask @ :3001/_next/static/c…2ce9398a._.js:10826
+performWorkUntilDeadline @ :3001/_next/static/c…_2ce9398a._.js:1982
+<ChunksView>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+VisualRAGInterface @ VisualRAGInterface.tsx:281
+react-stack-bottom-frame @ :3001/_next/static/c…2ce9398a._.js:14911
+renderWithHooksAgain @ :3001/_next/static/c…_2ce9398a._.js:6256
+renderWithHooks @ :3001/_next/static/c…_2ce9398a._.js:6207
+updateFunctionComponent @ :3001/_next/static/c…_2ce9398a._.js:7543
+beginWork @ :3001/_next/static/c…_2ce9398a._.js:8142
+runWithFiberInDEV @ :3001/_next/static/c…_2ce9398a._.js:3073
+performUnitOfWork @ :3001/_next/static/c…2ce9398a._.js:10243
+workLoopSync @ :3001/_next/static/c…2ce9398a._.js:10135
+renderRootSync @ :3001/_next/static/c…2ce9398a._.js:10118
+performWorkOnRoot @ :3001/_next/static/c…_2ce9398a._.js:9877
+performWorkOnRootViaSchedulerTask @ :3001/_next/static/c…2ce9398a._.js:10826
+performWorkUntilDeadline @ :3001/_next/static/c…_2ce9398a._.js:1982
+<VisualRAGInterface>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+ChatMain @ ChatMain.tsx:360
+react-stack-bottom-frame @ :3001/_next/static/c…2ce9398a._.js:14911
+renderWithHooksAgain @ :3001/_next/static/c…_2ce9398a._.js:6256
+renderWithHooks @ :3001/_next/static/c…_2ce9398a._.js:6207
+updateFunctionComponent @ :3001/_next/static/c…_2ce9398a._.js:7543
+beginWork @ :3001/_next/static/c…_2ce9398a._.js:8142
+runWithFiberInDEV @ :3001/_next/static/c…_2ce9398a._.js:3073
+performUnitOfWork @ :3001/_next/static/c…2ce9398a._.js:10243
+workLoopSync @ :3001/_next/static/c…2ce9398a._.js:10135
+renderRootSync @ :3001/_next/static/c…2ce9398a._.js:10118
+performWorkOnRoot @ :3001/_next/static/c…_2ce9398a._.js:9853
+performSyncWorkOnRoot @ :3001/_next/static/c…2ce9398a._.js:10834
+flushSyncWorkAcrossRoots_impl @ :3001/_next/static/c…2ce9398a._.js:10754
+processRootScheduleInMicrotask @ :3001/_next/static/c…2ce9398a._.js:10774
+(anonymous) @ :3001/_next/static/c…2ce9398a._.js:10845
+ ErrorBoundary caught an error: ReferenceError: getChunkTypeIcon is not defined
+    at VisualRAGInterface.tsx:395:44
+    at Array.map (<anonymous>)
+    at ChunksView (VisualRAGInterface.tsx:380:17)
+    at react-stack-bottom-frame (:3001/_next/static/c…9398a._.js:14911:24)
+    at renderWithHooks (:3001/_next/static/c…e9398a._.js:6201:24)
+    at updateFunctionComponent (:3001/_next/static/c…e9398a._.js:7543:21)
+    at beginWork (:3001/_next/static/c…e9398a._.js:8142:24)
+    at runWithFiberInDEV (:3001/_next/static/c…e9398a._.js:3073:74)
+    at performUnitOfWork (:3001/_next/static/c…9398a._.js:10243:97)
+    at workLoopSync (:3001/_next/static/c…9398a._.js:10135:40)
+    at renderRootSync (:3001/_next/static/c…9398a._.js:10118:13)
+    at performWorkOnRoot (:3001/_next/static/c…e9398a._.js:9877:56)
+    at performWorkOnRootViaSchedulerTask (:3001/_next/static/c…e9398a._.js:10826:9)
+    at MessagePort.performWorkUntilDeadline (:3001/_next/static/c…e9398a._.js:1982:64) {componentStack: '\n    at ChunksView (http://localhost:3001/_next/st…_modules_next_dist_client_8f19e6fb._.js:19053:11)'}
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+error @ :3001/_next/static/c…_8f19e6fb._.js:1226
+componentDidCatch @ ErrorBoundary.tsx:26
+react-stack-bottom-frame @ :3001/_next/static/c…2ce9398a._.js:14945
+inst.componentDidCatch.update.callback @ :3001/_next/static/c…_2ce9398a._.js:7377
+callCallback @ :3001/_next/static/c…_2ce9398a._.js:6081
+commitCallbacks @ :3001/_next/static/c…_2ce9398a._.js:6089
+runWithFiberInDEV @ :3001/_next/static/c…_2ce9398a._.js:3073
+commitClassCallbacks @ :3001/_next/static/c…_2ce9398a._.js:8683
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8992
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8984
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8984
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8984
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9020
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9020
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8984
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8984
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8984
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8984
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8980
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9057
+recursivelyTraverseLayoutEffects @ :3001/_next/static/c…_2ce9398a._.js:9451
+commitLayoutEffectOnFiber @ :3001/_next/static/c…_2ce9398a._.js:8997
+flushLayoutEffects @ :3001/_next/static/c…2ce9398a._.js:10469
+commitRoot @ :3001/_next/static/c…2ce9398a._.js:10391
+commitRootWhenReady @ :3001/_next/static/c…_2ce9398a._.js:9950
+performWorkOnRoot @ :3001/_next/static/c…_2ce9398a._.js:9928
+performWorkOnRootViaSchedulerTask @ :3001/_next/static/c…2ce9398a._.js:10826
+performWorkUntilDeadline @ :3001/_next/static/c…_2ce9398a._.js:1982
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/conversations?select=*&id=eq.collab-test-mbr7wz54 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+ Error loading conversation: {code: '22P02', details: null, hint: null, message: 'invalid input syntax for type uuid: "collab-test-mbr7wz54"'}
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+error @ :3001/_next/static/c…_8f19e6fb._.js:1226
+useRealtimeChat.useEffect.loadInitialData @ useRealtimeChat.ts:40
+await in useRealtimeChat.useEffect.loadInitialData
+useRealtimeChat.useEffect @ useRealtimeChat.ts:66
+react-stack-bottom-frame @ :3001/_next/static/c…2ce9398a._.js:14961
+runWithFiberInDEV @ :3001/_next/static/c…_2ce9398a._.js:3073
+commitHookEffectListMount @ :3001/_next/static/c…_2ce9398a._.js:8637
+commitHookPassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:8672
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9578
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9610
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9603
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9581
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9581
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9581
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9581
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9581
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9581
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9581
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9581
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9585
+flushPassiveEffects @ :3001/_next/static/c…2ce9398a._.js:10582
+(anonymous) @ :3001/_next/static/c…2ce9398a._.js:10371
+performWorkUntilDeadline @ :3001/_next/static/c…_2ce9398a._.js:1982
+<ChatMain>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+ChatInterface @ ChatInterface.tsx:206
+react-stack-bottom-frame @ :3001/_next/static/c…2ce9398a._.js:14911
+renderWithHooksAgain @ :3001/_next/static/c…_2ce9398a._.js:6256
+renderWithHooks @ :3001/_next/static/c…_2ce9398a._.js:6207
+updateFunctionComponent @ :3001/_next/static/c…_2ce9398a._.js:7543
+beginWork @ :3001/_next/static/c…_2ce9398a._.js:8142
+runWithFiberInDEV @ :3001/_next/static/c…_2ce9398a._.js:3073
+performUnitOfWork @ :3001/_next/static/c…2ce9398a._.js:10243
+workLoopSync @ :3001/_next/static/c…2ce9398a._.js:10135
+renderRootSync @ :3001/_next/static/c…2ce9398a._.js:10118
+performWorkOnRoot @ :3001/_next/static/c…_2ce9398a._.js:9853
+performWorkOnRootViaSchedulerTask @ :3001/_next/static/c…2ce9398a._.js:10826
+performWorkUntilDeadline @ :3001/_next/static/c…_2ce9398a._.js:1982
+<ChatInterface>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+HomeContent @ page.tsx:14
+react-stack-bottom-frame @ :3001/_next/static/c…2ce9398a._.js:14911
+renderWithHooksAgain @ :3001/_next/static/c…_2ce9398a._.js:6256
+renderWithHooks @ :3001/_next/static/c…_2ce9398a._.js:6207
+updateFunctionComponent @ :3001/_next/static/c…_2ce9398a._.js:7543
+beginWork @ :3001/_next/static/c…_2ce9398a._.js:8142
+runWithFiberInDEV @ :3001/_next/static/c…_2ce9398a._.js:3073
+performUnitOfWork @ :3001/_next/static/c…2ce9398a._.js:10243
+workLoopSync @ :3001/_next/static/c…2ce9398a._.js:10135
+renderRootSync @ :3001/_next/static/c…2ce9398a._.js:10118
+performWorkOnRoot @ :3001/_next/static/c…_2ce9398a._.js:9853
+performWorkOnRootViaSchedulerTask @ :3001/_next/static/c…2ce9398a._.js:10826
+performWorkUntilDeadline @ :3001/_next/static/c…_2ce9398a._.js:1982
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/conversations?select=*&id=eq.collab-test-mbr7wz54 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+ Error loading conversation: {code: '22P02', details: null, hint: null, message: 'invalid input syntax for type uuid: "collab-test-mbr7wz54"'}
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+error @ :3001/_next/static/c…_8f19e6fb._.js:1226
+useRealtimeChat.useEffect.loadInitialData @ useRealtimeChat.ts:40
+await in useRealtimeChat.useEffect.loadInitialData
+useRealtimeChat.useEffect @ useRealtimeChat.ts:66
+react-stack-bottom-frame @ :3001/_next/static/c…2ce9398a._.js:14961
+runWithFiberInDEV @ :3001/_next/static/c…_2ce9398a._.js:3073
+commitHookEffectListMount @ :3001/_next/static/c…_2ce9398a._.js:8637
+commitHookPassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:8672
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9578
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9610
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9603
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9581
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9581
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9581
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9581
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9581
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9581
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9581
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9581
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9577
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9618
+recursivelyTraversePassiveMountEffects @ :3001/_next/static/c…_2ce9398a._.js:9569
+commitPassiveMountOnFiber @ :3001/_next/static/c…_2ce9398a._.js:9585
+flushPassiveEffects @ :3001/_next/static/c…2ce9398a._.js:10582
+(anonymous) @ :3001/_next/static/c…2ce9398a._.js:10371
+performWorkUntilDeadline @ :3001/_next/static/c…_2ce9398a._.js:1982
+<ChatInterface>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+HomeContent @ page.tsx:14
+react-stack-bottom-frame @ :3001/_next/static/c…2ce9398a._.js:14911
+renderWithHooksAgain @ :3001/_next/static/c…_2ce9398a._.js:6256
+renderWithHooks @ :3001/_next/static/c…_2ce9398a._.js:6207
+updateFunctionComponent @ :3001/_next/static/c…_2ce9398a._.js:7543
+beginWork @ :3001/_next/static/c…_2ce9398a._.js:8142
+runWithFiberInDEV @ :3001/_next/static/c…_2ce9398a._.js:3073
+performUnitOfWork @ :3001/_next/static/c…2ce9398a._.js:10243
+workLoopSync @ :3001/_next/static/c…2ce9398a._.js:10135
+renderRootSync @ :3001/_next/static/c…2ce9398a._.js:10118
+performWorkOnRoot @ :3001/_next/static/c…_2ce9398a._.js:9853
+performWorkOnRootViaSchedulerTask @ :3001/_next/static/c…2ce9398a._.js:10826
+performWorkUntilDeadline @ :3001/_next/static/c…_2ce9398a._.js:1982
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages?select=*&conversation_id=eq.collab-test-mbr7wz54&order=created_at.asc 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages?select=*&conversation_id=eq.collab-test-mbr7wz54&order=created_at.asc 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages?select=*&conversation_id=eq.collab-test-mbr7wz54&order=created_at.asc 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages?select=*&conversation_id=eq.collab-test-mbr7wz54&order=created_at.asc 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages?select=*&conversation_id=eq.collab-test-mbr7wz54&order=created_at.asc 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages?select=*&conversation_id=eq.collab-test-mbr7wz54&order=created_at.asc 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages?select=*&conversation_id=eq.collab-test-mbr7wz54&order=created_at.asc 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages?select=*&conversation_id=eq.collab-test-mbr7wz54&order=created_at.asc 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages?select=*&conversation_id=eq.collab-test-mbr7wz54&order=created_at.asc 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages?select=*&conversation_id=eq.collab-test-mbr7wz54&order=created_at.asc 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages?select=*&conversation_id=eq.collab-test-mbr7wz54&order=created_at.asc 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages?select=*&conversation_id=eq.collab-test-mbr7wz54&order=created_at.asc 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages?select=*&conversation_id=eq.collab-test-mbr7wz54&order=created_at.asc 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages?select=*&conversation_id=eq.collab-test-mbr7wz54&order=created_at.asc 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages?select=*&conversation_id=eq.collab-test-mbr7wz54&order=created_at.asc 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101
+fetch.ts:15 
+            
+            
+           GET https://nhadlfbxbivlhtkbolve.supabase.co/rest/v1/messages?select=*&conversation_id=eq.collab-test-mbr7wz54&order=created_at.asc 400 (Bad Request)
+(anonymous) @ fetch.ts:15
+(anonymous) @ fetch.ts:46
+fulfilled @ fetch.ts:2
+Promise.then
+step @ fetch.ts:2
+(anonymous) @ fetch.ts:2
+push.[project]/node_modules/@supabase/supabase-js/dist/module/lib/fetch.js [app-client] (ecmascript).__awaiter @ fetch.ts:2
+(anonymous) @ fetch.ts:34
+then @ PostgrestBuilder.ts:101

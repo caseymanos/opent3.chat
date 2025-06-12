@@ -15,7 +15,6 @@ export default function TestMarkdown() {
       role: 'user',
       content: { text: 'Show me a JavaScript function that calculates fibonacci numbers' },
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
       model_metadata: null,
       attachments: null,
       branch_index: 0
@@ -78,7 +77,6 @@ const fibMemo = (() => {
 - Memoized: O(n)`
       },
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
       model_metadata: { model: 'gpt-4' },
       attachments: null,
       branch_index: 0
@@ -90,7 +88,6 @@ const fibMemo = (() => {
       role: 'user',
       content: { text: 'Can you show me a Python version with type hints?' },
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
       model_metadata: null,
       attachments: null,
       branch_index: 0
@@ -189,7 +186,6 @@ def fibonacci_cached(n: int) -> int:
 This approach is clean and efficient!`
       },
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
       model_metadata: { model: 'claude-3-sonnet' },
       attachments: null,
       branch_index: 0

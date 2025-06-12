@@ -5,9 +5,12 @@ import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import rehypeHighlight from 'rehype-highlight'
 import { XMarkIcon } from '@heroicons/react/24/outline'
-import ChainOfThought from './ChainOfThought'
+import EnhancedChainOfThought from './EnhancedChainOfThought'
 import MessageActions from './MessageActions'
 import { extractReasoning } from '@/lib/reasoning'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'
+import { ScrollArea } from './ui/ScrollArea'
+import { cn } from '@/lib/utils'
 import type { Database } from '@/lib/supabase'
 import type { Message as AIMessage } from 'ai'
 
@@ -228,7 +231,8 @@ function MessageBubble({ message, onCreateBranch }: MessageBubbleProps) {
                     </div>
                   )
                 },
-                code: ({ inline, className, children, ...props }) => {
+                code: ({ className, children, ...props }: any) => {
+                  const inline = !className?.includes('language-')
                   if (inline) {
                     return (
                       <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-sm" {...props}>
@@ -297,88 +301,48 @@ function MessageBubble({ message, onCreateBranch }: MessageBubbleProps) {
         )}
       </div>
 
-      {/* Chain of Thought Component */}
+      {/* Enhanced Chain of Thought Component */}
       {isAssistant && reasoningData && reasoningData.reasoning.length > 0 && showReasoning && (
         <motion.div
           initial={{ opacity: 0, x: 300 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 300 }}
           transition={{ duration: 0.3, type: "spring", damping: 25 }}
-          className="fixed top-20 right-4 bottom-20 w-80 z-40 overflow-y-auto"
-          style={{ maxHeight: 'calc(100vh - 10rem)' }}
+          className="fixed top-20 right-4 bottom-20 w-96 z-40 overflow-hidden"
+          style={{ 
+            maxHeight: 'calc(100vh - 10rem)',
+            width: 'min(384px, calc(100vw - 2rem))'
+          }}
         >
-          <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xl h-full">
-            <div className="p-4 border-b border-slate-200 dark:border-slate-700">
+          <Card className="h-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-slate-200 dark:border-slate-700 shadow-2xl">
+            <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                  Chain of Thought
-                </h3>
+                <CardTitle className="text-sm font-semibold">
+                  Enhanced Chain of Thought
+                </CardTitle>
                 <button
                   onClick={() => setShowReasoning(false)}
-                  className="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                  className="p-1 rounded-lg hover:bg-accent transition-colors"
                 >
                   <XMarkIcon className="w-4 h-4" />
                 </button>
               </div>
-            </div>
-            <div className="p-4 h-full overflow-y-auto">
-              <div className="space-y-3">
-                {reasoningData.reasoning.map((step, index) => (
-                  <div key={index} className="relative">
-                    {/* Connector Line */}
-                    {index < reasoningData.reasoning.length - 1 && (
-                      <div className="absolute left-6 top-12 w-0.5 h-6 bg-gradient-to-b from-slate-300 to-transparent dark:from-slate-600" />
-                    )}
-
-                    <div className="flex items-start gap-4">
-                      {/* Step Number & Icon */}
-                      <div className="flex-shrink-0 relative">
-                        <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${
-                          step.type === 'analysis' ? 'from-blue-500 to-blue-600' :
-                          step.type === 'reasoning' ? 'from-purple-500 to-purple-600' :
-                          step.type === 'conclusion' ? 'from-green-500 to-green-600' :
-                          'from-orange-500 to-orange-600'
-                        } flex items-center justify-center shadow-sm`}>
-                          <span className="text-white text-sm font-medium">
-                            {index + 1}
-                          </span>
-                        </div>
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center text-xs border-2 border-white dark:border-slate-800">
-                          {step.type === 'analysis' ? '🔍' : 
-                           step.type === 'reasoning' ? '🧠' : 
-                           step.type === 'conclusion' ? '💡' : '✅'}
-                        </div>
-                      </div>
-
-                      {/* Step Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700 shadow-sm">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-xs font-medium px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 capitalize">
-                              {step.type}
-                            </span>
-                            {step.confidence && (
-                              <span className="text-xs px-2 py-1 rounded-full bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300">
-                                {(step.confidence * 100).toFixed(0)}% confidence
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                            {step.thought}
-                          </p>
-                          {step.duration && (
-                            <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                              Processing time: {step.duration}ms
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ScrollArea className="h-full">
+                <div className="p-4">
+                  <EnhancedChainOfThought
+                    reasoning={reasoningData.reasoning}
+                    isVisible={true}
+                    autoPlay={true}
+                    showMetrics={true}
+                    enableVoice={false}
+                    theme="neural"
+                  />
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
         </motion.div>
       )}
     </motion.div>

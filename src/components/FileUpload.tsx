@@ -81,7 +81,12 @@ export default function FileUpload({
   }, [selectedModel, selectedProvider])
 
   const processFile = useCallback(async (file: File): Promise<UploadedFile> => {
-    const fileId = `${Date.now()}-${Math.random()}-${file.name}`
+    // Generate a proper UUID v4 for Supabase compatibility
+    const fileId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0
+      const v = c == 'x' ? r : (r & 0x3 | 0x8)
+      return v.toString(16)
+    })
     const uploadedFile: UploadedFile = {
       id: fileId,
       file,
@@ -128,6 +133,26 @@ export default function FileUpload({
       )
 
       onFileAnalyzed?.(fileId, analysis)
+      
+      // Save analysis to database if conversationId is provided
+      if (conversationId && saveFileSummary) {
+        await saveFileSummary(fileId, analysis?.content || analysis?.summary || '', {
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size,
+          model: selectedModel,
+          provider: selectedProvider,
+          analysisDate: new Date().toISOString()
+        })
+      }
+
+      onAnalysisComplete?.(analysis?.summary || analysis?.content || '', {
+        id: fileId,
+        name: file.name,
+        type: file.type,
+        size: file.size
+      })
+
       onFilesUploaded?.([completedFile])
       return completedFile
 
