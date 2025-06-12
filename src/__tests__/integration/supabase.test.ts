@@ -20,7 +20,7 @@ describe('Supabase Integration Tests', () => {
     
     // Verify connection
     const { data, error } = await supabase.from('profiles').select('count').limit(1)
-    if (error && !error.message.includes('JWT')) {
+    if (error && !error.message?.includes('JWT')) {
       throw new Error(`Failed to connect to Supabase: ${error.message}`)
     }
   })

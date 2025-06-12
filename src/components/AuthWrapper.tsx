@@ -73,7 +73,7 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
         password: demoPassword
       })
       
-      if (error && error.message.includes('Invalid login credentials')) {
+      if (error && error.message?.includes('Invalid login credentials')) {
         const signUpResult = await supabase.auth.signUp({
           email: demoEmail,
           password: demoPassword,

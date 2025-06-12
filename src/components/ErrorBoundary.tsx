@@ -26,8 +26,8 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     console.error('ErrorBoundary caught an error:', error, errorInfo)
     
     // Check if this is a subscription error
-    if (error.message.includes('subscribe multiple times') || 
-        error.message.includes('channel instance')) {
+    if (error.message?.includes('subscribe multiple times') || 
+        error.message?.includes('channel instance')) {
       console.error('🔌 Subscription error detected, suggesting page refresh')
     }
   }
