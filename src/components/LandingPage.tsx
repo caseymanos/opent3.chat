@@ -36,13 +36,11 @@ export default function LandingPage() {
         router.push(`/chat/${data.id}`)
       } else {
         console.error('❌ [LandingPage] Failed to create conversation:', error)
-        // Fallback to main page
-        router.push('/?conversationId=new')
+        alert('Failed to create conversation. Please try again.')
       }
     } catch (error) {
       console.error('❌ [LandingPage] Error creating conversation:', error)
-      // Fallback to main page
-      router.push('/?conversationId=new')
+      alert('Error creating conversation. Please check your connection and try again.')
     }
   }
 

@@ -89,9 +89,12 @@ export function useRealtimeChat(conversationId: string) {
 
     console.log('🔌 [useRealtimeChat] Setting up real-time subscription for conversation:', conversationId)
     
+    // Create a unique channel name with timestamp to avoid conflicts
+    const channelName = `conversation:${conversationId}:${Date.now()}`
+    
     // Set up real-time subscription for new messages
     const channel = supabase
-      .channel(`conversation:${conversationId}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -185,7 +188,12 @@ export function useRealtimeChat(conversationId: string) {
     // Cleanup function
     return () => {
       console.log('🔌 [useRealtimeChat] Cleaning up subscription for:', conversationId)
-      supabase.removeChannel(channel)
+      try {
+        supabase.removeChannel(channel)
+        console.log('🔌 [useRealtimeChat] Subscription status:', channel.state)
+      } catch (error) {
+        console.warn('⚠️ [useRealtimeChat] Error cleaning up channel:', error)
+      }
     }
   }, [conversationId, supabase])
 

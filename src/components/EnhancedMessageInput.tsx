@@ -213,6 +213,7 @@ export default function EnhancedMessageInput({
             </div>
             
             <FileUpload
+              conversationId=""
               onFilesUploaded={handleFilesUploaded}
               onFileAnalyzed={handleFileAnalyzed}
               maxFiles={5}

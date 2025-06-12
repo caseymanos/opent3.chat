@@ -472,7 +472,7 @@ export default function FileUpload({
       </div>
 
       {/* Drop Zone */}
-      <motion.div
+      <div
         {...getRootProps()}
         className={`
           border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all
@@ -482,9 +482,12 @@ export default function FileUpload({
           }
           ${isAnalyzing ? 'pointer-events-none opacity-50' : ''}
         `}
-        whileHover={{ scale: isAnalyzing ? 1 : 1.02 }}
-        whileTap={{ scale: isAnalyzing ? 1 : 0.98 }}
       >
+        <motion.div
+          whileHover={{ scale: isAnalyzing ? 1 : 1.02 }}
+          whileTap={{ scale: isAnalyzing ? 1 : 0.98 }}
+          className="w-full h-full"
+        >
         <input {...getInputProps()} />
         
         <motion.div
@@ -513,7 +516,8 @@ export default function FileUpload({
             <DocumentIcon className="w-5 h-5" />
           </div>
         </motion.div>
-      </motion.div>
+        </motion.div>
+      </div>
 
       {/* Analysis Result */}
       {analysisResult && (

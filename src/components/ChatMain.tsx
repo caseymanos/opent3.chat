@@ -45,17 +45,6 @@ export default function ChatMain({
   const [showBranchNavigator, setShowBranchNavigator] = useState(false)
   const [activeBranchId, setActiveBranchId] = useState<string | undefined>()
   
-<<<<<<< HEAD
-  // Tab state for side panels
-  const [activeTab, setActiveTab] = useState<'chat' | 'files' | 'summaries'>('chat')
-  
-  // Collaborative state
-  const [showInviteModal, setShowInviteModal] = useState(false)
-  
-  // Collaborative features
-  const { updateTyping, isCollaborative } = useCollaborativeChat(conversationId)
-=======
-  
   // Collaborative features
   const { 
     updateTyping, 
@@ -65,7 +54,9 @@ export default function ChatMain({
   
   // Tab state for side panels
   const [activeTab, setActiveTab] = useState<'chat' | 'files' | 'summaries'>('chat')
->>>>>>> 7a1ce38 (Fix middleware blocking public files and improve service worker caching)
+  
+  // Collaborative state
+  const [showInviteModal, setShowInviteModal] = useState(false)
 
 
   // Use AI chat hook for streaming responses
@@ -307,19 +298,6 @@ export default function ChatMain({
                 📄 Files
               </button>
               {activeTab === 'chat' && (
-<<<<<<< HEAD
-                <button
-                  onClick={() => setShowBranchNavigator(!showBranchNavigator)}
-                  className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                    showBranchNavigator
-                      ? 'bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-orange-50 dark:hover:bg-orange-900/30'
-                  }`}
-                  title="Toggle conversation tree"
-                >
-                  🌿 Tree
-                </button>
-=======
                 <>
                   <button
                     onClick={() => setShowBranchNavigator(!showBranchNavigator)}
@@ -341,7 +319,6 @@ export default function ChatMain({
                     Test Collab
                   </button>
                 </>
->>>>>>> 7a1ce38 (Fix middleware blocking public files and improve service worker caching)
               )}
               <button
                 onClick={() => setShowInviteModal(true)}

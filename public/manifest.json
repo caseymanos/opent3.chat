@@ -108,7 +108,7 @@
   "prefer_related_applications": false,
   "protocol_handlers": [
     {
-      "protocol": "web+t3crusher",
+      "protocol": "web+t3crusherchat",
       "url": "/share?url=%s"
     }
   ],

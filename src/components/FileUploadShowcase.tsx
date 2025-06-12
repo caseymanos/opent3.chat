@@ -149,6 +149,7 @@ export default function FileUploadShowcase() {
           </div>
 
           <FileUpload
+            conversationId=""
             onFilesUploaded={handleFilesUploaded}
             onFileAnalyzed={handleFileAnalyzed}
             maxFiles={5}
