@@ -214,7 +214,7 @@ class VisualRAGProcessor {
     
     let fullText = ''
     const layoutElements: any[] = []
-    let elementIndex = 0
+    const elementIndex = 0
     
     for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
       const page = await pdf.getPage(pageNum)

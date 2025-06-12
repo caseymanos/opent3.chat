@@ -136,6 +136,7 @@ export default function CostTracker({ conversationId, className = '' }: CostTrac
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     Cost tracking will be implemented in a future update to monitor token usage and API costs.
                   </p>
+                </div>
               </div>
             </motion.div>
           </>

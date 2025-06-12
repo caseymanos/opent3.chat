@@ -362,7 +362,7 @@ export function useRealtimeChat(conversationId: string) {
       }
 
       let totalDeleted = 0
-      let errors = []
+      const errors = []
 
       // Delete related records in batches first
       for (const batch of batches) {

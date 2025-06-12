@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     // Check content type to handle both JSON and FormData
     const contentType = req.headers.get('content-type') || ''
     let body: any = {}
-    let attachedFiles: File[] = []
+    const attachedFiles: File[] = []
     
     if (contentType.includes('multipart/form-data')) {
       // Handle FormData (with file attachments)

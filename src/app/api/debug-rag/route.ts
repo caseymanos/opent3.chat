@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     const stats = unifiedRAG.getStats()
     const allDocs = unifiedRAG.getAllDocuments()
     
-    let debugInfo: any = {
+    const debugInfo: any = {
       stats,
       documents: allDocs.map(doc => ({
         id: doc.id,
