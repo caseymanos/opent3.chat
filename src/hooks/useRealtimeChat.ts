@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { createClientComponentClient } from '@/lib/supabase'
 import { logger } from '@/lib/logger'
+import { LocalStorageFallback } from '@/lib/local-storage-fallback'
 import type { Database } from '@/lib/supabase'
 
 type Message = Database['public']['Tables']['messages']['Row']
@@ -14,6 +15,7 @@ export function useRealtimeChat(conversationId: string) {
   const [conversation, setConversation] = useState<Conversation | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isTyping, setIsTyping] = useState(false)
+  const [useLocalFallback, setUseLocalFallback] = useState(false)
   
   // Disable real-time in production until RLS is fixed
   const isProduction = typeof window !== 'undefined' && 
@@ -392,20 +394,6 @@ export function useRealtimeChat(conversationId: string) {
           userId = crypto.randomUUID()
           sessionStorage.setItem('t3-crusher-session-id', userId)
         }
-        
-        // Ensure profile exists for session user
-        try {
-          await supabase
-            .from('profiles')
-            .upsert({
-              id: userId,
-              username: `User-${userId.slice(0, 8)}`,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
-        } catch (profileError) {
-          console.warn('Could not ensure profile exists:', profileError)
-        }
       }
 
       // Get all user conversations
@@ -621,22 +609,7 @@ export function useRealtimeChat(conversationId: string) {
       if (!user) {
         logger.info('No authenticated user, using demo mode with UUID:', userId)
         
-        // First ensure the profile exists for this session user
-        try {
-          await supabase
-            .from('profiles')
-            .upsert({
-              id: userId,
-              username: `User-${userId.slice(0, 8)}`,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
-            .select()
-            .single()
-        } catch (profileError) {
-          logger.warn('Could not create profile, continuing anyway:', profileError)
-        }
-        
+        // Skip profile creation - just try to create conversation
         const { data, error } = await supabase
           .from('conversations')
           .insert({
@@ -650,10 +623,10 @@ export function useRealtimeChat(conversationId: string) {
 
         if (error) {
           logger.error('Error creating conversation without auth:', error)
-          // Create a mock conversation for development with proper UUID format
+          // Always return a mock conversation on any error
           const timestamp = Date.now().toString(16).padStart(12, '0').slice(-12)
           const mockId = `00000000-0000-4000-8000-${timestamp}`
-          return {
+          const mockConversation = {
             id: mockId,
             title: title || 'New Conversation',
             user_id: userId,
@@ -663,6 +636,18 @@ export function useRealtimeChat(conversationId: string) {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           }
+          
+          // Store in localStorage as backup
+          try {
+            const stored = localStorage.getItem('t3-crusher-conversations') || '[]'
+            const conversations = JSON.parse(stored)
+            conversations.push(mockConversation)
+            localStorage.setItem('t3-crusher-conversations', JSON.stringify(conversations))
+          } catch (e) {
+            console.warn('Could not store conversation locally:', e)
+          }
+          
+          return mockConversation
         }
 
         return data

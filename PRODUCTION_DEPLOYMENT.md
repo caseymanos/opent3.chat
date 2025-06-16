@@ -13,9 +13,15 @@ Run these SQL scripts in your Supabase SQL Editor in order:
 -- 1. First apply the base schema
 -- Run the contents of: supabase/schema.sql
 
--- 2. Then apply the production auth fixes
--- Run the contents of: supabase/fix-production-auth.sql
+-- 2. Then remove all constraints for demo mode
+-- Run the contents of: supabase/remove-all-constraints.sql
 ```
+
+**IMPORTANT**: The `remove-all-constraints.sql` script:
+- Drops ALL foreign key constraints
+- Disables Row Level Security completely
+- Grants full access to anonymous users
+- This is ONLY for hackathon/demo purposes!
 
 ### 2. Important: The production auth fix removes foreign key constraints
 This allows session-based users to work without requiring profiles upfront.
