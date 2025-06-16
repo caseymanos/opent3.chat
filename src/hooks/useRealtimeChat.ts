@@ -24,7 +24,7 @@ export function useRealtimeChat(conversationId: string) {
     (window.location.hostname.includes('vercel.app') || 
      window.location.hostname.includes('t3-crusher') ||
      window.location.hostname !== 'localhost')
-  const ENABLE_REALTIME = !isProduction
+  const ENABLE_REALTIME = false
 
   // Helper function to validate UUID format
   const isValidUUID = (uuid: string) => {
@@ -119,6 +119,7 @@ export function useRealtimeChat(conversationId: string) {
     if (activeChannel) {
       console.log('🔌 [useRealtimeChat] Cleaning up previous active channel')
       try {
+        setActiveChannel(null)
         activeChannel.unsubscribe()
         supabase.removeChannel(activeChannel)
       } catch (error) {
@@ -248,16 +249,16 @@ export function useRealtimeChat(conversationId: string) {
       if (activeChannel) {
         console.log('🔌 [useRealtimeChat] Cleaning up subscription for:', conversationId)
         try {
+          setActiveChannel(null)
           activeChannel.unsubscribe()
           supabase.removeChannel(activeChannel)
-          setActiveChannel(null)
           console.log('🔌 [useRealtimeChat] Channel cleanup completed')
         } catch (error) {
           console.warn('⚠️ [useRealtimeChat] Error cleaning up channel:', error)
         }
       }
     }
-  }, [conversationId, conversation, supabase, activeChannel])
+  }, [conversationId, conversation, supabase, getSessionId])
 
   const sendMessage = useCallback(async (
     content: string, 
