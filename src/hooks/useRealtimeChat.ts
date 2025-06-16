@@ -14,6 +14,13 @@ export function useRealtimeChat(conversationId: string) {
   const [conversation, setConversation] = useState<Conversation | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isTyping, setIsTyping] = useState(false)
+  
+  // Disable real-time in production until RLS is fixed
+  const isProduction = typeof window !== 'undefined' && 
+    (window.location.hostname.includes('vercel.app') || 
+     window.location.hostname.includes('t3-crusher') ||
+     window.location.hostname !== 'localhost')
+  const ENABLE_REALTIME = !isProduction
 
   // Helper function to validate UUID format
   const isValidUUID = (uuid: string) => {
@@ -79,22 +86,63 @@ export function useRealtimeChat(conversationId: string) {
     loadInitialData()
   }, [conversationId, supabase])
 
+  // Store active channel reference
+  const [activeChannel, setActiveChannel] = useState<any>(null)
+
   // Enable real-time subscriptions for enhanced collaboration
   useEffect(() => {
+    // Skip real-time in production
+    if (!ENABLE_REALTIME) {
+      console.log('🔌 [useRealtimeChat] Real-time disabled in production')
+      return
+    }
+    
     // Only set up subscriptions for valid UUIDs, not empty strings or 'default'
     if (!conversationId || conversationId === '' || conversationId === 'default' || !isValidUUID(conversationId)) {
       console.log('🔌 [useRealtimeChat] Skipping subscription setup for invalid conversation ID:', conversationId)
       return
     }
 
+    // Don't create new subscription if conversation hasn't loaded yet
+    if (!conversation) {
+      console.log('🔌 [useRealtimeChat] Waiting for conversation to load before subscribing')
+      return
+    }
+
     console.log('🔌 [useRealtimeChat] Setting up real-time subscription for conversation:', conversationId)
     
-    // Create a unique channel name with timestamp to avoid conflicts
-    const channelName = `conversation:${conversationId}:${Date.now()}`
+    // Clean up any existing active channel first
+    if (activeChannel) {
+      console.log('🔌 [useRealtimeChat] Cleaning up previous active channel')
+      try {
+        activeChannel.unsubscribe()
+        supabase.removeChannel(activeChannel)
+      } catch (error) {
+        console.warn('⚠️ [useRealtimeChat] Error cleaning up previous channel:', error)
+      }
+    }
     
-    // Set up real-time subscription for new messages
-    const channel = supabase
-      .channel(channelName)
+    // Create a unique channel name without timestamp to allow proper cleanup
+    const channelName = `conversation:${conversationId}`
+    
+    // Remove any existing channels for this conversation
+    const existingChannels = supabase.getChannels()
+    existingChannels.forEach((ch: any) => {
+      if (ch.topic === channelName) {
+        console.log('🔌 [useRealtimeChat] Found existing channel, removing:', ch.topic)
+        try {
+          supabase.removeChannel(ch)
+        } catch (error) {
+          console.warn('⚠️ [useRealtimeChat] Error removing existing channel:', error)
+        }
+      }
+    })
+    
+    // Small delay to ensure cleanup completes
+    const setupTimeout = setTimeout(() => {
+      // Set up real-time subscription for new messages
+      const channel = supabase
+        .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -155,12 +203,17 @@ export function useRealtimeChat(conversationId: string) {
         console.log('🔌 [useRealtimeChat] Subscription status:', status)
         if (status === 'SUBSCRIBED') {
           console.log('✅ [useRealtimeChat] Successfully subscribed to real-time updates')
+          setActiveChannel(channel)
         } else if (status === 'CHANNEL_ERROR') {
           console.error('❌ [useRealtimeChat] Real-time subscription error, falling back to polling')
           // Fallback to polling if real-time fails
           setupPollingFallback()
         }
       })
+
+      // Store channel reference
+      setActiveChannel(channel)
+    }, 100) // Small delay to ensure cleanup
 
     // Polling fallback function
     const setupPollingFallback = () => {
@@ -187,15 +240,20 @@ export function useRealtimeChat(conversationId: string) {
 
     // Cleanup function
     return () => {
-      console.log('🔌 [useRealtimeChat] Cleaning up subscription for:', conversationId)
-      try {
-        supabase.removeChannel(channel)
-        console.log('🔌 [useRealtimeChat] Subscription status:', channel.state)
-      } catch (error) {
-        console.warn('⚠️ [useRealtimeChat] Error cleaning up channel:', error)
+      clearTimeout(setupTimeout)
+      if (activeChannel) {
+        console.log('🔌 [useRealtimeChat] Cleaning up subscription for:', conversationId)
+        try {
+          activeChannel.unsubscribe()
+          supabase.removeChannel(activeChannel)
+          setActiveChannel(null)
+          console.log('🔌 [useRealtimeChat] Channel cleanup completed')
+        } catch (error) {
+          console.warn('⚠️ [useRealtimeChat] Error cleaning up channel:', error)
+        }
       }
     }
-  }, [conversationId, supabase])
+  }, [conversationId, conversation, supabase, activeChannel])
 
   const sendMessage = useCallback(async (
     content: string, 
@@ -333,6 +391,20 @@ export function useRealtimeChat(conversationId: string) {
         if (!userId) {
           userId = crypto.randomUUID()
           sessionStorage.setItem('t3-crusher-session-id', userId)
+        }
+        
+        // Ensure profile exists for session user
+        try {
+          await supabase
+            .from('profiles')
+            .upsert({
+              id: userId,
+              username: `User-${userId.slice(0, 8)}`,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+        } catch (profileError) {
+          console.warn('Could not ensure profile exists:', profileError)
         }
       }
 
@@ -548,6 +620,22 @@ export function useRealtimeChat(conversationId: string) {
       
       if (!user) {
         logger.info('No authenticated user, using demo mode with UUID:', userId)
+        
+        // First ensure the profile exists for this session user
+        try {
+          await supabase
+            .from('profiles')
+            .upsert({
+              id: userId,
+              username: `User-${userId.slice(0, 8)}`,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .select()
+            .single()
+        } catch (profileError) {
+          logger.warn('Could not create profile, continuing anyway:', profileError)
+        }
         
         const { data, error } = await supabase
           .from('conversations')

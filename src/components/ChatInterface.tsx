@@ -28,13 +28,13 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
   const [selectedModel, setSelectedModel] = useState('claude-3-haiku-20240307')
   const [selectedProvider, setSelectedProvider] = useState('anthropic')
   
-  // Initialize with provided conversation ID
+  // Initialize with provided conversation ID only once
   useEffect(() => {
-    if (initialConversationId && initialConversationId !== currentConversationId) {
+    if (initialConversationId && !currentConversationId) {
       console.log('🔄 [ChatInterface] Setting initial conversation ID:', initialConversationId)
       setCurrentConversationId(initialConversationId)
     }
-  }, [initialConversationId, currentConversationId])
+  }, [initialConversationId]) // Remove currentConversationId from deps to prevent loops
 
   // Debug conversation ID changes
   useEffect(() => {
@@ -82,7 +82,7 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
       console.log('🔄 [ChatInterface] Creating initial conversation')
       handleNewConversation()
     }
-  }, [initialConversationId, currentConversationId, creatingConversation]) // Only run once on mount
+  }, []) // Empty deps to run only once on mount
   
   // Handle invalid conversation IDs
   if (initialConversationId === 'default' || currentConversationId === 'default') {
@@ -123,20 +123,30 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
   const handleClearAll = async () => {
     try {
       console.log('🗑️ [ChatInterface] Starting clear all conversations')
+      
+      // First clear the current conversation ID to trigger cleanup of subscriptions
+      const previousConversationId = currentConversationId
+      setCurrentConversationId('')
+      
+      // Wait for cleanup to happen
+      await new Promise(resolve => setTimeout(resolve, 200))
+      
+      // Now clear all conversations from database
       await clearAllConversations()
       console.log('✅ [ChatInterface] Clear all completed, refreshing UI')
-      
-      // First clear the current conversation to prevent using deleted conversation
-      setCurrentConversationId('')
       
       // Force sidebar refresh
       setSidebarKey(prev => prev + 1)
       
-      // Wait a bit before creating new conversation to avoid race conditions
-      setTimeout(() => {
-        console.log('🆕 [ChatInterface] Creating new conversation after clear all')
-        handleNewConversation()
-      }, 100)
+      // Create new conversation after ensuring cleanup is complete
+      // Use a longer delay to ensure all subscriptions are cleaned up
+      setTimeout(async () => {
+        // Only create new conversation if we actually cleared the current one
+        if (previousConversationId) {
+          console.log('🆕 [ChatInterface] Creating new conversation after clear all')
+          await handleNewConversation()
+        }
+      }, 500)
     } catch (error) {
       console.error('❌ [ChatInterface] Failed to clear conversations:', error)
       // Don't create new conversation if clear failed
