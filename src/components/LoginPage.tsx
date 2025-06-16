@@ -38,7 +38,7 @@ export default function LoginPage() {
         setError('Check your email to confirm your account!')
       } else {
         await signInWithEmail(email, password)
-        router.push('/chat')
+        router.push('/')
       }
     } catch (err: any) {
       setError(err.message || 'Authentication failed')
@@ -49,7 +49,7 @@ export default function LoginPage() {
   }
 
   const handleSkip = () => {
-    router.push('/chat')
+    router.push('/')
   }
 
   return (

@@ -11,3 +11,10 @@
  ✓ Compiled middleware in 82ms
  ✓ Ready in 800ms
  ✓ Compiled middleware in 3ms
+ ○ Compiling /login ...
+ ✓ Compiled /login in 1048ms
+ GET /login 200 in 1195ms
+ ✓ Compiled /_not-found/page in 251ms
+ GET /sw.js 404 in 287ms
+ GET /chat?code=2b168e31-014d-4d25-a058-da1633dd2065 404 in 38ms
+ GET /sw.js 404 in 48ms
