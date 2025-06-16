@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { createClientComponentClient } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
 import { logger } from '@/lib/logger'
 import { LocalStorageFallback } from '@/lib/local-storage-fallback'
 import type { Database } from '@/lib/supabase'
@@ -11,6 +12,7 @@ type Conversation = Database['public']['Tables']['conversations']['Row']
 
 export function useRealtimeChat(conversationId: string) {
   const supabase = createClientComponentClient()
+  const { getSessionId } = useAuth()
   const [messages, setMessages] = useState<Message[]>([])
   const [conversation, setConversation] = useState<Conversation | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -86,7 +88,7 @@ export function useRealtimeChat(conversationId: string) {
     }
 
     loadInitialData()
-  }, [conversationId, supabase])
+  }, [conversationId, supabase, getSessionId])
 
   // Store active channel reference
   const [activeChannel, setActiveChannel] = useState<any>(null)
@@ -305,24 +307,13 @@ export function useRealtimeChat(conversationId: string) {
       console.error('Error sending message:', error)
       throw error
     }
-  }, [conversationId, supabase])
+  }, [conversationId, supabase, getSessionId])
 
   const updateTypingStatus = useCallback(async (isTyping: boolean) => {
     if (!conversationId) return
 
     try {
-      // Get session-based user ID for anonymous users
-      let userId = sessionStorage.getItem('t3-crusher-session-id')
-      if (!userId) {
-        userId = crypto.randomUUID()
-        sessionStorage.setItem('t3-crusher-session-id', userId)
-      }
-      
-      // Try to get real user, but continue with session ID if not found
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        userId = user.id
-      }
+      const userId = getSessionId()
 
       const { error } = await supabase
         .from('chat_sessions')
@@ -339,7 +330,7 @@ export function useRealtimeChat(conversationId: string) {
     } catch (error) {
       console.error('Error updating typing status:', error)
     }
-  }, [conversationId, supabase])
+  }, [conversationId, supabase, getSessionId])
 
   const deleteConversation = useCallback(async (conversationId: string) => {
     try {
@@ -381,20 +372,11 @@ export function useRealtimeChat(conversationId: string) {
       console.error('Error in deleteConversation:', error)
       throw error
     }
-  }, [supabase])
+  }, [supabase, getSessionId])
 
   const clearAllConversations = useCallback(async () => {
     try {
-      // Get current user or session-based ID
-      const { data: { user } } = await supabase.auth.getUser()
-      let userId = user?.id
-      if (!userId) {
-        userId = sessionStorage.getItem('t3-crusher-session-id')
-        if (!userId) {
-          userId = crypto.randomUUID()
-          sessionStorage.setItem('t3-crusher-session-id', userId)
-        }
-      }
+      const userId = getSessionId()
 
       // Get all user conversations
       const { data: conversations, error: fetchError } = await supabase
@@ -493,7 +475,7 @@ export function useRealtimeChat(conversationId: string) {
       console.error('Error in clearAllConversations:', error)
       throw error
     }
-  }, [supabase])
+  }, [supabase, getSessionId])
 
   const saveFileSummary = useCallback(async (fileId: string, summary: string, metadata?: any) => {
     try {
@@ -518,7 +500,7 @@ export function useRealtimeChat(conversationId: string) {
       console.error('Error in saveFileSummary:', error)
       throw error
     }
-  }, [supabase])
+  }, [supabase, getSessionId])
 
   const getFileSummary = useCallback(async (fileId: string) => {
     try {
@@ -538,26 +520,15 @@ export function useRealtimeChat(conversationId: string) {
       console.error('Error in getFileSummary:', error)
       throw error
     }
-  }, [supabase])
+  }, [supabase, getSessionId])
 
   const createNewConversation = useCallback(async (title?: string, modelProvider?: string, modelName?: string) => {
     try {
       logger.group('createNewConversation')
       logger.info('Starting conversation creation', { title })
       
-      // First try to get the current user
-      const { data: { user } } = await supabase.auth.getUser()
-      logger.info('Auth check result:', { userId: user?.id, email: user?.email })
-      
-      // Get user ID or create session-based ID
-      let userId = user?.id
-      if (!userId) {
-        userId = sessionStorage.getItem('t3-crusher-session-id')
-        if (!userId) {
-          userId = crypto.randomUUID()
-          sessionStorage.setItem('t3-crusher-session-id', userId)
-        }
-      }
+      const userId = getSessionId()
+      logger.info('Using user ID:', userId)
       
       // Check if a conversation with the same title was just created (within last 5 seconds)
       // to prevent duplicates from double-clicks or race conditions
@@ -606,59 +577,12 @@ export function useRealtimeChat(conversationId: string) {
         console.warn('Auto-cleanup failed (non-critical):', cleanupError)
       }
       
-      if (!user) {
-        logger.info('No authenticated user, using demo mode with UUID:', userId)
-        
-        // Skip profile creation - just try to create conversation
-        const { data, error } = await supabase
-          .from('conversations')
-          .insert({
-            title: title || 'New Conversation',
-            user_id: userId,
-            model_provider: modelProvider || 'anthropic',
-            model_name: modelName || 'claude-3-haiku-20240307'
-          })
-          .select()
-          .single()
-
-        if (error) {
-          logger.error('Error creating conversation without auth:', error)
-          // Always return a mock conversation on any error
-          const timestamp = Date.now().toString(16).padStart(12, '0').slice(-12)
-          const mockId = `00000000-0000-4000-8000-${timestamp}`
-          const mockConversation = {
-            id: mockId,
-            title: title || 'New Conversation',
-            user_id: userId,
-            model_provider: modelProvider || 'anthropic',
-            model_name: modelName || 'claude-3-haiku-20240307',
-            system_prompt: null,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
-          
-          // Store in localStorage as backup
-          try {
-            const stored = localStorage.getItem('t3-crusher-conversations') || '[]'
-            const conversations = JSON.parse(stored)
-            conversations.push(mockConversation)
-            localStorage.setItem('t3-crusher-conversations', JSON.stringify(conversations))
-          } catch (e) {
-            console.warn('Could not store conversation locally:', e)
-          }
-          
-          return mockConversation
-        }
-
-        return data
-      }
-
-      // User is authenticated, create conversation
+      // Create conversation
       const { data, error } = await supabase
         .from('conversations')
         .insert({
           title: title || 'New Conversation',
-          user_id: user.id,
+          user_id: userId,
           model_provider: modelProvider || 'anthropic',
           model_name: modelName || 'claude-3-haiku-20240307'
         })
@@ -666,17 +590,41 @@ export function useRealtimeChat(conversationId: string) {
         .single()
 
       if (error) {
-        console.error('Error creating conversation:', error)
-        throw error
+        logger.error('Error creating conversation:', error)
+        // Always return a mock conversation on any error
+        const timestamp = Date.now().toString(16).padStart(12, '0').slice(-12)
+        const mockId = `00000000-0000-4000-8000-${timestamp}`
+        const mockConversation = {
+          id: mockId,
+          title: title || 'New Conversation',
+          user_id: userId,
+          model_provider: modelProvider || 'anthropic',
+          model_name: modelName || 'claude-3-haiku-20240307',
+          system_prompt: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+        
+        // Store in localStorage as backup
+        try {
+          const stored = localStorage.getItem('t3-crusher-conversations') || '[]'
+          const conversations = JSON.parse(stored)
+          conversations.push(mockConversation)
+          localStorage.setItem('t3-crusher-conversations', JSON.stringify(conversations))
+        } catch (e) {
+          console.warn('Could not store conversation locally:', e)
+        }
+        
+        return mockConversation
       }
 
-      console.log('Successfully created conversation:', data)
+      logger.info('Successfully created conversation:', data)
       return data
     } catch (error) {
       console.error('Error in createNewConversation:', error)
       throw error
     }
-  }, [supabase])
+  }, [supabase, getSessionId])
 
   return {
     messages,

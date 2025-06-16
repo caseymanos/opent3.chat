@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
 import { Button } from './ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'
 import { ScrollArea } from './ui/ScrollArea'
@@ -31,6 +32,7 @@ export default function ChatSidebar({
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [deletingConversation, setDeletingConversation] = useState<string | null>(null)
   const supabase = createClientComponentClient()
+  const { getSessionId } = useAuth()
 
   useEffect(() => {
     loadConversations()
@@ -53,9 +55,13 @@ export default function ChatSidebar({
 
   const loadConversations = async () => {
     try {
+      const userId = getSessionId()
+      console.log('🔍 [ChatSidebar] Loading conversations for user:', userId)
+      
       const { data, error } = await supabase
         .from('conversations')
         .select('*')
+        .eq('user_id', userId)
         .order('updated_at', { ascending: false })
 
       if (error) {
@@ -63,6 +69,7 @@ export default function ChatSidebar({
         return
       }
 
+      console.log(`📚 [ChatSidebar] Loaded ${data?.length || 0} conversations`)
       setConversations(data || [])
     } catch (error) {
       console.error('Error loading conversations:', error)
@@ -95,14 +102,23 @@ export default function ChatSidebar({
       await onClearAllConversations()
       console.log('✅ [ChatSidebar] Clear all completed successfully')
       
-      // Clear local state
-      setConversations([])
+      // Close the confirmation modal
       setShowClearConfirm(false)
+      
+      // Wait a moment for database operations to complete
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      // Reload conversations from database to ensure UI is in sync
+      console.log('🔄 [ChatSidebar] Reloading conversations after clear')
+      await loadConversations()
     } catch (error) {
       console.error('❌ [ChatSidebar] Failed to clear conversations:', error)
       // Don't clear local state if the operation failed
       // Keep the confirmation modal closed though
       setShowClearConfirm(false)
+      
+      // Still try to reload to ensure UI is in sync with database
+      await loadConversations()
       
       // Show error to user (you could add a toast notification here)
       console.warn('Clear all operation failed. Please try again.')

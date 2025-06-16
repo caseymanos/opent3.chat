@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useRealtimeChat } from '@/hooks/useRealtimeChat'
+import { useAuth } from '@/contexts/AuthContext'
 import ChatSidebar from './ChatSidebar'
 import ChatMain from './ChatMain'
 import { Button } from './ui/Button'
-import { PlusIcon } from '@heroicons/react/24/outline'
+import { PlusIcon, UserCircleIcon } from '@heroicons/react/24/outline'
+import { ArrowLeftStartOnRectangleIcon } from '@heroicons/react/24/outline'
 
 interface ChatInterfaceProps {
   initialConversationId?: string
@@ -14,6 +16,7 @@ interface ChatInterfaceProps {
 
 export default function ChatInterface({ initialConversationId }: ChatInterfaceProps) {
   const router = useRouter()
+  const { user, isAnonymous, signOut } = useAuth()
   const [currentConversationId, setCurrentConversationId] = useState<string>('')
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     // Start with sidebar closed on mobile
@@ -216,6 +219,45 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
           </div>
 
           <div className="flex items-center gap-2">
+            {/* User menu */}
+            <div className="flex items-center gap-2">
+              {user && (
+                <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800">
+                  <UserCircleIcon className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                  <span className="text-sm text-slate-700 dark:text-slate-300">
+                    {user.email?.split('@')[0] || 'User'}
+                  </span>
+                  {isAnonymous && (
+                    <span className="text-xs text-slate-500 dark:text-slate-400">(Guest)</span>
+                  )}
+                </div>
+              )}
+              
+              {!isAnonymous ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={async () => {
+                    await signOut()
+                    router.push('/login')
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowLeftStartOnRectangleIcon className="w-4 h-4" />
+                  Sign Out
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push('/login')}
+                  className="flex items-center gap-2"
+                >
+                  Sign In
+                </Button>
+              )}
+            </div>
+            
             <Button
               variant="outline"
               size="sm"
