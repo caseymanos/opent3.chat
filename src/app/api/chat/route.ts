@@ -300,8 +300,8 @@ export async function POST(req: Request) {
           system: "You are a helpful AI assistant. Provide comprehensive, detailed, and accurate responses. When users ask about topics, give thorough explanations with background information, examples, and practical details. Be informative and complete in your answers.",
           temperature: 0.7,
           maxTokens: 4000,
-          onError: ({ error }) => {
-            logError('🚨 [OPENROUTER STREAM ERROR]:', error?.message);
+          onError: (errorObj: any) => {
+            logError('🚨 [OPENROUTER STREAM ERROR]:', errorObj);
           }
         })
       } else if (provider === 'anthropic') {
@@ -321,8 +321,8 @@ export async function POST(req: Request) {
             system: "You are a helpful AI assistant. Provide comprehensive, detailed, and accurate responses. When users ask about topics, give thorough explanations with background information, examples, and practical details. Be informative and complete in your answers.",
             temperature: 0.7,
             maxTokens: 4000,
-            onError: ({ error }) => {
-              logError('🚨 [ANTHROPIC STREAM ERROR]:', error?.message);
+            onError: (errorObj: any) => {
+              logError('🚨 [ANTHROPIC STREAM ERROR]:', errorObj);
             }
           })
         } else {
@@ -345,8 +345,8 @@ export async function POST(req: Request) {
             system: "You are a helpful AI assistant. Provide comprehensive, detailed, and accurate responses. When users ask about topics, give thorough explanations with background information, examples, and practical details. Be informative and complete in your answers.",
             temperature: 0.7,
             maxTokens: 4000,
-            onError: ({ error }) => {
-              logError('🚨 [OPENAI STREAM ERROR]:', error?.message);
+            onError: (errorObj: any) => {
+              logError('🚨 [OPENAI STREAM ERROR]:', errorObj);
             }
           })
         } else {
@@ -368,8 +368,8 @@ export async function POST(req: Request) {
             system: "You are a helpful AI assistant. Provide comprehensive, detailed, and accurate responses. When users ask about topics, give thorough explanations with background information, examples, and practical details. Be informative and complete in your answers.",
             temperature: 0.7,
             maxTokens: 4000,
-            onError: ({ error }) => {
-              logError('🚨 [STREAM TEXT ERROR]:', error?.message);
+            onError: (errorObj: any) => {
+              logError('🚨 [STREAM TEXT ERROR]:', errorObj);
             }
           })
         } else {
@@ -397,7 +397,7 @@ export async function POST(req: Request) {
       
       try {
         const response = result.toDataStreamResponse({
-          getErrorMessage: (error) => {
+          getErrorMessage: (error: any) => {
             if (isDev) logError('🔍 [STREAM ERROR] Unmasked error:', error);
             if (isDev) logError('🔍 [STREAM ERROR] Error type:', typeof error);
             if (isDev) logError('🔍 [STREAM ERROR] Error details:', {

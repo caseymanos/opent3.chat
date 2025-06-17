@@ -13,30 +13,58 @@ export async function loadPDFJS() {
     return await pdfjsLibPromise // Loading in progress
   }
 
-  pdfjsLibPromise = new Promise(async (resolve, reject) => {
-    try {
-      console.log('🔄 [PDF.js] Loading PDF.js library...')
-      
-      // Load PDF.js dynamically
-      const pdfjs = await import('pdfjs-dist')
-      
-      // Set the worker source - use a reliable CDN
-      pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`
-
-      // Make it globally available
-      ;(window as any).pdfjsLib = pdfjs
-
-      console.log('✅ [PDF.js] PDF.js loaded successfully')
-      resolve(pdfjs)
-    } catch (error) {
-      console.error('❌ [PDF.js] Failed to load PDF.js:', error)
-      reject(error)
+  pdfjsLibPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script')
+    script.src = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js'
+    
+    script.onload = () => {
+      const pdfjs = (window as any).pdfjsLib
+      if (pdfjs) {
+        // Set the worker source
+        pdfjs.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js'
+        console.log('✅ [PDF.js] PDF.js loaded successfully from CDN')
+        resolve(pdfjs)
+      } else {
+        reject(new Error('PDF.js failed to load'))
+      }
     }
+    
+    script.onerror = () => {
+      console.error('❌ [PDF.js] Failed to load PDF.js from CDN')
+      reject(new Error('Failed to load PDF.js'))
+    }
+    
+    document.head.appendChild(script)
   })
 
-  return await pdfjsLibPromise
+  return pdfjsLibPromise
 }
 
-export function isPDFJSAvailable(): boolean {
-  return typeof window !== 'undefined' && !!(window as any).pdfjsLib
+export async function extractTextFromPDF(file: File): Promise<string> {
+  const pdfjsLib = await loadPDFJS()
+  
+  if (!pdfjsLib) {
+    throw new Error('PDF.js not available')
+  }
+
+  try {
+    const arrayBuffer = await file.arrayBuffer()
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+    
+    let fullText = ''
+    
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i)
+      const textContent = await page.getTextContent()
+      const pageText = textContent.items
+        .map((item: any) => item.str)
+        .join(' ')
+      fullText += pageText + '\n\n'
+    }
+    
+    return fullText.trim()
+  } catch (error) {
+    console.error('Error extracting text from PDF:', error)
+    throw error
+  }
 }
