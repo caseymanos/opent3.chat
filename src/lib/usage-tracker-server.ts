@@ -2,6 +2,10 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import type { Database } from '@/lib/supabase'
 
+const isDev = process.env.NODE_ENV === 'development'
+const log = isDev ? console.log : () => {}
+const logError = console.error // Always log errors
+
 export interface UserUsage {
   premiumCalls: number
   lastReset: string
@@ -21,7 +25,7 @@ const RESET_INTERVAL_DAYS = 30
 export class ServerUsageTracker {
   private supabase: ReturnType<typeof createServerComponentClient<Database>>
   private usageCache: Map<string, { data: UserUsage; timestamp: number }> = new Map()
-  private readonly CACHE_TTL = 60000 // 1 minute cache
+  private readonly CACHE_TTL = 300000 // 5 minute cache for better performance
 
   constructor() {
     this.supabase = createServerComponentClient<Database>({ cookies })
@@ -31,7 +35,7 @@ export class ServerUsageTracker {
   private async ensureProfileExists(userId: string): Promise<void> {
     try {
       // Try to create profile using upsert (insert or ignore if exists)
-      console.log('🔍 [PROFILE UPSERT] Creating profile for user:', userId)
+      log('🔍 [PROFILE UPSERT] Creating profile for user:', userId)
       const { error } = await this.supabase
         .from('profiles')
         .upsert({
@@ -46,10 +50,10 @@ export class ServerUsageTracker {
         })
 
       if (error) {
-        console.warn('Profile creation/upsert warning (this is usually safe):', error.message)
+        if (isDev) console.warn('Profile creation/upsert warning (this is usually safe):', error.message)
       }
     } catch (error) {
-      console.error('Error ensuring profile exists:', error)
+      logError('Error ensuring profile exists:', error)
     }
   }
 
@@ -61,14 +65,14 @@ export class ServerUsageTracker {
     // Check cache first
     const cached = this.usageCache.get(cacheKey)
     if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
-      console.log('📊 [USAGE] Returning cached usage data for:', cacheKey)
+      log('📊 [USAGE] Returning cached usage data for:', cacheKey)
       return cached.data
     }
     
     if (userId) {
       // Authenticated user - try to get from Supabase
       try {
-        console.log('🔍 [PROFILE QUERY] Fetching profile for user:', userId)
+        log('🔍 [PROFILE QUERY] Fetching profile for user:', userId)
         const { data, error } = await this.supabase
           .from('profiles')
           .select('premium_calls_used, usage_last_reset, byok_enabled, api_keys')
@@ -113,11 +117,11 @@ export class ServerUsageTracker {
           this.usageCache.set(userId, { data: usage, timestamp: Date.now() })
           return usage
         } else if (error) {
-          console.warn('Profile not found for user (this is normal for new users):', userId)
+          if (isDev) console.warn('Profile not found for user (this is normal for new users):', userId)
           // Create profile only when we actually need to track usage
         }
       } catch (error) {
-        console.error('Error fetching usage from Supabase:', error)
+        logError('Error fetching usage from Supabase:', error)
       }
     }
 
@@ -142,7 +146,7 @@ export class ServerUsageTracker {
       const usage = await this.getUsage(userId)
       return this.incrementUsageWithData(userId, modelId, usage)
     } catch (error) {
-      console.error('Error updating usage:', error)
+      logError('Error updating usage:', error)
       return false
     }
   }
@@ -153,7 +157,7 @@ export class ServerUsageTracker {
       const newCallCount = usage.premiumCalls + 1
       
       // First try to update, if it fails because profile doesn't exist, create it
-      console.log('🔍 [PROFILE UPDATE] Updating usage count for user:', userId)
+      log('🔍 [PROFILE UPDATE] Updating usage count for user:', userId)
       const { error } = await this.supabase
         .from('profiles')
         .update({ 
@@ -163,7 +167,7 @@ export class ServerUsageTracker {
 
       if (error && error.code === 'PGRST116') {
         // No rows returned - profile doesn't exist yet
-        console.log('Profile does not exist, creating it now')
+        log('Profile does not exist, creating it now')
         await this.ensureProfileExists(userId)
         
         // Try update again
@@ -175,29 +179,29 @@ export class ServerUsageTracker {
           .eq('id', userId)
           
         if (retryError) {
-          console.error('Error incrementing usage after profile creation:', retryError)
+          logError('Error incrementing usage after profile creation:', retryError)
           return false
         }
       } else if (error) {
-        console.error('Error incrementing usage:', error)
+        logError('Error incrementing usage:', error)
         return false
       }
 
-      console.log(`📊 [USAGE] Incremented ${modelId} usage for user ${userId}: ${usage.premiumCalls} → ${newCallCount}`)
+      log(`📊 [USAGE] Incremented ${modelId} usage for user ${userId}: ${usage.premiumCalls} → ${newCallCount}`)
       
       // Invalidate cache for this user
       this.usageCache.delete(userId)
       
       return true
     } catch (error) {
-      console.error('Error updating usage:', error)
+      logError('Error updating usage:', error)
       return false
     }
   }
 
   // Check if user can use a model
   async canUseModel(userId: string | undefined, modelTier: 'free' | 'premium' | 'byok'): Promise<boolean> {
-    console.log('🔍 [ServerUsageTracker] Checking model access:', {
+    log('🔍 [ServerUsageTracker] Checking model access:', {
       userId,
       modelTier,
       isAnonymous: !userId
@@ -205,13 +209,13 @@ export class ServerUsageTracker {
 
     // Free models are always available
     if (modelTier === 'free') {
-      console.log('✅ [ServerUsageTracker] Free model - access granted')
+      log('✅ [ServerUsageTracker] Free model - access granted')
       return true
     }
 
     // No user ID means anonymous - only free models
     if (!userId) {
-      console.log('🚫 [ServerUsageTracker] Anonymous user - only free models allowed')
+      log('🚫 [ServerUsageTracker] Anonymous user - only free models allowed')
       return false
     }
 
@@ -225,7 +229,7 @@ export class ServerUsageTracker {
     modelTier: 'free' | 'premium' | 'byok',
     usage: UserUsage
   ): Promise<boolean> {
-    console.log('📊 [ServerUsageTracker] Usage data:', {
+    log('📊 [ServerUsageTracker] Usage data:', {
       premiumCalls: usage.premiumCalls,
       byokEnabled: usage.byokEnabled,
       limit: PREMIUM_CALL_LIMIT
@@ -233,31 +237,31 @@ export class ServerUsageTracker {
 
     // Free models are always available
     if (modelTier === 'free') {
-      console.log('✅ [ServerUsageTracker] Free model - access granted')
+      log('✅ [ServerUsageTracker] Free model - access granted')
       return true
     }
 
     // No user ID means anonymous - only free models
     if (!userId) {
-      console.log('🚫 [ServerUsageTracker] Anonymous user - only free models allowed')
+      log('🚫 [ServerUsageTracker] Anonymous user - only free models allowed')
       return false
     }
 
     // BYOK models require BYOK enabled
     if (modelTier === 'byok') {
       const canUse = usage.byokEnabled
-      console.log(`${canUse ? '✅' : '🚫'} [ServerUsageTracker] BYOK model - BYOK enabled: ${canUse}`)
+      log(`${canUse ? '✅' : '🚫'} [ServerUsageTracker] BYOK model - BYOK enabled: ${canUse}`)
       return canUse
     }
 
     // Premium models - check usage limit
     if (modelTier === 'premium') {
       const canUse = usage.premiumCalls < PREMIUM_CALL_LIMIT
-      console.log(`${canUse ? '✅' : '🚫'} [ServerUsageTracker] Premium model - ${usage.premiumCalls}/${PREMIUM_CALL_LIMIT} used`)
+      log(`${canUse ? '✅' : '🚫'} [ServerUsageTracker] Premium model - ${usage.premiumCalls}/${PREMIUM_CALL_LIMIT} used`)
       return canUse
     }
 
-    console.log('🚫 [ServerUsageTracker] Unknown model tier')
+    log('🚫 [ServerUsageTracker] Unknown model tier')
     return false
   }
 }

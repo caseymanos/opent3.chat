@@ -11,9 +11,13 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import type { Database } from '@/lib/supabase'
 
+const isDev = process.env.NODE_ENV === 'development'
+const log = isDev ? console.log : () => {}
+const logError = console.error // Always log errors
+
 export async function POST(req: Request) {
   const startTime = Date.now()
-  console.log('🚀 [CHAT API] Request received at', new Date().toISOString())
+  log('🚀 [CHAT API] Request received at', new Date().toISOString())
   
   try {
     // Start processing request body immediately while auth check happens in parallel
@@ -65,7 +69,7 @@ export async function POST(req: Request) {
       userId
     } = body
     
-    console.log('📝 [CHAT API] Request details:', {
+    log('📝 [CHAT API] Request details:', {
       messagesCount: messages?.length,
       conversationId,
       model,
@@ -80,23 +84,58 @@ export async function POST(req: Request) {
     })
 
     if (!conversationId) {
-      console.error('❌ [CHAT API] Missing conversationId')
+      logError('❌ [CHAT API] Missing conversationId')
       return new Response('Missing conversationId', { status: 400 })
     }
     
-    // Now await the auth result
-    const { data: { user }, error: authError } = await authPromise
+    // Quick model check to optimize for free models
+    const modelInfo = getModelById(model)
+    if (!modelInfo) {
+      logError('❌ [USAGE] Model not found:', model)
+      return new Response(
+        JSON.stringify({
+          error: `Model "${model}" not found`,
+          type: 'model_not_found'
+        }),
+        { 
+          status: 400, 
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
+    }
     
-    console.log('🔐 [CHAT API] Auth check:', {
-      hasUser: !!user,
-      userId: user?.id,
-      authError: authError?.message,
-      isAnonymous: !user
-    })
+    // For free models, skip auth entirely
+    let user = null
+    let userUsage = null
     
-    // Anonymous users are allowed - don't treat auth errors as failures for them
-    if (!user) {
-      console.log('👤 [CHAT API] Anonymous user detected - proceeding with free model access only')
+    if (modelInfo.tier === 'free') {
+      log('✅ [USAGE] Free model detected - skipping auth and usage checks')
+    } else {
+      // Only await auth for non-free models
+      const { data: authData, error: authError } = await authPromise
+      user = authData?.user || null
+      
+      log('🔐 [CHAT API] Auth check:', {
+        hasUser: !!user,
+        userId: user?.id,
+        authError: authError?.message,
+        isAnonymous: !user
+      })
+      
+      // Anonymous users are allowed - don't treat auth errors as failures for them
+      if (!user) {
+        log('👤 [CHAT API] Anonymous user detected - premium models not available')
+        return new Response(
+          JSON.stringify({
+            error: 'Premium models require sign-in. Please sign in or use free models like Gemini 2.5 Flash.',
+            type: 'auth_required'
+          }),
+          { 
+            status: 401, 
+            headers: { 'Content-Type': 'application/json' }
+          }
+        )
+      }
     }
 
     // Process messages with file attachments
@@ -104,13 +143,13 @@ export async function POST(req: Request) {
     
     // If no messages provided, this might be a new conversation
     if (!messages || messages.length === 0) {
-      console.warn('⚠️ [CHAT API] No messages provided, using empty array')
+      if (isDev) console.warn('⚠️ [CHAT API] No messages provided, using empty array')
       processedMessages = []
     }
     
     // Handle file attachments for the last user message
     if (attachedFiles && attachedFiles.length > 0) {
-      console.log('📎 [FILES] Processing', attachedFiles.length, 'attached files')
+      log('📎 [FILES] Processing', attachedFiles.length, 'attached files')
       
       const lastUserMessageIndex = messages.findLastIndex((msg: { role: string }) => msg.role === 'user')
       
@@ -129,9 +168,9 @@ export async function POST(req: Request) {
           })
         }
         
-        // Add file contents
-        for (const file of attachedFiles) {
-          console.log('📎 [FILES] Processing file:', {
+        // Process all files in parallel for better performance
+        const fileProcessingPromises = attachedFiles.map(async (file) => {
+          log('📎 [FILES] Processing file:', {
             name: file.name,
             type: file.type,
             size: file.size
@@ -140,26 +179,31 @@ export async function POST(req: Request) {
           if (file.type?.startsWith('image/')) {
             // Handle images - convert to base64
             const arrayBuffer = await file.arrayBuffer()
+            // For large images, consider using streaming in the future
             const base64 = Buffer.from(arrayBuffer).toString('base64')
-            enhancedContent.push({
+            return {
               type: 'image',
               image: `data:${file.type};base64,${base64}`
-            })
+            }
           } else {
             // Handle text-based files (TXT, MD, etc.)
             const text = await file.text()
-            console.log('📄 [FILES] File content read:', {
+            log('📄 [FILES] File content read:', {
               filename: file.name,
               contentLength: text.length,
               contentPreview: text.substring(0, 200) + '...'
             })
             
-            enhancedContent.push({
+            return {
               type: 'text',
               text: `\n\n[File: ${file.name}]\n${text}`
-            })
+            }
           }
-        }
+        })
+        
+        // Wait for all files to be processed
+        const processedFiles = await Promise.all(fileProcessingPromises)
+        enhancedContent.push(...processedFiles)
         
         // Update the message with enhanced content
         processedMessages[lastUserMessageIndex] = {
@@ -169,59 +213,29 @@ export async function POST(req: Request) {
             : enhancedContent
         }
         
-        console.log('📎 [FILES] Enhanced last message with file content:', {
+        log('📎 [FILES] Enhanced last message with file content:', {
           enhancedContentLength: enhancedContent.length,
           finalMessageContent: JSON.stringify(processedMessages[lastUserMessageIndex].content).substring(0, 500) + '...'
         })
       }
     }
 
-    // Quick model tier check without database calls for free models
-    const modelInfo = getModelById(model)
-    const currentUserId = user?.id // Use authenticated user
-    
-    console.log('🔍 [USAGE] Checking model access:', {
-      model,
-      modelInfo: modelInfo ? { id: modelInfo.id, tier: modelInfo.tier } : 'NOT_FOUND',
-      userId: currentUserId,
-      isAnonymous: !currentUserId
-    })
-    
-    if (!modelInfo) {
-      console.error('❌ [USAGE] Model not found:', model)
-      return new Response(
-        JSON.stringify({
-          error: `Model "${model}" not found`,
-          type: 'model_not_found'
-        }),
-        { 
-          status: 400, 
-          headers: { 'Content-Type': 'application/json' }
-        }
-      )
-    }
-    
-    // Store usage data to avoid multiple queries
-    let userUsage: { premiumCalls: number; byokEnabled: boolean } | null = null
+    // Usage tracking for premium/byok models
+    const currentUserId = user?.id
     const tracker = getServerUsageTracker()
     
-    // Skip database calls for free models - they're always allowed
-    if (modelInfo.tier === 'free') {
-      console.log('✅ [USAGE] Free model - skipping usage checks')
-    } else {
-      // Only check usage for premium/byok models
+    if (modelInfo.tier !== 'free' && currentUserId) {
       // Get usage data once and reuse it
       userUsage = await tracker.getUsage(currentUserId)
       const canUse = await tracker.canUseModelWithUsage(currentUserId, modelInfo.tier, userUsage)
       
       if (!canUse) {
-        console.log('🚫 [USAGE] Model access denied:', {
+        log('🚫 [USAGE] Model access denied:', {
           model,
           tier: modelInfo.tier,
           premiumCalls: userUsage.premiumCalls,
           byokEnabled: userUsage.byokEnabled,
-          userId: currentUserId,
-          isAnonymous: !currentUserId
+          userId: currentUserId
         })
         
         let errorMessage = 'Access denied to this model.'
@@ -262,7 +276,7 @@ export async function POST(req: Request) {
       
       // Check if we should use OpenRouter
       if (useOpenRouter && openRouterApiKey) {
-        console.log('🌐 [OPENROUTER] Using OpenRouter for model:', model)
+        log('🌐 [OPENROUTER] Using OpenRouter for model:', model)
         
         const openRouterModelId = OPENROUTER_MODEL_MAP[model]
         if (!openRouterModelId) {
@@ -279,7 +293,7 @@ export async function POST(req: Request) {
         
         aiProvider = openRouter(openRouterModelId)
         
-        console.log('🤖 [OPENROUTER] Starting API call with model:', openRouterModelId)
+        log('🤖 [OPENROUTER] Starting API call with model:', openRouterModelId)
         result = await streamText({
           model: aiProvider,
           messages: processedMessages,
@@ -287,12 +301,12 @@ export async function POST(req: Request) {
           temperature: 0.7,
           maxTokens: 4000,
           onError: ({ error }) => {
-            console.error('🚨 [OPENROUTER STREAM ERROR]:', error?.message);
+            logError('🚨 [OPENROUTER STREAM ERROR]:', error?.message);
           }
         })
       } else if (provider === 'anthropic') {
         const anthropicKey = process.env.ANTHROPIC_API_KEY
-        console.log('🔑 [ANTHROPIC] API Key check:', {
+        log('🔑 [ANTHROPIC] API Key check:', {
           hasKey: !!anthropicKey,
           keyPrefix: anthropicKey?.substring(0, 10) + '...',
           keyLength: anthropicKey?.length,
@@ -300,7 +314,7 @@ export async function POST(req: Request) {
         })
         
         if (anthropicKey && anthropicKey !== 'your-anthropic-api-key' && anthropicKey.startsWith('sk-ant-')) {
-          console.log('🤖 [ANTHROPIC] Starting API call with model:', model)
+          log('🤖 [ANTHROPIC] Starting API call with model:', model)
           result = await streamText({
             model: anthropic(model),
             messages: processedMessages,
@@ -308,7 +322,7 @@ export async function POST(req: Request) {
             temperature: 0.7,
             maxTokens: 4000,
             onError: ({ error }) => {
-              console.error('🚨 [ANTHROPIC STREAM ERROR]:', error?.message);
+              logError('🚨 [ANTHROPIC STREAM ERROR]:', error?.message);
             }
           })
         } else {
@@ -316,7 +330,7 @@ export async function POST(req: Request) {
         }
       } else if (provider === 'openai') {
         const openaiKey = process.env.OPENAI_API_KEY
-        console.log('🔑 [OPENAI] API Key check:', {
+        log('🔑 [OPENAI] API Key check:', {
           hasKey: !!openaiKey,
           keyPrefix: openaiKey?.substring(0, 10) + '...',
           keyLength: openaiKey?.length,
@@ -324,7 +338,7 @@ export async function POST(req: Request) {
         })
         
         if (openaiKey && openaiKey !== 'your-openai-api-key' && openaiKey.startsWith('sk-')) {
-          console.log('🤖 [OPENAI] Starting API call with model:', model)
+          log('🤖 [OPENAI] Starting API call with model:', model)
           result = await streamText({
             model: openai(model),
             messages: processedMessages,
@@ -332,7 +346,7 @@ export async function POST(req: Request) {
             temperature: 0.7,
             maxTokens: 4000,
             onError: ({ error }) => {
-              console.error('🚨 [OPENAI STREAM ERROR]:', error?.message);
+              logError('🚨 [OPENAI STREAM ERROR]:', error?.message);
             }
           })
         } else {
@@ -340,13 +354,13 @@ export async function POST(req: Request) {
         }
       } else if (provider === 'google') {
         const googleKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
-        console.log('🔑 [GOOGLE] API Key check:', {
+        log('🔑 [GOOGLE] API Key check:', {
           hasKey: !!googleKey,
           keyLength: googleKey?.length,
         })
         
         if (googleKey && googleKey !== 'your-google-api-key') {
-          console.log('🤖 [GOOGLE] Starting API call with model:', model)
+          log('🤖 [GOOGLE] Starting API call with model:', model)
           
           result = await streamText({
             model: google(model),
@@ -355,7 +369,7 @@ export async function POST(req: Request) {
             temperature: 0.7,
             maxTokens: 4000,
             onError: ({ error }) => {
-              console.error('🚨 [STREAM TEXT ERROR]:', error?.message);
+              logError('🚨 [STREAM TEXT ERROR]:', error?.message);
             }
           })
         } else {
@@ -366,8 +380,8 @@ export async function POST(req: Request) {
       }
 
       const actualProvider = useOpenRouter ? 'OPENROUTER' : provider.toUpperCase()
-      console.log(`✅ [${actualProvider}] API call successful, returning stream response`)
-      console.log('⏱️ [CHAT API] Total request time:', Date.now() - startTime, 'ms')
+      log(`✅ [${actualProvider}] API call successful, returning stream response`)
+      log('⏱️ [CHAT API] Total request time:', Date.now() - startTime, 'ms')
       
       // Increment usage for premium models
       if (modelInfo && modelInfo.tier === 'premium' && currentUserId) {
@@ -377,16 +391,16 @@ export async function POST(req: Request) {
         }
         if (!userUsage.byokEnabled) {
           await tracker.incrementUsageWithData(currentUserId, model, userUsage)
-          console.log('📊 [USAGE] Incremented premium call count for user:', currentUserId)
+          log('📊 [USAGE] Incremented premium call count for user:', currentUserId)
         }
       }
       
       try {
         const response = result.toDataStreamResponse({
           getErrorMessage: (error) => {
-            console.error('🔍 [STREAM ERROR] Unmasked error:', error);
-            console.error('🔍 [STREAM ERROR] Error type:', typeof error);
-            console.error('🔍 [STREAM ERROR] Error details:', {
+            if (isDev) logError('🔍 [STREAM ERROR] Unmasked error:', error);
+            if (isDev) logError('🔍 [STREAM ERROR] Error type:', typeof error);
+            if (isDev) logError('🔍 [STREAM ERROR] Error details:', {
               message: error?.message,
               name: error?.name,
               stack: error?.stack,
@@ -396,23 +410,15 @@ export async function POST(req: Request) {
           }
         })
         
-        console.log('📤 [CHAT API] Response headers:', Object.fromEntries(response.headers.entries()))
-        console.log('📤 [CHAT API] Response status:', response.status)
-        
-        // Add debugging for the response body
-        const responseClone = response.clone()
-        if (responseClone.body) {
-          console.log('📤 [CHAT API] Response has body, checking stream...')
-        }
-        
+        // Return response immediately without cloning for better performance
         return response
       } catch (streamError) {
-        console.error('❌ [CHAT API] Error creating stream response:', streamError)
+        logError('❌ [CHAT API] Error creating stream response:', streamError)
         
         // Try to get the text response instead
         try {
           const textResult = await result.text
-          console.log('📝 [CHAT API] Fallback to text response:', textResult?.substring(0, 100) + '...')
+          log('📝 [CHAT API] Fallback to text response:', textResult?.substring(0, 100) + '...')
           
           return new Response(
             JSON.stringify({
@@ -425,7 +431,7 @@ export async function POST(req: Request) {
             }
           )
         } catch (textError) {
-          console.error('❌ [CHAT API] Text fallback also failed:', textError)
+          logError('❌ [CHAT API] Text fallback also failed:', textError)
           
           // Final fallback to error response
           return new Response(
@@ -442,7 +448,7 @@ export async function POST(req: Request) {
         }
       }
     } catch (aiError) {
-      console.error(`❌ [${provider.toUpperCase()}] API call failed:`, {
+      logError(`❌ [${provider.toUpperCase()}] API call failed:`, {
         error: aiError,
         message: aiError instanceof Error ? aiError.message : 'Unknown error',
         stack: aiError instanceof Error ? aiError.stack : undefined,
@@ -492,7 +498,7 @@ export async function POST(req: Request) {
     }
 
   } catch (error) {
-    console.error('Error in chat API:', error)
+    logError('Error in chat API:', error)
     return new Response('Internal server error', { status: 500 })
   }
 }
