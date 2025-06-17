@@ -1,9 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-import { ChevronDownIcon, SparklesIcon, BoltIcon, CpuChipIcon, EyeIcon, CodeBracketIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline'
+import { useState, useEffect } from 'react'
+import { ChevronDownIcon, SparklesIcon, BoltIcon, CpuChipIcon, EyeIcon, CodeBracketIcon, CurrencyDollarIcon, LockClosedIcon, LockOpenIcon } from '@heroicons/react/24/outline'
 import { AI_MODELS, getModelById, type AIModel } from '@/lib/ai'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useUsageTracking } from '@/lib/usage-tracker'
+import { useAuth } from '@/contexts/AuthContext'
+import type { UserUsage } from '@/lib/usage-tracker'
 
 interface ModelSelectorProps {
   selectedModel: string
@@ -30,8 +33,48 @@ export default function ModelSelector({
   disabled = false 
 }: ModelSelectorProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [usage, setUsage] = useState<UserUsage | null>(null)
+  const { user } = useAuth()
+  const { getUsage, canUsePremiumModel, canUseByokModel, getRemainingPremiumCalls } = useUsageTracking()
   const currentModel = getModelById(selectedModel)
 
+  // Load usage data
+  useEffect(() => {
+    const loadUsage = async () => {
+      const data = await getUsage()
+      setUsage(data)
+    }
+    loadUsage()
+  }, [getUsage])
+
+  // Filter models based on tier and usage
+  const getAvailableModels = () => {
+    return AI_MODELS.filter(model => {
+      // Free tier is always available
+      if (model.tier === 'free') return true
+      
+      // Premium/BYOK tiers require authentication
+      if (!user) return false
+      
+      // If we don't have usage data yet, be conservative and only show free models
+      if (!usage) return false
+      
+      // Premium tier requires login and available calls
+      if (model.tier === 'premium') {
+        return canUsePremiumModel(usage)
+      }
+      
+      // BYOK tier requires BYOK enabled
+      if (model.tier === 'byok') {
+        return canUseByokModel(usage)
+      }
+      
+      return false
+    })
+  }
+
+  const availableModels = getAvailableModels()
+  // Show all models but mark which are available
   const groupedModels = AI_MODELS.reduce((acc, model) => {
     if (!acc[model.provider]) {
       acc[model.provider] = []
@@ -96,7 +139,7 @@ export default function ModelSelector({
               {currentModel && (
                 <>
                   <span>•</span>
-                  <span>{formatPrice(currentModel.pricing.input)}/1k</span>
+                  <span>{formatPrice(currentModel.pricing.input)}/M</span>
                   {currentModel.capabilities.vision && <span>👁</span>}
                   {currentModel.performance.speed === 'fast' && <span>⚡</span>}
                 </>
@@ -134,15 +177,20 @@ export default function ModelSelector({
                 
                 {models.map((model) => {
                   const badges = getPerformanceBadge(model.performance)
+                  const isLocked = !availableModels.find(m => m.id === model.id)
+                  const canSelect = !isLocked || (model.tier === 'premium' && user && usage && canUsePremiumModel(usage))
+                  
                   return (
                     <button
                       key={model.id}
-                      onClick={() => handleModelSelect(model)}
+                      onClick={() => canSelect && handleModelSelect(model)}
+                      disabled={!canSelect}
                       className={`
                         w-full flex items-start gap-3 px-3 py-3 rounded-md transition-all duration-150 text-left
+                        ${!canSelect ? 'opacity-50 cursor-not-allowed' : ''}
                         ${selectedModel === model.id 
                           ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700' 
-                          : 'hover:bg-gray-50 dark:hover:bg-gray-800'
+                          : canSelect ? 'hover:bg-gray-50 dark:hover:bg-gray-800' : ''
                         }
                       `}
                     >
@@ -159,9 +207,31 @@ export default function ModelSelector({
                               Active
                             </span>
                           )}
+                          {model.tier === 'premium' && user && usage && (
+                            <span className="text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                              <span>{getRemainingPremiumCalls(usage)}</span>
+                              <span>left</span>
+                            </span>
+                          )}
+                          {model.tier === 'byok' && (
+                            <span className="text-xs bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                              {usage?.byokEnabled ? <LockOpenIcon className="w-3 h-3" /> : <LockClosedIcon className="w-3 h-3" />}
+                              <span>BYOK</span>
+                            </span>
+                          )}
                         </div>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                           {model.description}
+                          {model.tier === 'premium' && !user && (
+                            <span className="block text-xs text-amber-600 dark:text-amber-400 mt-1">
+                              ⚠️ Sign in for 10 free calls
+                            </span>
+                          )}
+                          {model.tier === 'byok' && !usage?.byokEnabled && (
+                            <span className="block text-xs text-orange-600 dark:text-orange-400 mt-1">
+                              🔐 Requires API key
+                            </span>
+                          )}
                         </p>
                         
                         {/* Capabilities */}
@@ -190,7 +260,7 @@ export default function ModelSelector({
                           </span>
                           <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                             <CurrencyDollarIcon className="w-3 h-3" />
-                            <span>{formatPrice(model.pricing.input)}/1k</span>
+                            <span>{formatPrice(model.pricing.input)}/M</span>
                           </div>
                         </div>
                         

@@ -92,7 +92,7 @@ export default function MessageInput({
         disabled={disabled}
       />
 
-      <div className="flex items-end gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
+      <div className="flex items-end gap-4 p-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20">
         {/* Text Input */}
         <textarea
           ref={textareaRef}
@@ -104,50 +104,61 @@ export default function MessageInput({
           placeholder={placeholder}
           disabled={disabled}
           rows={1}
-          className="flex-1 resize-none border-0 bg-transparent text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-0 min-h-[40px] max-h-[200px] py-2 px-0"
+          className="flex-1 resize-none border-0 bg-transparent text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-0 min-h-[44px] max-h-[200px] py-3 px-0 text-base leading-relaxed"
         />
 
-        {/* Voice Input */}
-        <VoiceInput
-          onTranscriptChange={onChange}
-          isDisabled={disabled}
-          className="flex-shrink-0"
-        />
+        {/* Action Buttons Container */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Voice Input */}
+          <VoiceInput
+            onTranscriptChange={onChange}
+            isDisabled={disabled}
+            className="flex-shrink-0"
+          />
 
-        {/* Integrations Panel */}
-        <IntegrationsPanel
-          onContentSelect={(content) => {
-            const newValue = value ? `${value}\n\n${content}` : content
-            onChange(newValue)
-          }}
-          className="flex-shrink-0"
-        />
+          {/* Integrations Panel */}
+          <IntegrationsPanel
+            onContentSelect={(content) => {
+              const newValue = value ? `${value}\n\n${content}` : content
+              onChange(newValue)
+            }}
+            className="flex-shrink-0"
+          />
 
-        {/* Send Button */}
-        <Button
-          onClick={handleSend}
-          disabled={disabled || (!value.trim() && attachedFiles.length === 0)}
-          size="icon"
-          className="flex-shrink-0 mb-1"
-        >
-          <PaperAirplaneIcon className="w-5 h-5" />
-        </Button>
+          {/* Send Button */}
+          <Button
+            onClick={handleSend}
+            disabled={disabled || (!value.trim() && attachedFiles.length === 0)}
+            size="default"
+            className={`flex-shrink-0 transition-all duration-200 ${
+              disabled || (!value.trim() && attachedFiles.length === 0)
+                ? 'opacity-50 cursor-not-allowed'
+                : 'hover:scale-105 shadow-md hover:shadow-lg bg-blue-600 hover:bg-blue-700 text-white'
+            }`}
+          >
+            <PaperAirplaneIcon className="w-5 h-5" />
+          </Button>
+        </div>
       </div>
 
-      {/* Character count / status */}
-      <div className="flex justify-between items-center mt-2 px-1">
-        <div className="text-xs text-slate-500 dark:text-slate-400">
+      {/* Status and Help Text */}
+      <div className="flex justify-between items-center mt-3 px-2">
+        <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
           {value.length > 0 && (
-            <span>{value.length} characters</span>
+            <span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full">
+              {value.length} chars
+            </span>
           )}
           {attachedFiles.length > 0 && (
-            <span className="ml-2">{attachedFiles.length} file{attachedFiles.length !== 1 ? 's' : ''} attached</span>
+            <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-full">
+              {attachedFiles.length} file{attachedFiles.length !== 1 ? 's' : ''}
+            </span>
           )}
         </div>
-        <div className="text-xs text-slate-500 dark:text-slate-400">
+        <div className="text-xs text-slate-400 dark:text-slate-500 hidden sm:block">
           {attachedFiles.length > 0 
-            ? 'Press Enter to send message with files' 
-            : 'Press Enter to send, Shift+Enter for new line • Use 📎 to attach files • 🎤 for voice input • 🔗 for integrations'
+            ? '⏎ Send with files' 
+            : '⏎ Send • ⇧⏎ New line • 🎤 Voice • 📎 Files'
           }
         </div>
       </div>

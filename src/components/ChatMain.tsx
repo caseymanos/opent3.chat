@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect, useState } from 'react'
 import { useRealtimeChat } from '@/hooks/useRealtimeChat'
 import { useAIChat } from '@/lib/ai'
 import MessageList from './MessageList'
@@ -12,6 +12,7 @@ import FileSummaries from './FileSummaries'
 import CostTracker from './CostTracker'
 import ModelComparison from './ModelComparison'
 import TaskExtractor from './TaskExtractor'
+import OpenRouterSettings from './OpenRouterSettings'
 import type { Database } from '@/lib/supabase'
 
 type Message = Database['public']['Tables']['messages']['Row']
@@ -47,17 +48,31 @@ export default function ChatMain({
   // State for pending message when no conversation exists
   const [pendingMessage, setPendingMessage] = useState<{ text: string; files?: FileList | null } | null>(null)
   
+  // OpenRouter configuration state
+  const [openRouterConfig, setOpenRouterConfig] = useState({ enabled: false, apiKey: '' })
+  const [showOpenRouterSettings, setShowOpenRouterSettings] = useState(false)
   
   // Tab state for side panels
   const [activeTab, setActiveTab] = useState<'chat' | 'files' | 'summaries'>('chat')
   
+  // Load OpenRouter config from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem('openrouter-config')
+    if (stored) {
+      try {
+        setOpenRouterConfig(JSON.parse(stored))
+      } catch (error) {
+        console.warn('Failed to parse OpenRouter config from localStorage:', error)
+      }
+    }
+  }, [])
 
 
   // Convert database messages to AI SDK format for initialization
-  // Implement sliding window to limit context size
+  // Implement sliding window to limit context size for faster processing
   const initialAIMessages = React.useMemo(() => {
-    const MAX_CONTEXT_MESSAGES = 50 // Limit to last 50 messages
-    const MAX_CONTEXT_LENGTH = 100000 // Approximate character limit
+    const MAX_CONTEXT_MESSAGES = 25 // Reduced from 50 for faster processing
+    const MAX_CONTEXT_LENGTH = 50000 // Reduced from 100K for faster processing
     
     // Filter messages based on branch if needed
     let relevantMessages = messages
@@ -111,12 +126,16 @@ export default function ChatMain({
     handleSubmit,
     isLoading: isAILoading,
     messages: aiMessages,
-    error: aiError
+    error: aiError,
+    isUsingOpenRouter,
+    getOpenRouterFee
   } = useAIChat({
     conversationId,
     model: selectedModel,
     provider: selectedProvider,
     initialMessages: initialAIMessages, // Pass conversation history
+    useOpenRouter: openRouterConfig.enabled,
+    openRouterApiKey: openRouterConfig.apiKey,
     onFinish: async (message) => {
       console.log('🎯 [ChatMain] AI response finished:', message)
       // Save AI response to Supabase
@@ -182,7 +201,7 @@ export default function ChatMain({
     // 3. Filtering the message list to show only this path
   }
 
-  // Debug AI messages
+  // Debug AI messages and handle errors
   useEffect(() => {
     if (aiMessages.length > 0) {
       console.log('💬 [ChatMain] AI messages updated:', aiMessages)
@@ -191,6 +210,38 @@ export default function ChatMain({
       console.error('❌ [ChatMain] AI error:', aiError)
     }
   }, [aiMessages, aiError])
+
+  // Parse error messages to show user-friendly messages
+  const getErrorMessage = (error: Error | undefined) => {
+    if (!error) return null
+    
+    console.log('🔍 [ChatMain] Parsing error message:', {
+      message: error.message,
+      startsWithBrace: error.message?.startsWith('{'),
+      messageLength: error.message?.length
+    })
+    
+    // Try to parse structured error responses
+    if (error.message && error.message.startsWith('{')) {
+      try {
+        const parsedError = JSON.parse(error.message)
+        console.log('✅ [ChatMain] Parsed error object:', parsedError)
+        
+        if (parsedError.type === 'usage_limit') {
+          return parsedError.error
+        } else if (parsedError.type === 'api_error' || parsedError.type === 'api_key_error') {
+          return parsedError.error
+        }
+        return parsedError.error || error.message
+      } catch (parseError) {
+        console.warn('❌ [ChatMain] Failed to parse error JSON:', parseError)
+        // Fall back to original error message
+      }
+    }
+    
+    console.log('📝 [ChatMain] Using original error message:', error.message)
+    return error.message
+  }
 
   // Auto-scroll to bottom only for new user/assistant messages
   useEffect(() => {
@@ -404,14 +455,35 @@ export default function ChatMain({
           
           {/* Right side controls */}
           <div className="flex items-center gap-4">
-            
+            {/* OpenRouter Settings Button */}
+            <button
+              onClick={() => setShowOpenRouterSettings(true)}
+              className={`relative text-xs px-3 py-1.5 rounded-full transition-colors ${
+                openRouterConfig.enabled
+                  ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/30'
+              }`}
+              title="OpenRouter Configuration - Save 60-80% on AI costs"
+            >
+              🌐 OpenRouter
+              {openRouterConfig.enabled && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"></span>
+              )}
+              {isUsingOpenRouter && getOpenRouterFee() < 0 && (
+                <span className="ml-1 text-xs font-bold">+{Math.abs(getOpenRouterFee())}%</span>
+              )}
+            </button>
             
             <TaskExtractor conversationId={conversationId} />
             <ModelComparison 
               selectedModels={[selectedModel]}
               onModelSelect={handleModelChange}
             />
-            <CostTracker conversationId={conversationId} />
+            <CostTracker 
+              conversationId={conversationId} 
+              openRouterConfig={openRouterConfig}
+              selectedModel={selectedModel}
+            />
           </div>
         </div>
       </div>
@@ -524,6 +596,27 @@ export default function ChatMain({
       {/* Input Area */}
       <div className="border-t border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl p-4 flex-shrink-0">
         
+        {/* Error Display */}
+        {aiError && (
+          <div className="mb-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg">
+            <div className="flex items-start gap-2 text-sm text-red-700 dark:text-red-300">
+              <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              </svg>
+              <div className="flex-1">
+                <div className="font-medium mb-1">Error</div>
+                <div className="text-xs">{getErrorMessage(aiError)}</div>
+              </div>
+              <button 
+                onClick={() => window.location.reload()}
+                className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200 text-xs"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Branch Mode Indicator */}
         {activeBranchId && (
           <div className="mb-3 p-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700/50 rounded-lg">
@@ -574,6 +667,17 @@ export default function ChatMain({
           </div>
         </div>
       </div>
+
+      {/* OpenRouter Settings Modal */}
+      <OpenRouterSettings
+        isOpen={showOpenRouterSettings}
+        onClose={() => setShowOpenRouterSettings(false)}
+        onConfigChange={(config) => {
+          setOpenRouterConfig(config)
+          console.log('🌐 [ChatMain] OpenRouter config updated:', config)
+        }}
+        currentConfig={openRouterConfig}
+      />
 
     </div>
   )

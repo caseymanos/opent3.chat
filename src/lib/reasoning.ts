@@ -54,10 +54,10 @@ export function extractReasoning(message: string): ReasoningExtraction {
     cleanMessage = cleanMessage.replace(conclusionMatch[0], '')
   }
 
-  // If no structured reasoning found, create synthetic reasoning based on content analysis
-  if (reasoning.length === 0) {
-    reasoning.push(...generateSyntheticReasoning(message))
-  }
+  // Skip synthetic reasoning generation to improve performance
+  // if (reasoning.length === 0) {
+  //   reasoning.push(...generateSyntheticReasoning(message))
+  // }
 
   return {
     mainResponse: cleanMessage.trim(),

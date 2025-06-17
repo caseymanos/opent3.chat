@@ -261,3 +261,179 @@ html {
   50% { transform: scale(0.95); }
   100% { transform: scale(1); }
 }
+
+/* Enhanced UI animations and effects */
+.hover-lift {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Enhanced pulse animation for recording */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.33);
+    opacity: 1;
+  }
+  40%,
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+.pulse-ring {
+  animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+/* Voice recording visual feedback */
+@keyframes voice-wave {
+  0%, 100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.5);
+  }
+}
+
+.voice-wave {
+  animation: voice-wave 0.6s ease-in-out infinite;
+}
+
+/* Improved focus states */
+.focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  border-color: rgb(59, 130, 246);
+}
+
+/* Better button transitions */
+.btn-transition {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-transition:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-transition:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Smart modal positioning utilities */
+.modal-smart-position {
+  /* Mobile: bottom sheet style */
+  @media (max-width: 640px) {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    transform: none;
+    border-radius: 1rem 1rem 0 0;
+    max-height: 80vh;
+  }
+  
+  /* Tablet: centered with constraints */
+  @media (min-width: 641px) and (max-width: 1024px) {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 90vw;
+    max-height: 80vh;
+  }
+  
+  /* Desktop: positioned near trigger */
+  @media (min-width: 1025px) {
+    position: absolute;
+    max-width: 28rem;
+  }
+}
+
+/* Enhanced accessibility for touch targets */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+@media (max-width: 640px) {
+  .touch-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
+/* Responsive text scaling */
+.text-responsive {
+  @media (max-width: 640px) {
+    font-size: 0.875rem; /* text-sm */
+    line-height: 1.25rem;
+  }
+  
+  @media (min-width: 641px) and (max-width: 1024px) {
+    font-size: 1rem; /* text-base */
+    line-height: 1.5rem;
+  }
+  
+  @media (min-width: 1025px) {
+    font-size: 1.125rem; /* text-lg */
+    line-height: 1.75rem;
+  }
+}
+
+/* Safe area insets for mobile devices */
+@supports (padding: max(0px)) {
+  .safe-area-inset {
+    padding-top: max(1rem, env(safe-area-inset-top));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+}
+
+/* Improved backdrop blur for better performance */
+.backdrop-blur-smart {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop-blur-smart {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background-color: rgba(255, 255, 255, 0.95);
+  }
+  
+  .dark .backdrop-blur-smart {
+    background-color: rgba(0, 0, 0, 0.95);
+  }
+}
+
+/* Force modal visibility - override any parent constraints */
+.modal-force-visible {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 9999 !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: flex !important;
+}
+
+/* Ensure portal container has highest z-index */
+#modal-portal-root {
+  position: relative;
+  z-index: 10000;
+}

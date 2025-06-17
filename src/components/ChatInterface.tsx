@@ -6,6 +6,7 @@ import { useRealtimeChat } from '@/hooks/useRealtimeChat'
 import { useAuth } from '@/contexts/AuthContext'
 import ChatSidebar from './ChatSidebar'
 import ChatMain from './ChatMain'
+import UsageCounter from './UsageCounter'
 import { Button } from './ui/Button'
 import { PlusIcon, UserCircleIcon } from '@heroicons/react/24/outline'
 import { ArrowLeftStartOnRectangleIcon } from '@heroicons/react/24/outline'
@@ -28,8 +29,9 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
   const [creatingConversation, setCreatingConversation] = useState(false)
   const [sidebarKey, setSidebarKey] = useState(0) // Force sidebar refresh
   // Model selection state - moved up from ChatMain to ensure new conversations use current model
-  const [selectedModel, setSelectedModel] = useState('claude-3-haiku-20240307')
-  const [selectedProvider, setSelectedProvider] = useState('anthropic')
+  // Default to free model for all users
+  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash-preview-05-20')
+  const [selectedProvider, setSelectedProvider] = useState('google')
   
   // Initialize with provided conversation ID only once
   useEffect(() => {
@@ -212,6 +214,9 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Usage Counter */}
+            <UsageCounter />
+            
             {/* User menu */}
             <div className="flex items-center gap-2">
               {user && (

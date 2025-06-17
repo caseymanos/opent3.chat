@@ -35,7 +35,7 @@ export default function ModelComparison({
 }: ModelComparisonProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [selectedForComparison, setSelectedForComparison] = useState<string[]>(
-    selectedModels.length > 0 ? selectedModels : ['claude-3-5-sonnet-20241022', 'gpt-4o', 'claude-3-haiku-20240307']
+    selectedModels.length > 0 ? selectedModels : ['o3', 'gemini-2.5-flash-preview-05-20', 'claude-4-opus', 'gemma-3-4b']
   )
 
   // Sync selectedForComparison with selectedModels prop changes
@@ -63,11 +63,15 @@ export default function ModelComparison({
 
     // Cost scoring (lower cost = higher score)
     const avgCost = (model.pricing.input + model.pricing.output) / 2
-    // Use inverse scoring with reasonable range (most expensive models around $0.075, cheapest around $0.001)
-    const maxCost = 0.075
-    const minCost = 0.0005
+    // Updated range for 2025 models: o3-pro ($50/M avg) to Gemma 3 4B ($0.00003/M avg)
+    const maxCost = 50.0 // o3-pro average cost
+    const minCost = 0.00003 // Gemma 3 4B cost
     const normalizedCost = Math.min(Math.max(avgCost, minCost), maxCost)
-    const costScore = Math.round(100 * (1 - (normalizedCost - minCost) / (maxCost - minCost)))
+    // Use logarithmic scaling for better distribution across the wide price range
+    const logMaxCost = Math.log10(maxCost)
+    const logMinCost = Math.log10(minCost)
+    const logNormalizedCost = Math.log10(normalizedCost)
+    const costScore = Math.round(100 * (1 - (logNormalizedCost - logMinCost) / (logMaxCost - logMinCost)))
 
     // Capabilities scoring
     const capabilitiesCount = Object.values(model.capabilities).filter(Boolean).length
@@ -277,7 +281,7 @@ export default function ModelComparison({
                       <th className="text-center p-3 text-xs font-medium text-gray-900 dark:text-gray-100">Overall Score</th>
                       <th className="text-center p-3 text-xs font-medium text-gray-900 dark:text-gray-100">Speed</th>
                       <th className="text-center p-3 text-xs font-medium text-gray-900 dark:text-gray-100">Quality</th>
-                      <th className="text-center p-3 text-xs font-medium text-gray-900 dark:text-gray-100">Cost/1k</th>
+                      <th className="text-center p-3 text-xs font-medium text-gray-900 dark:text-gray-100">Cost/M</th>
                       <th className="text-center p-3 text-xs font-medium text-gray-900 dark:text-gray-100">Capabilities</th>
                     </tr>
                   </thead>
