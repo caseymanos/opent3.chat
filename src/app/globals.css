@@ -56,15 +56,19 @@ body {
   color: hsl(var(--foreground));
   font-feature-settings: "rlig" 1, "calt" 1;
   overflow-x: hidden; /* Prevent horizontal scrolling */
+  height: 100vh;
+  margin: 0;
 }
 
 html {
   overflow-x: hidden; /* Prevent horizontal scrolling at root level */
+  height: 100%;
 }
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -73,11 +77,16 @@ html {
 
 ::-webkit-scrollbar-thumb {
   background: hsl(var(--border));
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground));
+}
+
+/* Ensure smooth scrolling */
+* {
+  scroll-behavior: smooth;
 }
 
 /* Glass morphism utility classes */

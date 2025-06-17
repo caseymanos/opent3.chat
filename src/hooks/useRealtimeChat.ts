@@ -10,7 +10,7 @@ import type { Database } from '@/lib/supabase'
 type Message = Database['public']['Tables']['messages']['Row']
 type Conversation = Database['public']['Tables']['conversations']['Row']
 
-export function useRealtimeChat(conversationId: string) {
+export function useRealtimeChat(conversationId: string | null) {
   const supabase = createClientComponentClient()
   const { getSessionId } = useAuth()
   const [messages, setMessages] = useState<Message[]>([])
@@ -35,17 +35,19 @@ export function useRealtimeChat(conversationId: string) {
   // Load initial messages and conversation
   useEffect(() => {
     // Immediately clear messages when conversation changes to prevent showing old messages
+    console.log('🔄 [useRealtimeChat] Conversation changed, clearing messages. New ID:', conversationId)
     setMessages([])
     setConversation(null)
     
     if (!conversationId || conversationId === '' || conversationId === 'default') {
+      console.log('⚠️ [useRealtimeChat] No valid conversation ID, skipping load')
       setIsLoading(false)
       return
     }
 
     // Check if conversationId is a valid UUID
     if (!isValidUUID(conversationId)) {
-      console.error('Invalid conversation ID format:', conversationId)
+      console.error('❌ [useRealtimeChat] Invalid conversation ID format:', conversationId)
       setIsLoading(false)
       return
     }
@@ -68,6 +70,7 @@ export function useRealtimeChat(conversationId: string) {
         setConversation(conversationData)
 
         // Load messages
+        console.log('📄 [useRealtimeChat] Loading messages for conversation:', conversationId)
         const { data: messagesData, error: messagesError } = await supabase
           .from('messages')
           .select('*')
@@ -79,6 +82,7 @@ export function useRealtimeChat(conversationId: string) {
           return
         }
 
+        console.log(`📨 [useRealtimeChat] Loaded ${messagesData?.length || 0} messages for conversation:`, conversationId)
         setMessages(messagesData || [])
       } catch (error) {
         console.error('Error loading initial data:', error)
@@ -268,6 +272,8 @@ export function useRealtimeChat(conversationId: string) {
   ) => {
     if (!conversationId) return
 
+    console.log('📤 [useRealtimeChat] Sending message to conversation:', conversationId, { role, parentId })
+    
     try {
       // Calculate branch index if not provided
       let finalBranchIndex = branchIndex
@@ -304,6 +310,16 @@ export function useRealtimeChat(conversationId: string) {
       }
 
       console.log('✅ Message sent with branching info:', { parentId, branchIndex: finalBranchIndex })
+      
+      // Update conversation's updated_at timestamp
+      const { error: updateError } = await supabase
+        .from('conversations')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', conversationId)
+      
+      if (updateError) {
+        console.warn('⚠️ [useRealtimeChat] Failed to update conversation timestamp:', updateError)
+      }
     } catch (error) {
       console.error('Error sending message:', error)
       throw error

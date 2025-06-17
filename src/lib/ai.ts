@@ -1,3 +1,4 @@
+import React from 'react'
 import { useChat } from 'ai/react'
 import type { Message } from 'ai'
 
@@ -140,17 +141,23 @@ export function useAIChat({
   provider = 'anthropic',
   systemPrompt,
   ragContext,
-  onFinish
+  onFinish,
+  initialMessages = []
 }: {
-  conversationId: string
+  conversationId: string | null
   model?: string
   provider?: string
   systemPrompt?: string
   ragContext?: string
   onFinish?: (message: Message) => void
+  initialMessages?: Message[]
 }) {
+  const [previousConversationId, setPreviousConversationId] = React.useState<string | null>(null)
+  
   const chat = useChat({
+    id: conversationId || 'no-conversation', // Force reset when conversation changes
     api: '/api/chat',
+    initialMessages: initialMessages, // Initialize with conversation history
     body: {
       conversationId,
       model,
@@ -168,7 +175,7 @@ export function useAIChat({
   })
 
   // Override handleSubmit to support experimental_attachments
-  const enhancedHandleSubmit = (event?: React.FormEvent<HTMLFormElement>, chatRequestOptions?: { experimental_attachments?: FileList }) => {
+  const enhancedHandleSubmit = (event?: React.FormEvent<HTMLFormElement>, chatRequestOptions?: any) => {
     if (event) {
       event.preventDefault()
     }
@@ -180,7 +187,8 @@ export function useAIChat({
       console.log('🤖 [useAIChat] Submitting with attachments:', {
         hasInput,
         hasAttachments,
-        attachmentCount: chatRequestOptions?.experimental_attachments?.length || 0
+        attachmentCount: chatRequestOptions?.experimental_attachments?.length || 0,
+        currentMessages: chat.messages.length
       })
       
       return chat.handleSubmit(event, {
@@ -195,6 +203,16 @@ export function useAIChat({
       })
     }
   }
+
+  // Update messages when conversation changes or initial messages change
+  React.useEffect(() => {
+    if (previousConversationId !== conversationId) {
+      console.log('🧹 [useAIChat] Conversation changed, updating AI messages with history')
+      // Set the messages to the initial messages (conversation history)
+      chat.setMessages(initialMessages)
+      setPreviousConversationId(conversationId)
+    }
+  }, [conversationId, previousConversationId, chat, initialMessages])
 
   return {
     ...chat,

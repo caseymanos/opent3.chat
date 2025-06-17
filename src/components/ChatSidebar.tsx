@@ -39,18 +39,7 @@ export default function ChatSidebar({
     
     // For now, disable real-time subscriptions to eliminate errors
     // We'll use the sidebar key refresh mechanism instead
-    console.log('🔌 [ChatSidebar] Skipping real-time subscription (using manual refresh)')
-    
-    // Polling fallback every 5 seconds when tab is visible
-    const interval = setInterval(() => {
-      if (document.visibilityState === 'visible') {
-        loadConversations()
-      }
-    }, 5000)
-
-    return () => {
-      clearInterval(interval)
-    }
+    console.log('🔌 [ChatSidebar] Loading conversations once (no polling)')
   }, [])  // loadConversations is defined inline, so it's stable
 
   const loadConversations = async () => {

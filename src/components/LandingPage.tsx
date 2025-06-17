@@ -1,54 +1,19 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Button } from './ui/Button'
-import { createClientComponentClient } from '@/lib/supabase'
 
 export default function LandingPage() {
   const router = useRouter()
-  const [isStarting, setIsStarting] = useState(false)
-  const supabase = createClientComponentClient()
 
-  const handleStartChatting = async () => {
-    setIsStarting(true)
-    
-    try {
-      console.log('🚀 [LandingPage] Creating new conversation...')
-      
-      // Create conversation via API endpoint
-      const response = await fetch('/api/conversations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: 'New Chat',
-          model_provider: 'anthropic',
-          model_name: 'claude-3-5-sonnet-20241022'
-        }),
-      })
-
-      const result = await response.json()
-      
-      if (response.ok && result.success && result.data?.id) {
-        console.log('✅ [LandingPage] Created conversation, navigating to:', result.data.id)
-        router.push(`/chat/${result.data.id}`)
-      } else {
-        console.error('❌ [LandingPage] Failed to create conversation:', result)
-        alert(`Failed to create conversation: ${result.error || 'Unknown error'}`)
-      }
-    } catch (error) {
-      console.error('❌ [LandingPage] Error creating conversation:', error)
-      alert('Error creating conversation. Please check your connection and try again.')
-    } finally {
-      setIsStarting(false)
-    }
+  const handleStartChatting = () => {
+    console.log('🚀 [LandingPage] Navigating to chat...')
+    router.push('/chat')
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100 dark:from-gray-900 dark:via-gray-900 dark:to-indigo-950">
+    <div className="h-screen overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-indigo-100 dark:from-gray-900 dark:via-gray-900 dark:to-indigo-950">
       {/* Background Pattern */}
       <div className="absolute inset-0 bg-grid-slate-100 dark:bg-grid-slate-800 bg-[size:20px_20px] opacity-20" />
       
@@ -129,20 +94,10 @@ export default function LandingPage() {
           >
             <Button
               onClick={handleStartChatting}
-              disabled={isStarting}
               size="lg"
               className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300"
             >
-              {isStarting ? (
-                <>
-                  <div className="w-5 h-5 animate-spin rounded-full border-2 border-white border-t-transparent mr-2" />
-                  Starting Chat...
-                </>
-              ) : (
-                <>
-                  🚀 Start Chatting
-                </>
-              )}
+              🚀 Start Chatting
             </Button>
             
             <Button

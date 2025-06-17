@@ -17,12 +17,14 @@ import type { Database } from '@/lib/supabase'
 type Message = Database['public']['Tables']['messages']['Row']
 
 interface ChatMainProps {
-  conversationId: string
+  conversationId: string | null
   messages: Message[]
   isLoading: boolean
   selectedModel: string
   selectedProvider: string
   onModelChange: (model: string, provider: string) => void
+  onCreateConversation?: () => Promise<void>
+  onMessageSent?: () => void
 }
 
 export default function ChatMain({
@@ -31,7 +33,9 @@ export default function ChatMain({
   isLoading,
   selectedModel,
   selectedProvider,
-  onModelChange
+  onModelChange,
+  onCreateConversation,
+  onMessageSent
 }: ChatMainProps) {
   const { sendMessage, updateTypingStatus } = useRealtimeChat(conversationId)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -40,11 +44,65 @@ export default function ChatMain({
   const [showBranchNavigator, setShowBranchNavigator] = useState(false)
   const [activeBranchId, setActiveBranchId] = useState<string | undefined>()
   
+  // State for pending message when no conversation exists
+  const [pendingMessage, setPendingMessage] = useState<{ text: string; files?: FileList | null } | null>(null)
+  
   
   // Tab state for side panels
   const [activeTab, setActiveTab] = useState<'chat' | 'files' | 'summaries'>('chat')
   
 
+
+  // Convert database messages to AI SDK format for initialization
+  // Implement sliding window to limit context size
+  const initialAIMessages = React.useMemo(() => {
+    const MAX_CONTEXT_MESSAGES = 50 // Limit to last 50 messages
+    const MAX_CONTEXT_LENGTH = 100000 // Approximate character limit
+    
+    // Filter messages based on branch if needed
+    let relevantMessages = messages
+    if (activeBranchId) {
+      // TODO: Implement branch path filtering
+      // For now, use all messages but this should filter to only the active branch path
+      console.log('🌿 [ChatMain] Branch mode active, should filter messages for branch:', activeBranchId)
+    }
+    
+    // Start from the end and work backwards
+    const formattedMessages = relevantMessages.map(msg => ({
+      id: msg.id,
+      role: msg.role as 'user' | 'assistant' | 'system',
+      content: typeof msg.content === 'object' && msg.content && 'text' in msg.content 
+        ? (msg.content as { text: string }).text 
+        : typeof msg.content === 'string' ? msg.content : ''
+    }))
+    
+    // Take only the most recent messages that fit within our limits
+    let contextLength = 0
+    const contextMessages = []
+    
+    for (let i = formattedMessages.length - 1; i >= 0 && contextMessages.length < MAX_CONTEXT_MESSAGES; i--) {
+      const message = formattedMessages[i]
+      const messageLength = message.content.length
+      
+      if (contextLength + messageLength > MAX_CONTEXT_LENGTH) {
+        console.log('📏 [ChatMain] Reached context length limit, truncating older messages')
+        break
+      }
+      
+      contextMessages.unshift(message) // Add to beginning to maintain order
+      contextLength += messageLength
+    }
+    
+    console.log('📚 [ChatMain] Initialized AI messages:', {
+      totalMessages: messages.length,
+      contextMessages: contextMessages.length,
+      contextLength,
+      oldestIncluded: contextMessages[0]?.content.substring(0, 50) + '...',
+      newestIncluded: contextMessages[contextMessages.length - 1]?.content.substring(0, 50) + '...'
+    })
+    
+    return contextMessages
+  }, [messages, activeBranchId])
 
   // Use AI chat hook for streaming responses
   const {
@@ -58,6 +116,7 @@ export default function ChatMain({
     conversationId,
     model: selectedModel,
     provider: selectedProvider,
+    initialMessages: initialAIMessages, // Pass conversation history
     onFinish: async (message) => {
       console.log('🎯 [ChatMain] AI response finished:', message)
       // Save AI response to Supabase
@@ -133,10 +192,35 @@ export default function ChatMain({
     }
   }, [aiMessages, aiError])
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom only for new user/assistant messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1]
+      // Only auto-scroll for recent messages (within last 5 seconds)
+      const messageTime = new Date(lastMessage.created_at).getTime()
+      const now = Date.now()
+      if (now - messageTime < 5000) {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      }
+    }
   }, [messages])
+
+  // Send pending message when conversation is created
+  useEffect(() => {
+    if (conversationId && pendingMessage) {
+      console.log('📨 [ChatMain] Sending pending message to new conversation:', conversationId)
+      const message = pendingMessage.text
+      const files = pendingMessage.files
+      // Clear pending message
+      setPendingMessage(null)
+      // Use setTimeout to ensure state updates have propagated
+      setTimeout(() => {
+        // Update input and trigger send
+        handleInputValueChange(message)
+        handleSendMessage(files)
+      }, 100)
+    }
+  }, [conversationId])
 
   const handleSendMessage = async (fileList?: FileList | null, e?: React.FormEvent) => {
     console.log('🚀 [ChatMain] handleSendMessage called', { 
@@ -152,14 +236,26 @@ export default function ChatMain({
       e.preventDefault()
     }
     
-    if ((!input.trim() && (!fileList || fileList.length === 0)) || isAILoading || !conversationId) {
+    if ((!input.trim() && (!fileList || fileList.length === 0)) || isAILoading) {
       console.warn('❌ [ChatMain] Message sending blocked:', { 
         hasInput: !!input.trim(), 
         hasAttachedFiles: !!(fileList && fileList.length > 0),
-        isAILoading, 
-        hasConversationId: !!conversationId 
+        isAILoading
       })
       return
+    }
+
+    // Create conversation if it doesn't exist
+    if (!conversationId) {
+      console.log('🆕 [ChatMain] No conversation exists, storing pending message and creating conversation...')
+      setPendingMessage({ text: input.trim(), files: fileList })
+      if (onCreateConversation) {
+        await onCreateConversation()
+        return
+      } else {
+        console.error('❌ [ChatMain] No onCreateConversation handler provided')
+        return
+      }
     }
 
     try {
@@ -177,15 +273,19 @@ export default function ChatMain({
         await sendMessage(input, 'user')
       }
       
+      // Notify parent that a message was sent to refresh sidebar
+      onMessageSent?.()
+      
       console.log('🤖 [ChatMain] Triggering AI response with files:', {
         filesCount: fileList?.length || 0,
         hasFiles: !!(fileList && fileList.length > 0)
       })
       
-      // Use the proper AI SDK flow with file attachments
+      // The AI SDK now has the full conversation history via initialMessages
+      // Just submit with attachments if any
       await handleSubmit(undefined, {
         experimental_attachments: fileList || undefined
-      })
+      } as any)
       
       // Clear the input after successful send (AI SDK should do this, but let's be explicit)
       console.log('✅ [ChatMain] Message sent successfully, input should be cleared')
@@ -238,7 +338,7 @@ export default function ChatMain({
   }
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="h-full flex flex-col">
       {/* Collaborative Cursors Overlay */}
       
       {/* Header with Model Selector and Controls */}
@@ -317,7 +417,7 @@ export default function ChatMain({
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex overflow-hidden min-h-0">
+      <div className="flex-1 flex overflow-hidden">
         {/* Sidebar Content */}
         {(activeTab !== 'chat' || showBranchNavigator) && (
           <div className="w-80 border-r border-slate-200 dark:border-slate-700 bg-white/30 dark:bg-slate-900/30 backdrop-blur-sm overflow-y-auto flex-shrink-0">
@@ -329,7 +429,7 @@ export default function ChatMain({
                 onCreateBranch={handleCreateBranch}
               />
             )}
-            {activeTab === 'files' && (
+            {activeTab === 'files' && conversationId && (
               <div className="p-4">
                 <FileUpload
                   conversationId={conversationId}
@@ -341,29 +441,65 @@ export default function ChatMain({
                 />
               </div>
             )}
-            {activeTab === 'summaries' && (
+            {activeTab === 'files' && !conversationId && (
+              <div className="p-4 text-center text-slate-500 dark:text-slate-400">
+                <p>Start a conversation first to upload files</p>
+              </div>
+            )}
+            {activeTab === 'summaries' && conversationId && (
               <div className="p-4">
                 <FileSummaries conversationId={conversationId} />
+              </div>
+            )}
+            {activeTab === 'summaries' && !conversationId && (
+              <div className="p-4 text-center text-slate-500 dark:text-slate-400">
+                <p>Start a conversation first to view summaries</p>
               </div>
             )}
           </div>
         )}
         
         {/* Main Content Area */}
-        <div className="flex-1 overflow-y-auto relative min-w-0">
-          {isLoading ? (
+        <div className="flex-1 relative min-w-0">
+          {!conversationId ? (
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center max-w-md">
+                <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <svg
+                    className="w-8 h-8 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                  Welcome to T3 Crusher
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400 mb-4">
+                  Start a conversation by typing a message below.
+                </p>
+              </div>
+            </div>
+          ) : isLoading ? (
             <div className="h-full flex items-center justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
           ) : activeTab === 'chat' ? (
-            <>
+            <div className="h-full flex flex-col">
               <MessageList 
                 messages={messages} 
-                aiMessages={aiMessages} 
+                aiMessages={conversationId ? aiMessages : []} 
                 onCreateBranch={handleCreateBranch}
               />
-              <div ref={messagesEndRef} />
-            </>
+              <div ref={messagesEndRef} className="flex-shrink-0 h-4" />
+            </div>
           ) : (
             <div className="h-full flex items-center justify-center">
               <div className="text-center text-slate-500 dark:text-slate-400">

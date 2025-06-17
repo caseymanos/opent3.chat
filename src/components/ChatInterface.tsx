@@ -67,25 +67,22 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
         setCurrentConversationId(newConversation.id)
         setSidebarKey(prev => prev + 1) // Force sidebar to re-render and reload conversations
         console.log('✅ [ChatInterface] Set conversation ID to:', newConversation.id)
+        return newConversation.id
       } else {
         console.error('❌ [ChatInterface] No conversation ID returned:', newConversation)
+        return null
       }
     } catch (error) {
       console.error('❌ [ChatInterface] Failed to create new conversation:', error)
       // Show error to user without alert (less intrusive)
       console.warn(`Conversation creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      return null
     } finally {
       setCreatingConversation(false)
     }
   }
 
-  // Only create initial conversation if no initial ID provided
-  useEffect(() => {
-    if (!initialConversationId && !currentConversationId && !creatingConversation) {
-      console.log('🔄 [ChatInterface] Creating initial conversation')
-      handleNewConversation()
-    }
-  }, []) // Empty deps to run only once on mount
+  // Remove auto-creation - conversations should only be created when first message is sent
   
   // Handle invalid conversation IDs
   if (initialConversationId === 'default' || currentConversationId === 'default') {
@@ -100,9 +97,14 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
   }
 
   const handleConversationSelect = (conversationId: string) => {
-    // Set the conversation ID directly for better UX
-    setCurrentConversationId(conversationId)
-    console.log('🔄 [ChatInterface] Selected conversation:', conversationId)
+    // Only update if actually changing conversation
+    if (conversationId !== currentConversationId) {
+      console.log('🔄 [ChatInterface] Switching conversation from', currentConversationId, 'to', conversationId)
+      // Set the conversation ID directly for better UX
+      setCurrentConversationId(conversationId)
+    } else {
+      console.log('🔄 [ChatInterface] Same conversation selected, no change needed')
+    }
     
     // Close sidebar on mobile after selection
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
@@ -114,9 +116,9 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
     try {
       await deleteConversation(conversationId)
       setSidebarKey(prev => prev + 1) // Force sidebar refresh
-      // If we deleted the current conversation, create a new one
+      // If we deleted the current conversation, clear it (don't create a new one)
       if (conversationId === currentConversationId) {
-        handleNewConversation()
+        setCurrentConversationId('')
       }
     } catch (error) {
       console.error('Failed to delete conversation:', error)
@@ -128,7 +130,6 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
       console.log('🗑️ [ChatInterface] Starting clear all conversations')
       
       // First clear the current conversation ID to trigger cleanup of subscriptions
-      const previousConversationId = currentConversationId
       setCurrentConversationId('')
       
       // Wait for cleanup to happen
@@ -141,15 +142,7 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
       // Force sidebar refresh
       setSidebarKey(prev => prev + 1)
       
-      // Create new conversation after ensuring cleanup is complete
-      // Use a longer delay to ensure all subscriptions are cleaned up
-      setTimeout(async () => {
-        // Only create new conversation if we actually cleared the current one
-        if (previousConversationId) {
-          console.log('🆕 [ChatInterface] Creating new conversation after clear all')
-          await handleNewConversation()
-        }
-      }, 500)
+      // Don't create a new conversation - wait for user to send first message
     } catch (error) {
       console.error('❌ [ChatInterface] Failed to clear conversations:', error)
       // Don't create new conversation if clear failed
@@ -289,7 +282,7 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
         </div>
 
         {/* Chat Messages Area */}
-        <div className="flex-1">
+        <div className="flex-1 h-full overflow-hidden">
           <ChatMain
             conversationId={currentConversationId}
             messages={messages}
@@ -299,6 +292,11 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
             onModelChange={(model, provider) => {
               setSelectedModel(model)
               setSelectedProvider(provider)
+            }}
+            onCreateConversation={handleNewConversation}
+            onMessageSent={() => {
+              console.log('🔄 [ChatInterface] Message sent, refreshing sidebar')
+              setSidebarKey(prev => prev + 1)
             }}
           />
         </div>

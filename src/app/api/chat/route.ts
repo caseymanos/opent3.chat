@@ -52,13 +52,19 @@ export async function POST(req: Request) {
       firstMessage: messages?.[0]?.content?.substring(0, 100) + '...'
     })
 
-    if (!messages || !conversationId) {
-      console.error('❌ [CHAT API] Missing required fields:', { messages: !!messages, conversationId: !!conversationId })
-      return new Response('Missing required fields', { status: 400 })
+    if (!conversationId) {
+      console.error('❌ [CHAT API] Missing conversationId')
+      return new Response('Missing conversationId', { status: 400 })
     }
 
     // Process messages with file attachments
-    let processedMessages = messages
+    let processedMessages = messages || []
+    
+    // If no messages provided, this might be a new conversation
+    if (!messages || messages.length === 0) {
+      console.warn('⚠️ [CHAT API] No messages provided, using empty array')
+      processedMessages = []
+    }
     
     // Handle file attachments for the last user message
     if (attachedFiles && attachedFiles.length > 0) {

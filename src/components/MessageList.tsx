@@ -4,13 +4,7 @@ import { motion } from 'framer-motion'
 import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import rehypeHighlight from 'rehype-highlight'
-import { XMarkIcon } from '@heroicons/react/24/outline'
-import EnhancedChainOfThought from './EnhancedChainOfThought'
 import MessageActions from './MessageActions'
-import { extractReasoning } from '@/lib/reasoning'
-import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'
-import { ScrollArea } from './ui/ScrollArea'
-import { cn } from '@/lib/utils'
 import type { Database } from '@/lib/supabase'
 import type { Message as AIMessage } from 'ai'
 
@@ -23,7 +17,12 @@ interface MessageListProps {
 }
 
 export default function MessageList({ messages, aiMessages = [], onCreateBranch }: MessageListProps) {
-  console.log('🔄 [MessageList] Rendering with:', { dbMessages: messages.length, aiMessages: aiMessages.length })
+  console.log('🔄 [MessageList] Rendering with:', { 
+    dbMessages: messages.length, 
+    aiMessages: aiMessages.length,
+    firstDbMessageId: messages[0]?.id,
+    firstAiMessageContent: aiMessages[0]?.content?.substring(0, 50)
+  })
   
   // Combine database messages and AI messages for display
   const allMessages = [...messages]
@@ -84,15 +83,19 @@ export default function MessageList({ messages, aiMessages = [], onCreateBranch 
   }
 
   return (
-    <div className="p-4 space-y-4">
-      {allMessages.map((message, index) => (
-        <MessageBubble
-          key={message.id}
-          message={message}
-          isLast={index === allMessages.length - 1}
-          onCreateBranch={onCreateBranch}
-        />
-      ))}
+    <div className="flex-1 overflow-y-auto" style={{ height: '100%' }}>
+      <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+        {allMessages.map((message, index) => (
+          <MessageBubble
+            key={message.id}
+            message={message}
+            isLast={index === allMessages.length - 1}
+            onCreateBranch={onCreateBranch}
+          />
+        ))}
+        {/* Add padding at bottom for better scrolling */}
+        <div className="h-24" />
+      </div>
     </div>
   )
 }
@@ -107,7 +110,6 @@ function MessageBubble({ message, onCreateBranch }: MessageBubbleProps) {
   const isUser = message.role === 'user'
   const isAssistant = message.role === 'assistant'
   const isSystem = message.role === 'system'
-  const [showReasoning, setShowReasoning] = useState(false)
 
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString([], {
@@ -126,8 +128,6 @@ function MessageBubble({ message, onCreateBranch }: MessageBubbleProps) {
     return 'Invalid message content'
   }
 
-  // Extract reasoning for assistant messages
-  const reasoningData = isAssistant ? extractReasoning(getMessageContent()) : null
 
   if (isSystem) {
     return (
@@ -149,40 +149,26 @@ function MessageBubble({ message, onCreateBranch }: MessageBubbleProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className={`flex ${isUser ? 'justify-end' : 'justify-start'} group relative`}
+      className="group relative"
     >
-      <div
-        className={`
-          max-w-[70%] flex gap-3 
-          ${isUser ? 'flex-row-reverse' : 'flex-row'}
-        `}
-      >
-        {/* Avatar */}
-        <div
-          className={`
-            flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium
-            ${
-              isUser
-                ? 'bg-blue-600'
-                : 'bg-gradient-to-br from-purple-500 to-pink-500'
-            }
-          `}
-        >
-          {isUser ? 'U' : 'A'}
+      <div className="flex flex-col gap-2">
+        {/* Role Label */}
+        <div className="flex items-center gap-2">
+          <span className={`text-sm font-medium ${
+            isUser ? 'text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300'
+          }`}>
+            {isUser ? 'You' : 'Assistant'}
+          </span>
+          {message.model_metadata && (
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              {(message.model_metadata as { model?: string }).model || 'AI'}
+            </span>
+          )}
         </div>
 
         {/* Message Content */}
-        <div
-          className={`
-            rounded-2xl px-4 py-3 max-w-full
-            ${
-              isUser
-                ? 'bg-blue-600 text-white rounded-br-md'
-                : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-bl-md'
-            }
-          `}
-        >
-          <div className="prose prose-sm dark:prose-invert max-w-none">
+        <div className="text-slate-900 dark:text-slate-100">
+          <div className="prose prose-base dark:prose-invert max-w-none">
             <ReactMarkdown
               rehypePlugins={[[rehypeHighlight, { detect: true }]]}
               components={{
@@ -248,103 +234,35 @@ function MessageBubble({ message, onCreateBranch }: MessageBubbleProps) {
                 }
               }}
             >
-              {reasoningData ? reasoningData.mainResponse : getMessageContent()}
+              {getMessageContent()}
             </ReactMarkdown>
           </div>
           
-          {/* Reasoning Toggle Button for Assistant Messages */}
-          {isAssistant && reasoningData && reasoningData.reasoning.length > 0 && (
-            <button
-              onClick={() => setShowReasoning(!showReasoning)}
-              className="mt-3 text-xs px-3 py-1 rounded-full bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors flex items-center gap-1"
-            >
-              <span>🧠</span>
-              {showReasoning ? 'Hide' : 'Show'} reasoning
-            </button>
-          )}
           
-          {/* Metadata */}
-          <div
-            className={`
-              text-xs mt-2 flex items-center gap-2
-              ${
-                isUser
-                  ? 'text-blue-100'
-                  : 'text-slate-500 dark:text-slate-400'
-              }
-            `}
-          >
-            <span>{formatTime(message.created_at)}</span>
-            {message.model_metadata && (
-              <>
-                <span>•</span>
-                <span>
-                  {(message.model_metadata as { model?: string }).model || 'Assistant'}
-                </span>
-              </>
-            )}
-          </div>
         </div>
 
-        {/* Message Actions */}
-        {onCreateBranch && !isSystem && (
-          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <MessageActions
-              message={message}
-              onCreateBranch={onCreateBranch}
-              onCopy={(content) => {
-                navigator.clipboard.writeText(content)
-                console.log('📋 [MessageList] Copied to clipboard:', content.substring(0, 50) + '...')
-              }}
-            />
+        {/* Message Actions and Time */}
+        {!isSystem && (
+          <div className="flex items-center justify-between mt-1">
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              {formatTime(message.created_at)}
+            </span>
+            {onCreateBranch && (
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                <MessageActions
+                  message={message}
+                  onCreateBranch={onCreateBranch}
+                  onCopy={(content) => {
+                    navigator.clipboard.writeText(content)
+                    console.log('📋 [MessageList] Copied to clipboard:', content.substring(0, 50) + '...')
+                  }}
+                />
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      {/* Enhanced Chain of Thought Component */}
-      {isAssistant && reasoningData && reasoningData.reasoning.length > 0 && showReasoning && (
-        <motion.div
-          initial={{ opacity: 0, x: 300 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: 300 }}
-          transition={{ duration: 0.3, type: "spring", damping: 25 }}
-          className="fixed top-20 right-4 bottom-20 w-96 z-40 overflow-hidden"
-          style={{ 
-            maxHeight: 'calc(100vh - 10rem)',
-            width: 'min(384px, calc(100vw - 2rem))'
-          }}
-        >
-          <Card className="h-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-slate-200 dark:border-slate-700 shadow-2xl">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-semibold">
-                  Enhanced Chain of Thought
-                </CardTitle>
-                <button
-                  onClick={() => setShowReasoning(false)}
-                  className="p-1 rounded-lg hover:bg-accent transition-colors"
-                >
-                  <XMarkIcon className="w-4 h-4" />
-                </button>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ScrollArea className="h-full">
-                <div className="p-4">
-                  <EnhancedChainOfThought
-                    reasoning={reasoningData.reasoning}
-                    isVisible={true}
-                    autoPlay={true}
-                    showMetrics={true}
-                    enableVoice={false}
-                    theme="neural"
-                  />
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
     </motion.div>
   )
 }
