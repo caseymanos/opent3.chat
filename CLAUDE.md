@@ -5,8 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Context
 
 **Project Type:** Next.js Application
-**Branch:** integrations_branching_realtime
-**Focus Area:** Development work on integrations_branching_realtime
+
 
 ## Project Overview
 
@@ -14,7 +13,7 @@ This is a Next.js React application with server-side rendering capabilities.
 
 ## Branch Purpose
 
-This branch (integrations_branching_realtime) is focused on: Development work on integrations_branching_realtime
+
 
 ## Development Guidelines
 
@@ -66,4 +65,4 @@ npm run dev, npm run build, npm run start
 - Always verify functionality in the development environment
 - Run linting and type checking before committing
 - Create meaningful commit messages that describe the changes
-- Focus on the specific goals of this branch: Development work on integrations_branching_realtime
+

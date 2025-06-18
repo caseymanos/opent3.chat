@@ -41,14 +41,19 @@ export default function UsageCounter() {
 
   // Anonymous users - show X/10 for Vertex AI models only
   if (isAnonymous) {
-    const remaining = getRemainingAnonymousCalls(usage)
+    // Hide counter for guest users (those with generated usernames like "User 8da871fd")
+    if (user?.user_metadata?.username?.startsWith('User ')) {
+      return null
+    }
+    
+    const used = usage.premiumCalls
     const total = 10
     
     return (
       <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-100 dark:bg-blue-900 text-xs">
         <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
         <span className="text-blue-700 dark:text-blue-300 font-medium">
-          {remaining}/{total} Vertex AI calls
+          {used}/{total} requests
         </span>
       </div>
     )
@@ -68,17 +73,18 @@ export default function UsageCounter() {
 
   // Logged-in users - show X/20 with separate Claude counter
   if (user) {
-    const remainingPremium = getRemainingPremiumCalls(usage)
-    const remainingSpecial = getRemainingSpecialCalls(usage)
+    const usedPremium = usage.premiumCalls
+    const usedSpecial = usage.specialCalls
     const totalPremium = 18
     const totalSpecial = 2
     const totalCombined = 20
+    const totalUsed = usedPremium + usedSpecial
 
     const getStatusColor = () => {
-      const totalRemaining = remainingPremium + remainingSpecial
-      if (totalRemaining > 10) return 'text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900'
-      if (totalRemaining > 5) return 'text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900'
-      if (totalRemaining > 0) return 'text-orange-700 dark:text-orange-300 bg-orange-100 dark:bg-orange-900'
+      const remaining = totalCombined - totalUsed
+      if (remaining > 10) return 'text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900'
+      if (remaining > 5) return 'text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900'
+      if (remaining > 0) return 'text-orange-700 dark:text-orange-300 bg-orange-100 dark:bg-orange-900'
       return 'text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900'
     }
 
@@ -87,12 +93,12 @@ export default function UsageCounter() {
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-current"></div>
           <span className="font-medium">
-            {remainingPremium + remainingSpecial}/{totalCombined} calls/day
+            {totalUsed}/{totalCombined} requests
           </span>
         </div>
-        {remainingSpecial < totalSpecial && (
+        {usedSpecial > 0 && (
           <div className="flex items-center gap-1 text-[10px] opacity-75">
-            <span>Claude: {remainingSpecial}/{totalSpecial}</span>
+            <span>Claude: {usedSpecial}/{totalSpecial}</span>
           </div>
         )}
       </div>

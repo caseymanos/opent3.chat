@@ -12,6 +12,17 @@ export default function LandingPage() {
     router.push('/chat')
   }
 
+  const scrollToFeatures = () => {
+    const featuresSection = document.getElementById('features')
+    if (featuresSection) {
+      featuresSection.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+
+  const openGitHub = () => {
+    window.open('https://github.com/caseymanos/opent3.chat', '_blank')
+  }
+
   return (
     <div className="h-screen overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-indigo-100 dark:from-gray-900 dark:via-gray-900 dark:to-indigo-950">
       {/* Background Pattern */}
@@ -32,10 +43,10 @@ export default function LandingPage() {
           <Button variant="ghost" size="sm">
             About
           </Button>
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" onClick={scrollToFeatures}>
             Features
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={openGitHub}>
             GitHub
           </Button>
         </div>
@@ -103,7 +114,7 @@ export default function LandingPage() {
             <Button
               variant="outline"
               size="lg"
-              onClick={() => window.open('https://github.com/your-repo/t3-crusher', '_blank')}
+              onClick={openGitHub}
               className="px-8 py-4 text-lg font-semibold rounded-xl border-2"
             >
               <span className="mr-2">⭐</span>
@@ -114,6 +125,7 @@ export default function LandingPage() {
 
         {/* Feature Cards */}
         <motion.div
+          id="features"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9, duration: 0.8 }}
