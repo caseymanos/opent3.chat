@@ -474,7 +474,7 @@ export default function ChatMain({
               )}
             </button>
             
-            <TaskExtractor conversationId={conversationId} />
+            <TaskExtractor conversationId={conversationId} messageCount={messages.length} />
             <ModelComparison 
               selectedModels={[selectedModel]}
               onModelSelect={handleModelChange}
