@@ -5,16 +5,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Context
 
 **Project Type:** Next.js Application
-**Branch:** compare
-**Focus Area:** Development work on compare
 
 ## Project Overview
 
 This is a Next.js React application with server-side rendering capabilities.
-
-## Branch Purpose
-
-This branch (compare) is focused on: Development work on compare
 
 ## Development Guidelines
 
@@ -66,4 +60,3 @@ npm run dev, npm run build, npm run start
 - Always verify functionality in the development environment
 - Run linting and type checking before committing
 - Create meaningful commit messages that describe the changes
-- Focus on the specific goals of this branch: Development work on compare
