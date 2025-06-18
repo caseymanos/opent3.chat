@@ -203,7 +203,7 @@ export default function ModelSelector({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
               transition={{ duration: 0.15 }}
-              className="absolute bottom-full left-0 mb-2 w-72 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl z-[9999] max-h-96 overflow-y-auto"
+              className="absolute bottom-full left-0 mb-2 w-96 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl z-[9999] max-h-96 overflow-y-auto"
             >
             {sortedProviders.map((provider) => {
               const models = groupedModels[provider]
@@ -231,7 +231,7 @@ export default function ModelSelector({
                       onClick={() => canSelect && handleModelSelect(model)}
                       disabled={!canSelect}
                       className={`
-                        w-full flex items-start gap-3 px-3 py-3 rounded-md transition-all duration-150 text-left
+                        w-full flex items-start gap-2 px-3 py-2 rounded-md transition-all duration-150 text-left
                         ${!canSelect ? 'opacity-50 cursor-not-allowed' : ''}
                         ${selectedModel === model.id 
                           ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700' 
@@ -300,89 +300,27 @@ export default function ModelSelector({
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
                           {model.description}
-                          {/* Show tier-specific messages */}
-                          {model.tier === 'free' && (
-                            <span className="block text-xs text-gray-600 dark:text-gray-400 mt-1">
-                              Always available • No limits
-                            </span>
-                          )}
-                          {model.tier === 'premium' && !user && (
-                            <span className="block text-xs text-amber-600 dark:text-amber-400 mt-1">
-                              Sign in for 18 free calls/day
-                            </span>
-                          )}
-                          {model.tier === 'premium' && user && !usage?.byokEnabled && (
-                            <span className="block text-xs text-purple-600 dark:text-purple-400 mt-1">
-                              Part of 18 daily premium calls
-                            </span>
-                          )}
-                          {model.tier === 'special' && !user && (
-                            <span className="block text-xs text-amber-600 dark:text-amber-400 mt-1">
-                              Sign in for 2 free calls/day
-                            </span>
-                          )}
-                          {model.tier === 'special' && user && !usage?.byokEnabled && (
-                            <span className="block text-xs text-yellow-600 dark:text-yellow-400 mt-1">
-                              Limited to 2 calls/day
-                            </span>
-                          )}
-                          {model.tier === 'vertex-ai' && !user && (
-                            <span className="block text-xs text-blue-600 dark:text-blue-400 mt-1">
-                              10 free calls/day for anonymous
-                            </span>
-                          )}
-                          {model.tier === 'vertex-ai' && user && !usage?.byokEnabled && (
-                            <span className="block text-xs text-purple-600 dark:text-purple-400 mt-1">
-                              Part of 18 daily premium calls
-                            </span>
-                          )}
-                          {model.tier === 'byok' && !usage?.byokEnabled && (
-                            <span className="block text-xs text-orange-600 dark:text-orange-400 mt-1">
-                              Requires API key setup
-                            </span>
-                          )}
-                          {usage?.byokEnabled && model.tier !== 'free' && (
-                            <span className="block text-xs text-green-600 dark:text-green-400 mt-1">
-                              Unlimited with BYOK
-                            </span>
-                          )}
                         </p>
                         
-                        {/* Capabilities */}
-                        <div className="flex items-center gap-2 mt-2">
+                        {/* Compact info row */}
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
                           {model.capabilities.vision && (
-                            <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
-                              <EyeIcon className="w-3 h-3" />
-                              <span>Vision</span>
-                            </div>
+                            <span className="text-xs text-blue-600 dark:text-blue-400">👁</span>
                           )}
                           {model.capabilities.codeGeneration && (
-                            <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-                              <CodeBracketIcon className="w-3 h-3" />
-                              <span>Code</span>
-                            </div>
+                            <span className="text-xs text-green-600 dark:text-green-400">💻</span>
                           )}
-                        </div>
-                        
-                        {/* Performance & Pricing */}
-                        <div className="flex items-center gap-2 mt-2 flex-wrap">
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${badges.speedColors}`}>
-                            {model.performance.speed}
+                          <span className={`text-xs px-1.5 py-0.5 rounded ${badges.speedColors}`}>
+                            {model.performance.speed.charAt(0).toUpperCase()}
                           </span>
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${badges.qualityColors}`}>
-                            {model.performance.quality}
+                          <span className={`text-xs px-1.5 py-0.5 rounded ${badges.qualityColors}`}>
+                            {model.performance.quality.charAt(0).toUpperCase()}
                           </span>
-                          <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-                            <CurrencyDollarIcon className="w-3 h-3" />
-                            <span>{formatPrice(model.pricing.input)}/M</span>
-                          </div>
-                        </div>
-                        
-                        {/* Context Length */}
-                        <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                          {model.maxTokens.toLocaleString()} tokens
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {formatPrice(model.pricing.input)}/M
+                          </span>
                         </div>
                       </div>
                     </button>
