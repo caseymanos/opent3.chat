@@ -162,6 +162,15 @@ export async function POST(req: Request) {
         // Increment usage counter
         if (!currentUsage.byokEnabled) {
           await usageTracker.incrementUsage(userId, model);
+          
+          // For anonymous users, include usage info in response headers
+          if (!user) {
+            const updatedUsage = await usageTracker.getUsage(undefined);
+            const response = result.toDataStreamResponse();
+            response.headers.set('X-Usage-Count', String(updatedUsage.premiumCalls));
+            response.headers.set('X-Usage-Limit', '10');
+            return response;
+          }
         }
         
         return result.toDataStreamResponse();

@@ -32,8 +32,29 @@ export class UsageTracker {
 
   // Get usage data for current user
   async getUsage(userId?: string): Promise<UserUsage> {
+    // Try to get from API first (works for both authenticated and anonymous users)
+    try {
+      const response = await fetch('/api/usage')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.usage) {
+          console.log('📊 [UsageTracker] Got usage from API:', data.usage)
+          return {
+            premiumCalls: data.usage.premiumCalls || 0,
+            specialCalls: data.usage.specialCalls || 0,
+            lastReset: data.usage.lastReset || new Date().toISOString(),
+            byokEnabled: data.usage.byokEnabled || false,
+            apiKeys: data.usage.apiKeys || {}
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching usage from API:', error)
+    }
+
+    // Fallback for offline or error scenarios
     if (userId) {
-      // Authenticated user - try to get from Supabase
+      // Authenticated user - try to get from Supabase directly
       try {
         const { data, error } = await this.supabase
           .from('profiles')
@@ -49,26 +70,9 @@ export class UsageTracker {
             byokEnabled: data.byok_enabled || false,
             apiKeys: data.api_keys || {}
           }
-        } else if (error) {
-          console.warn('Profile not found for user, using default usage:', userId)
         }
       } catch (error) {
         console.error('Error fetching usage from Supabase:', error)
-      }
-    }
-
-    // Fall back to localStorage for anonymous users or when profile doesn't exist
-    const stored = localStorage.getItem(this.storageKey)
-    if (stored) {
-      try {
-        const usage = JSON.parse(stored) as UserUsage
-        // Check if reset is needed
-        if (this.shouldReset(usage.lastReset)) {
-          return this.resetUsage()
-        }
-        return usage
-      } catch (error) {
-        console.error('Error parsing stored usage:', error)
       }
     }
 

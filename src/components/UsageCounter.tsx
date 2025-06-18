@@ -19,6 +19,14 @@ export default function UsageCounter({ refreshKey }: UsageCounterProps = {}) {
     const loadUsage = async () => {
       try {
         const data = await getUsage()
+        console.log('📊 [UsageCounter] Loaded usage data:', {
+          user: user?.id || 'anonymous',
+          isAnonymous,
+          premiumCalls: data.premiumCalls,
+          specialCalls: data.specialCalls,
+          byokEnabled: data.byokEnabled,
+          refreshKey
+        })
         setUsage(data)
       } catch (error) {
         console.error('Failed to load usage data:', error)
@@ -28,7 +36,7 @@ export default function UsageCounter({ refreshKey }: UsageCounterProps = {}) {
     }
 
     loadUsage()
-  }, [user, getUsage, refreshKey])
+  }, [user, getUsage, refreshKey, isAnonymous])
 
   if (loading) {
     return (

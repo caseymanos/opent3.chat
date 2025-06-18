@@ -151,6 +151,8 @@ export default function ChatMain({
       console.log('🎯 [ChatMain] AI response finished:', message)
       // Save AI response to Supabase
       await sendMessage(message.content, 'assistant')
+      // Refresh usage counter after AI response is complete
+      onMessageSent?.()
     }
   })
 
