@@ -192,7 +192,7 @@ export function getVertexAIModelCapabilities(modelId: string) {
     },
   }
   
-  return capabilities[modelId] || {
+  return capabilities[modelId as keyof typeof capabilities] || {
     maxInputTokens: 32000,
     maxOutputTokens: 4096,
     supportsSystemPrompt: true,
