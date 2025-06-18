@@ -5,7 +5,11 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useUsageTracking } from '@/lib/usage-tracker'
 import type { UserUsage } from '@/lib/usage-tracker'
 
-export default function UsageCounter() {
+interface UsageCounterProps {
+  refreshKey?: number;
+}
+
+export default function UsageCounter({ refreshKey }: UsageCounterProps = {}) {
   const { user, isAnonymous } = useAuth()
   const { getUsage, getRemainingPremiumCalls, getRemainingAnonymousCalls, getRemainingSpecialCalls } = useUsageTracking()
   const [usage, setUsage] = useState<UserUsage | null>(null)
@@ -24,7 +28,7 @@ export default function UsageCounter() {
     }
 
     loadUsage()
-  }, [user, getUsage])
+  }, [user, getUsage, refreshKey])
 
   if (loading) {
     return (
@@ -48,7 +52,7 @@ export default function UsageCounter() {
       <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-100 dark:bg-blue-900 text-xs">
         <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
         <span className="text-blue-700 dark:text-blue-300 font-medium">
-          {remaining}/{total} Vertex AI calls
+          {remaining}/{total} requests
         </span>
       </div>
     )
@@ -87,7 +91,7 @@ export default function UsageCounter() {
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-current"></div>
           <span className="font-medium">
-            {remainingPremium + remainingSpecial}/{totalCombined} calls/day
+            {remainingPremium + remainingSpecial}/{totalCombined} requests/day
           </span>
         </div>
         {remainingSpecial < totalSpecial && (

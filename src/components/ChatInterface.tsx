@@ -28,6 +28,7 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
   })
   const [creatingConversation, setCreatingConversation] = useState(false)
   const [sidebarKey, setSidebarKey] = useState(0) // Force sidebar refresh
+  const [usageRefreshKey, setUsageRefreshKey] = useState(0) // Force usage counter refresh
   // Model selection state - moved up from ChatMain to ensure new conversations use current model
   // Default to Vertex AI model for anonymous users, free model for logged-in users
   const [selectedModel, setSelectedModel] = useState(() => {
@@ -227,7 +228,7 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
 
           <div className="flex items-center gap-2">
             {/* Usage Counter */}
-            <UsageCounter />
+            <UsageCounter refreshKey={usageRefreshKey} />
             
             {/* User menu */}
             <div className="flex items-center gap-2">
@@ -341,8 +342,9 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
             }}
             onCreateConversation={handleNewConversation}
             onMessageSent={() => {
-              console.log('🔄 [ChatInterface] Message sent, refreshing sidebar')
+              console.log('🔄 [ChatInterface] Message sent, refreshing sidebar and usage counter')
               setSidebarKey(prev => prev + 1)
+              setUsageRefreshKey(prev => prev + 1)
             }}
           />
         </div>
