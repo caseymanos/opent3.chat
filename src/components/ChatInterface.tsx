@@ -221,7 +221,7 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
               </svg>
             </Button>
             <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
-              {conversation?.title || 'T3 Crusher'}
+              {conversation?.title || 'OpenT3'}
             </h1>
           </div>
 

@@ -485,7 +485,7 @@ export default function ChatMain({
             </svg>
           </div>
           <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
-            Welcome to T3 Crusher
+            Welcome to OpenT3
           </h3>
           <p className="text-slate-600 dark:text-slate-400 mb-4">
             Start a new conversation to begin chatting with AI
@@ -504,7 +504,7 @@ export default function ChatMain({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-              T3 Crusher
+              OpenT3
             </h2>
             <span className="text-sm text-slate-500 dark:text-slate-400">
               Conversation {conversationId.split('-')[0]}
@@ -659,7 +659,7 @@ export default function ChatMain({
                   </svg>
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                  Welcome to T3 Crusher
+                  Welcome to OpenT3
                 </h3>
                 <p className="text-slate-600 dark:text-slate-400 mb-4">
                   Start a conversation by typing a message below.
