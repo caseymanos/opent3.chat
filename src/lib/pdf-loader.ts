@@ -22,7 +22,9 @@ export async function loadPDFJS() {
       if (pdfjs) {
         // Set the worker source
         pdfjs.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js'
-        console.log('✅ [PDF.js] PDF.js loaded successfully from CDN')
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ [PDF.js] PDF.js loaded successfully from CDN')
+        }
         resolve(pdfjs)
       } else {
         reject(new Error('PDF.js failed to load'))
@@ -30,7 +32,9 @@ export async function loadPDFJS() {
     }
     
     script.onerror = () => {
-      console.error('❌ [PDF.js] Failed to load PDF.js from CDN')
+      if (process.env.NODE_ENV === 'development') {
+        console.error('❌ [PDF.js] Failed to load PDF.js from CDN')
+      }
       reject(new Error('Failed to load PDF.js'))
     }
     

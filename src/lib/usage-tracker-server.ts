@@ -8,6 +8,7 @@ const logError = console.error // Always log errors
 
 export interface UserUsage {
   premiumCalls: number
+  specialCalls: number // For special tier models like Claude 4 Sonnet
   lastReset: string
   byokEnabled: boolean
   apiKeys?: {
@@ -19,8 +20,10 @@ export interface UserUsage {
   }
 }
 
-const PREMIUM_CALL_LIMIT = 10
-const RESET_INTERVAL_DAYS = 30
+const ANONYMOUS_CALL_LIMIT = 10 // Anonymous users: 10 calls/day (Vertex AI Gemini only)
+const PREMIUM_CALL_LIMIT = 18 // Logged-in users: 18 general calls/day
+const SPECIAL_CALL_LIMIT = 2 // Logged-in users: 2 special calls/day (Claude special)
+const RESET_INTERVAL_DAYS = 1 // Daily reset instead of monthly
 
 export class ServerUsageTracker {
   private supabase: ReturnType<typeof createServerComponentClient<Database>>
@@ -41,6 +44,7 @@ export class ServerUsageTracker {
         .upsert({
           id: userId,
           premium_calls_used: 0,
+          special_calls_used: 0,
           usage_last_reset: new Date().toISOString(),
           byok_enabled: false,
           api_keys: {}
@@ -75,12 +79,12 @@ export class ServerUsageTracker {
         log('🔍 [PROFILE QUERY] Fetching profile for user:', userId)
         const { data, error } = await this.supabase
           .from('profiles')
-          .select('premium_calls_used, usage_last_reset, byok_enabled, api_keys')
+          .select('premium_calls_used, special_calls_used, usage_last_reset, byok_enabled, api_keys')
           .eq('id', userId)
           .maybeSingle()
 
         if (!error && data) {
-          // Check if we need to reset usage (30 days)
+          // Check if we need to reset usage (daily)
           const lastReset = new Date(data.usage_last_reset || new Date())
           const daysSinceReset = (Date.now() - lastReset.getTime()) / (1000 * 60 * 60 * 24)
           
@@ -89,13 +93,15 @@ export class ServerUsageTracker {
             await this.supabase
               .from('profiles')
               .update({ 
-                premium_calls_used: 0, 
+                premium_calls_used: 0,
+                special_calls_used: 0, 
                 usage_last_reset: new Date().toISOString() 
               })
               .eq('id', userId)
             
             const resetUsage = {
               premiumCalls: 0,
+              specialCalls: 0,
               lastReset: new Date().toISOString(),
               byokEnabled: data.byok_enabled || false,
               apiKeys: data.api_keys || {}
@@ -108,6 +114,7 @@ export class ServerUsageTracker {
 
           const usage = {
             premiumCalls: data.premium_calls_used || 0,
+            specialCalls: data.special_calls_used || 0,
             lastReset: data.usage_last_reset || new Date().toISOString(),
             byokEnabled: data.byok_enabled || false,
             apiKeys: data.api_keys || {}
@@ -128,6 +135,7 @@ export class ServerUsageTracker {
     // Default for anonymous users or when profile doesn't exist yet
     const defaultUsage = {
       premiumCalls: 0,
+      specialCalls: 0,
       lastReset: new Date().toISOString(),
       byokEnabled: false,
       apiKeys: {}
@@ -152,17 +160,36 @@ export class ServerUsageTracker {
   }
 
   // Increment premium calls used with provided usage data (avoids extra query)
-  async incrementUsageWithData(userId: string, modelId: string, usage: UserUsage): Promise<boolean> {
+  async incrementUsageWithData(userId: string, modelId: string, usage: UserUsage, modelTier?: 'premium' | 'special'): Promise<boolean> {
     try {
-      const newCallCount = usage.premiumCalls + 1
+      // Handle anonymous users
+      if (userId === 'anonymous' || !userId) {
+        log('📊 [USAGE] Anonymous user usage tracking handled by client-side')
+        // Anonymous usage is tracked client-side via localStorage
+        return true
+      }
+      // Determine which counter to increment based on model tier
+      const modelInfo = await import('./models').then(m => m.getModelById(modelId))
+      const tier = modelTier || modelInfo?.tier
+      
+      let updateData: any = {}
+      let newCallCount: number
+      
+      if (tier === 'special') {
+        newCallCount = usage.specialCalls + 1
+        updateData = { special_calls_used: newCallCount }
+        log(`📊 [USAGE] Incrementing special tier usage for ${modelId}`)
+      } else {
+        newCallCount = usage.premiumCalls + 1
+        updateData = { premium_calls_used: newCallCount }
+        log(`📊 [USAGE] Incrementing premium tier usage for ${modelId}`)
+      }
       
       // First try to update, if it fails because profile doesn't exist, create it
       log('🔍 [PROFILE UPDATE] Updating usage count for user:', userId)
       const { error } = await this.supabase
         .from('profiles')
-        .update({ 
-          premium_calls_used: newCallCount
-        })
+        .update(updateData)
         .eq('id', userId)
 
       if (error && error.code === 'PGRST116') {
@@ -173,9 +200,7 @@ export class ServerUsageTracker {
         // Try update again
         const { error: retryError } = await this.supabase
           .from('profiles')
-          .update({ 
-            premium_calls_used: newCallCount
-          })
+          .update(updateData)
           .eq('id', userId)
           
         if (retryError) {
@@ -187,7 +212,8 @@ export class ServerUsageTracker {
         return false
       }
 
-      log(`📊 [USAGE] Incremented ${modelId} usage for user ${userId}: ${usage.premiumCalls} → ${newCallCount}`)
+      const previousCount = tier === 'special' ? usage.specialCalls : usage.premiumCalls
+      log(`📊 [USAGE] Incremented ${modelId} usage for user ${userId}: ${previousCount} → ${newCallCount}`)
       
       // Invalidate cache for this user
       this.usageCache.delete(userId)
@@ -200,10 +226,11 @@ export class ServerUsageTracker {
   }
 
   // Check if user can use a model
-  async canUseModel(userId: string | undefined, modelTier: 'free' | 'premium' | 'byok'): Promise<boolean> {
+  async canUseModel(userId: string | undefined, modelTier: 'free' | 'premium' | 'special' | 'byok' | 'vertex-ai', modelId?: string): Promise<boolean> {
     log('🔍 [ServerUsageTracker] Checking model access:', {
       userId,
       modelTier,
+      modelId,
       isAnonymous: !userId
     })
 
@@ -213,9 +240,25 @@ export class ServerUsageTracker {
       return true
     }
 
-    // No user ID means anonymous - only free models
+    // Handle Vertex AI models (available for anonymous users)
+    if (modelTier === 'vertex-ai') {
+      const usage = await this.getUsage(userId)
+      if (!userId) {
+        // Anonymous users get 10 calls/day for Vertex AI models
+        const canUse = usage.premiumCalls < ANONYMOUS_CALL_LIMIT
+        log(`${canUse ? '✅' : '🚫'} [ServerUsageTracker] Anonymous Vertex AI model - ${usage.premiumCalls}/${ANONYMOUS_CALL_LIMIT} used`)
+        return canUse
+      } else {
+        // Logged-in users can use Vertex AI models as part of their premium quota
+        const canUse = usage.premiumCalls < PREMIUM_CALL_LIMIT
+        log(`${canUse ? '✅' : '🚫'} [ServerUsageTracker] Vertex AI model for logged-in user - ${usage.premiumCalls}/${PREMIUM_CALL_LIMIT} used`)
+        return canUse
+      }
+    }
+
+    // No user ID means anonymous - only free and vertex-ai models allowed
     if (!userId) {
-      log('🚫 [ServerUsageTracker] Anonymous user - only free models allowed')
+      log('🚫 [ServerUsageTracker] Anonymous user - only free and Vertex AI models allowed')
       return false
     }
 
@@ -226,13 +269,15 @@ export class ServerUsageTracker {
   // Check if user can use a model with provided usage data (avoids extra query)
   async canUseModelWithUsage(
     userId: string | undefined, 
-    modelTier: 'free' | 'premium' | 'byok',
+    modelTier: 'free' | 'premium' | 'special' | 'byok' | 'vertex-ai',
     usage: UserUsage
   ): Promise<boolean> {
     log('📊 [ServerUsageTracker] Usage data:', {
       premiumCalls: usage.premiumCalls,
+      specialCalls: usage.specialCalls,
       byokEnabled: usage.byokEnabled,
-      limit: PREMIUM_CALL_LIMIT
+      premiumLimit: PREMIUM_CALL_LIMIT,
+      specialLimit: SPECIAL_CALL_LIMIT
     })
 
     // Free models are always available
@@ -258,6 +303,13 @@ export class ServerUsageTracker {
     if (modelTier === 'premium') {
       const canUse = usage.premiumCalls < PREMIUM_CALL_LIMIT
       log(`${canUse ? '✅' : '🚫'} [ServerUsageTracker] Premium model - ${usage.premiumCalls}/${PREMIUM_CALL_LIMIT} used`)
+      return canUse
+    }
+
+    // Special tier models - check special usage limit
+    if (modelTier === 'special') {
+      const canUse = usage.specialCalls < SPECIAL_CALL_LIMIT
+      log(`${canUse ? '✅' : '🚫'} [ServerUsageTracker] Special tier model - ${usage.specialCalls}/${SPECIAL_CALL_LIMIT} used`)
       return canUse
     }
 

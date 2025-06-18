@@ -63,6 +63,11 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           updated_at: string
+          premium_calls_used?: number
+          special_calls_used?: number
+          usage_last_reset?: string
+          byok_enabled?: boolean
+          api_keys?: Record<string, string>
         }
         Insert: {
           id: string
@@ -70,6 +75,11 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           updated_at?: string
+          premium_calls_used?: number
+          special_calls_used?: number
+          usage_last_reset?: string
+          byok_enabled?: boolean
+          api_keys?: Record<string, string>
         }
         Update: {
           id?: string
@@ -77,6 +87,11 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           updated_at?: string
+          premium_calls_used?: number
+          special_calls_used?: number
+          usage_last_reset?: string
+          byok_enabled?: boolean
+          api_keys?: Record<string, string>
         }
       }
       conversations: {

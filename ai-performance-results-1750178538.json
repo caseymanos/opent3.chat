@@ -1,0 +1,46 @@
+{
+  "timestamp": "2025-06-17T16:42:18Z",
+  "query": "What is the capital of France?",
+  "results": [
+    {
+      "name": "Google (Paid API)",
+      "provider": "google",
+      "model": "gemini-2.5-flash-preview-05-20",
+      "httpCode": 404,
+      "totalTime": .016716000,
+      "curlTime": 0.008598,
+      "success": false
+    }
+,
+    {
+      "name": "OpenAI Direct",
+      "provider": "openai",
+      "model": "gpt-4o-mini-azure",
+      "httpCode": 404,
+      "totalTime": .014669000,
+      "curlTime": 0.001713,
+      "success": false
+    }
+,
+    {
+      "name": "Anthropic Direct",
+      "provider": "anthropic",
+      "model": "claude-3-haiku-20240307",
+      "httpCode": 404,
+      "totalTime": .014143000,
+      "curlTime": 0.001677,
+      "success": false
+    }
+,
+    {
+      "name": "Azure OpenAI",
+      "provider": "azure",
+      "model": "gpt-4o-mini-azure",
+      "httpCode": 404,
+      "totalTime": .015071000,
+      "curlTime": 0.001674,
+      "success": false
+    }
+
+  ]
+}

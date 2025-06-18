@@ -19,22 +19,35 @@ export interface AIModel {
     speed: 'fast' | 'medium' | 'slow'
     quality: 'high' | 'medium' | 'basic'
   }
-  tier: 'free' | 'premium' | 'byok' // Access tier
+  tier: 'free' | 'premium' | 'special' | 'byok' | 'vertex-ai' // Access tier - special tier has 2-call limit, vertex-ai for anonymous users
 }
 
 export const AI_MODELS: AIModel[] = [
-  // Free Tier Models
+  // Vertex AI Models (Free Tier for Anonymous Users - 10 calls/day)
   {
-    id: 'gpt-4o-mini-azure',
-    name: 'GPT-4o Mini (Azure)',
-    provider: 'azure',
-    maxTokens: 128000,
-    description: 'Fast and efficient GPT-4o via Azure OpenAI - Better performance than free tier',
+    id: 'gemini-2.5-flash-vertex',
+    name: 'Gemini 2.5 Flash (Vertex AI)',
+    provider: 'vertex-ai',
+    maxTokens: 1000000,
+    description: 'Enterprise-grade Gemini hosted on Google Cloud - Available for anonymous users (10 calls/day)',
     pricing: { input: 0.15, output: 0.60, currency: 'USD' },
     capabilities: { vision: true, functionCalling: true, codeGeneration: true, multimodal: true },
     performance: { speed: 'fast', quality: 'high' },
-    tier: 'free'
+    tier: 'vertex-ai'
   },
+  {
+    id: 'gemini-2.5-flash-lite-vertex',
+    name: 'Gemini 2.5 Flash Lite (Vertex AI)',
+    provider: 'vertex-ai',
+    maxTokens: 1000000,
+    description: 'Lightweight Gemini model optimized for cost and speed - Available for anonymous users (10 calls/day)',
+    pricing: { input: 0.075, output: 0.30, currency: 'USD' },
+    capabilities: { vision: true, functionCalling: true, codeGeneration: true, multimodal: false },
+    performance: { speed: 'fast', quality: 'medium' },
+    tier: 'vertex-ai'
+  },
+
+  // Free Tier Models (Available for Logged-in Users)
   {
     id: 'gemini-2.5-flash-azure',
     name: 'Gemini 2.5 Flash (Azure AI)',
@@ -51,7 +64,7 @@ export const AI_MODELS: AIModel[] = [
     name: 'Gemini 2.5 Flash Preview',
     provider: 'google',
     maxTokens: 1000000,
-    description: 'Latest Gemini with enhanced reasoning and multimodal capabilities - Free for all users',
+    description: 'Latest Gemini with enhanced reasoning and multimodal capabilities - Free for logged-in users',
     pricing: { input: 0.15, output: 0.60, currency: 'USD' },
     capabilities: { vision: true, functionCalling: true, codeGeneration: true, multimodal: true },
     performance: { speed: 'fast', quality: 'high' },
@@ -62,7 +75,7 @@ export const AI_MODELS: AIModel[] = [
     name: 'Gemini 2.0 Flash',
     provider: 'google',
     maxTokens: 1000000,
-    description: 'Fast and versatile AI model for code, images, and data analysis - Free for all users',
+    description: 'Fast and versatile AI model for code, images, and data analysis - Free for logged-in users',
     pricing: { input: 0.10, output: 0.40, currency: 'USD' },
     capabilities: { vision: true, functionCalling: true, codeGeneration: true, multimodal: true },
     performance: { speed: 'fast', quality: 'high' },
@@ -73,41 +86,41 @@ export const AI_MODELS: AIModel[] = [
     name: 'Gemini 1.5 Flash',
     provider: 'google',
     maxTokens: 1000000,
-    description: 'Fast and versatile performance across diverse tasks - Free for all users',
+    description: 'Fast and versatile performance across diverse tasks - Free for logged-in users',
     pricing: { input: 0.075, output: 0.30, currency: 'USD' },
     capabilities: { vision: true, functionCalling: true, codeGeneration: true, multimodal: true },
     performance: { speed: 'fast', quality: 'high' },
     tier: 'free'
   },
   
-  // Vertex AI Models (BYOK)
+  // Special Tier Models (2 free calls for logged-in users)
   {
-    id: 'gemini-2.5-flash-vertex',
-    name: 'Gemini 2.5 Flash (Vertex AI)',
-    provider: 'vertex-ai',
-    maxTokens: 1000000,
-    description: 'Enterprise-grade Gemini hosted on Google Cloud with enhanced security and compliance',
-    pricing: { input: 0.15, output: 0.60, currency: 'USD' },
+    id: 'claude-4-sonnet',
+    name: 'Claude 4 Sonnet',
+    provider: 'anthropic',
+    maxTokens: 200000,
+    description: 'Latest Claude 4 Sonnet model - Limited to 2 free calls per user',
+    pricing: { input: 3, output: 15, currency: 'USD' },
     capabilities: { vision: true, functionCalling: true, codeGeneration: true, multimodal: true },
     performance: { speed: 'fast', quality: 'high' },
-    tier: 'byok'
-  },
-  {
-    id: 'gemini-2.5-flash-lite-vertex',
-    name: 'Gemini 2.5 Flash Lite (Vertex AI)',
-    provider: 'vertex-ai',
-    maxTokens: 1000000,
-    description: 'Lightweight Gemini model optimized for cost and speed on Google Cloud',
-    pricing: { input: 0.075, output: 0.30, currency: 'USD' },
-    capabilities: { vision: true, functionCalling: true, codeGeneration: true, multimodal: false },
-    performance: { speed: 'fast', quality: 'medium' },
-    tier: 'byok'
+    tier: 'special'
   },
   
   // Premium Tier Models (10 free calls for logged-in users)
   {
-    id: 'gpt-4o-mini-azure-premium',
-    name: 'GPT-4o Mini (Azure Premium)',
+    id: 'gpt-4o-mini',
+    name: 'GPT-4o Mini',
+    provider: 'openai',
+    maxTokens: 128000,
+    description: 'Fast and efficient GPT-4o Mini - Premium tier (10 free calls/day)',
+    pricing: { input: 0.15, output: 0.60, currency: 'USD' },
+    capabilities: { vision: true, functionCalling: true, codeGeneration: true, multimodal: true },
+    performance: { speed: 'fast', quality: 'high' },
+    tier: 'premium'
+  },
+  {
+    id: 'gpt-4o-mini-azure',
+    name: 'GPT-4o Mini (Azure)',
     provider: 'azure',
     maxTokens: 128000,
     description: 'Fast and efficient GPT-4o via Azure OpenAI - Premium tier with higher rate limits',
@@ -174,16 +187,38 @@ export const AI_MODELS: AIModel[] = [
     tier: 'byok'
   },
   
-  // Additional BYOK Models
+  // Additional BYOK Models via OpenRouter
+  {
+    id: 'gpt-4-vision',
+    name: 'GPT-4 Vision',
+    provider: 'openai',
+    maxTokens: 128000,
+    description: 'GPT-4 with vision capabilities - BYOK via OpenRouter required',
+    pricing: { input: 10, output: 30, currency: 'USD' },
+    capabilities: { vision: true, functionCalling: true, codeGeneration: true, multimodal: true },
+    performance: { speed: 'medium', quality: 'high' },
+    tier: 'byok'
+  },
   {
     id: 'gpt-4o',
     name: 'GPT-4o',
     provider: 'openai',
     maxTokens: 128000,
-    description: 'Latest multimodal GPT-4 - BYOK required',
+    description: 'Latest multimodal GPT-4 - BYOK via OpenRouter required',
     pricing: { input: 5, output: 15, currency: 'USD' },
     capabilities: { vision: true, functionCalling: true, codeGeneration: true, multimodal: true },
     performance: { speed: 'fast', quality: 'high' },
+    tier: 'byok'
+  },
+  {
+    id: 'gemini-2.5-pro',
+    name: 'Gemini 2.5 Pro',
+    provider: 'google',
+    maxTokens: 2000000,
+    description: 'Google\'s most advanced model - BYOK via OpenRouter required',
+    pricing: { input: 1.25, output: 5, currency: 'USD' },
+    capabilities: { vision: true, functionCalling: true, codeGeneration: true, multimodal: true },
+    performance: { speed: 'medium', quality: 'high' },
     tier: 'byok'
   },
   {
@@ -191,8 +226,19 @@ export const AI_MODELS: AIModel[] = [
     name: 'Gemini 2.5 Pro Experimental',
     provider: 'google',
     maxTokens: 2000000,
-    description: 'Google\'s most advanced model with thinking capabilities - BYOK required',
+    description: 'Google\'s experimental model with thinking capabilities - BYOK via OpenRouter required',
     pricing: { input: 1.25, output: 10, currency: 'USD' },
+    capabilities: { vision: true, functionCalling: true, codeGeneration: true, multimodal: true },
+    performance: { speed: 'medium', quality: 'high' },
+    tier: 'byok'
+  },
+  {
+    id: 'claude-4-sonnet-reasoning',
+    name: 'Claude 4 Sonnet Reasoning',
+    provider: 'anthropic',
+    maxTokens: 200000,
+    description: 'Claude 4 with enhanced reasoning capabilities - BYOK via OpenRouter required',
+    pricing: { input: 3, output: 15, currency: 'USD' },
     capabilities: { vision: true, functionCalling: true, codeGeneration: true, multimodal: true },
     performance: { speed: 'medium', quality: 'high' },
     tier: 'byok'
@@ -202,7 +248,7 @@ export const AI_MODELS: AIModel[] = [
     name: 'Claude 3.5 Sonnet',
     provider: 'anthropic',
     maxTokens: 200000,
-    description: 'Balanced performance with enhanced reasoning - BYOK required',
+    description: 'Balanced performance with enhanced reasoning - BYOK via OpenRouter required',
     pricing: { input: 3, output: 15, currency: 'USD' },
     capabilities: { vision: true, functionCalling: true, codeGeneration: true, multimodal: true },
     performance: { speed: 'fast', quality: 'high' },
@@ -213,7 +259,7 @@ export const AI_MODELS: AIModel[] = [
     name: 'Claude 3 Haiku',
     provider: 'anthropic',
     maxTokens: 200000,
-    description: 'Fast and cost-efficient Claude model - BYOK required',
+    description: 'Fast and cost-efficient Claude model - BYOK via OpenRouter required',
     pricing: { input: 0.25, output: 1.25, currency: 'USD' },
     capabilities: { vision: true, functionCalling: true, codeGeneration: true, multimodal: true },
     performance: { speed: 'fast', quality: 'medium' },

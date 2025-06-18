@@ -149,13 +149,19 @@ export async function POST(req: Request) {
     let userUsage = null
     
     // Skip auth if we have a valid API key for BYOK models or if it's a free model
-    const skipAuth = modelInfo.tier === 'free' || (modelInfo.tier === 'byok' && hasValidApiKey())
+    const skipAuth = modelInfo.tier === 'free' || modelInfo.tier === 'vertex-ai' || (modelInfo.tier === 'byok' && hasValidApiKey())
     
     if (skipAuth) {
-      log('✅ [USAGE] Free model or BYOK with API key - skipping auth checks')
+      log('✅ [USAGE] Free model, Vertex AI model, or BYOK with API key - auth not required')
       logTiming('authSkipped')
+      // Still get auth for vertex-ai to check if user is logged in
+      if (modelInfo.tier === 'vertex-ai') {
+        const { data: authData } = await authPromise
+        user = authData?.user || null
+        logTiming('authCompleted')
+      }
     } else {
-      // Only await auth for non-free models without API keys
+      // Only await auth for premium/special models without API keys
       const { data: authData, error: authError } = await authPromise
       user = authData?.user || null
       logTiming('authCompleted')
@@ -167,7 +173,7 @@ export async function POST(req: Request) {
         isAnonymous: !user
       })
       
-      // Anonymous users are allowed - don't treat auth errors as failures for them
+      // Anonymous users can't use premium/special models
       if (!user) {
         log('👤 [CHAT API] Anonymous user detected - premium models not available')
         return new Response(
@@ -267,16 +273,51 @@ export async function POST(req: Request) {
       }
     }
 
-    // Usage tracking for premium/byok models
+    // Usage tracking for non-free models
     const currentUserId = user?.id
     const tracker = getServerUsageTracker()
     
     // Skip usage checks if we have a valid API key for BYOK models
-    const skipUsageCheck = modelInfo.tier === 'byok' && hasValidApiKey()
+    const skipUsageCheck = modelInfo.tier === 'free' || (modelInfo.tier === 'byok' && hasValidApiKey())
     
-    if (modelInfo.tier !== 'free' && !skipUsageCheck) {
-      if (!currentUserId) {
-        log('🚫 [USAGE] Authentication required for non-free models without API key')
+    if (!skipUsageCheck) {
+      // For vertex-ai models, allow anonymous users but check limits
+      if (modelInfo.tier === 'vertex-ai') {
+        logTiming('usageCheckStart')
+        userUsage = await tracker.getUsage(currentUserId)
+        const canUse = await tracker.canUseModel(currentUserId, modelInfo.tier, modelInfo.id)
+        logTiming('usageCheckCompleted')
+        
+        if (!canUse) {
+          log('🚫 [USAGE] Vertex AI model access denied:', {
+            userId: currentUserId,
+            isAnonymous: !currentUserId,
+            usage: userUsage
+          })
+          
+          const errorMessage = currentUserId 
+            ? 'You have reached your daily limit. Please try again tomorrow or use a free model.'
+            : 'Anonymous users have reached the 10 calls/day limit for Vertex AI models. Please sign in for more calls or use free models.'
+          
+          return new Response(
+            JSON.stringify({
+              error: errorMessage,
+              type: 'usage_limit_exceeded',
+              usage: {
+                used: userUsage?.premiumCalls || 0,
+                limit: currentUserId ? 18 : 10,
+                resetAt: new Date(new Date().setHours(24, 0, 0, 0)).toISOString()
+              }
+            }),
+            { 
+              status: 429, 
+              headers: { 'Content-Type': 'application/json' }
+            }
+          )
+        }
+      } else if (!currentUserId) {
+        // Premium/special models require authentication
+        log('🚫 [USAGE] Authentication required for premium/special models')
         return new Response(
           JSON.stringify({
             error: 'Premium models require sign-in. Please sign in or use free models like Gemini 2.5 Flash.',
@@ -287,16 +328,15 @@ export async function POST(req: Request) {
             headers: { 'Content-Type': 'application/json' }
           }
         )
-      }
-      
-      // Get usage data once and reuse it
-      logTiming('usageCheckStart')
-      userUsage = await tracker.getUsage(currentUserId)
-      const canUse = await tracker.canUseModelWithUsage(currentUserId, modelInfo.tier, userUsage)
-      logTiming('usageCheckCompleted')
-      
-      if (!canUse) {
-        log('🚫 [USAGE] Model access denied:', {
+      } else {
+        // Check usage for premium/special models
+        logTiming('usageCheckStart')
+        userUsage = await tracker.getUsage(currentUserId)
+        const canUse = await tracker.canUseModelWithUsage(currentUserId, modelInfo.tier, userUsage)
+        logTiming('usageCheckCompleted')
+        
+        if (!canUse) {
+          log('🚫 [USAGE] Model access denied:', {
           model,
           tier: modelInfo.tier,
           premiumCalls: userUsage.premiumCalls,
@@ -307,6 +347,8 @@ export async function POST(req: Request) {
         let errorMessage = 'Access denied to this model.'
         if (modelInfo.tier === 'premium') {
           errorMessage = `Premium model limit reached. You have used ${userUsage.premiumCalls}/10 free calls for premium models. Please use free models or enable BYOK.`
+        } else if (modelInfo.tier === 'special') {
+          errorMessage = `Special tier model limit reached. You have used ${userUsage.specialCalls}/2 free calls for Claude 4 Sonnet. Please use free models or enable BYOK.`
         } else if (modelInfo.tier === 'byok') {
           errorMessage = 'This model requires BYOK (Bring Your Own Key) to be enabled in settings or a valid API key in environment.'
         }
@@ -318,7 +360,10 @@ export async function POST(req: Request) {
             modelTier: modelInfo.tier,
             usage: {
               premiumCalls: userUsage.premiumCalls,
-              remaining: Math.max(0, 10 - userUsage.premiumCalls)
+              specialCalls: userUsage.specialCalls,
+              remaining: modelInfo.tier === 'special' 
+                ? Math.max(0, 2 - userUsage.specialCalls)
+                : Math.max(0, 10 - userUsage.premiumCalls)
             }
           }),
           { 
@@ -481,10 +526,18 @@ export async function POST(req: Request) {
         
         if (anthropicKey && anthropicKey !== 'your-anthropic-api-key' && anthropicKey.startsWith('sk-ant-')) {
           logTiming('aiProviderInitCompleted')
-          log('🤖 [ANTHROPIC] Starting API call with model:', model)
+          
+          // Map claude-4-sonnet to the actual Anthropic model ID
+          let anthropicModelId = model
+          if (model === 'claude-4-sonnet') {
+            anthropicModelId = 'claude-3-5-sonnet-20241022' // Using Claude 3.5 Sonnet as Claude 4 Sonnet
+            log('🔄 [ANTHROPIC] Mapping claude-4-sonnet to:', anthropicModelId)
+          }
+          
+          log('🤖 [ANTHROPIC] Starting API call with model:', anthropicModelId)
           logTiming('aiCallStart')
           result = await streamText({
-            model: anthropic(model),
+            model: anthropic(anthropicModelId),
             messages: processedMessages,
             system: "You are a helpful AI assistant. Provide comprehensive, detailed, and accurate responses. When users ask about topics, give thorough explanations with background information, examples, and practical details. Be informative and complete in your answers.",
             temperature: 0.7,
@@ -615,15 +668,26 @@ export async function POST(req: Request) {
         }
       })
       
-      // Increment usage for premium models
-      if (modelInfo && modelInfo.tier === 'premium' && currentUserId) {
-        // Reuse the usage data we already fetched (or fetch it now if it's a free model)
-        if (!userUsage) {
-          userUsage = await tracker.getUsage(currentUserId)
-        }
-        if (!userUsage.byokEnabled) {
-          await tracker.incrementUsageWithData(currentUserId, model, userUsage)
-          log('📊 [USAGE] Incremented premium call count for user:', currentUserId)
+      // Increment usage for non-free models
+      if (modelInfo && modelInfo.tier !== 'free' && modelInfo.tier !== 'byok') {
+        // For vertex-ai models, increment usage for both anonymous and logged-in users
+        if (modelInfo.tier === 'vertex-ai') {
+          // Get usage data if we don't have it
+          if (!userUsage) {
+            userUsage = await tracker.getUsage(currentUserId)
+          }
+          // Always increment for vertex-ai (anonymous users use their localStorage tracking)
+          await tracker.incrementUsageWithData(currentUserId || 'anonymous', model, userUsage, 'premium')
+          log(`📊 [USAGE] Incremented vertex-ai call count for user:`, currentUserId || 'anonymous')
+        } else if (currentUserId) {
+          // Premium and special tier models - only for logged-in users
+          if (!userUsage) {
+            userUsage = await tracker.getUsage(currentUserId)
+          }
+          if (!userUsage.byokEnabled) {
+            await tracker.incrementUsageWithData(currentUserId, model, userUsage, modelInfo.tier as 'premium' | 'special')
+            log(`📊 [USAGE] Incremented ${modelInfo.tier} call count for user:`, currentUserId)
+          }
         }
       }
       

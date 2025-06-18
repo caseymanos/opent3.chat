@@ -35,7 +35,7 @@ export default function ModelSelector({
   const [isOpen, setIsOpen] = useState(false)
   const [usage, setUsage] = useState<UserUsage | null>(null)
   const { user } = useAuth()
-  const { getUsage, canUsePremiumModel, canUseByokModel, getRemainingPremiumCalls } = useUsageTracking()
+  const { getUsage, canUsePremiumModel, canUseSpecialModel, canUseByokModel, getRemainingPremiumCalls, getRemainingSpecialCalls } = useUsageTracking()
   const currentModel = getModelById(selectedModel)
 
   // Load usage data
@@ -53,7 +53,18 @@ export default function ModelSelector({
       // Free tier is always available
       if (model.tier === 'free') return true
       
-      // Premium/BYOK tiers require authentication
+      // Vertex AI models are available for anonymous users with limits
+      if (model.tier === 'vertex-ai') {
+        if (!usage) return false
+        if (!user) {
+          // Anonymous users can use Vertex AI models with 10 calls/day limit
+          return usage.premiumCalls < 10
+        }
+        // Logged-in users can use as part of their premium quota
+        return canUsePremiumModel(usage)
+      }
+      
+      // Premium/BYOK/Special tiers require authentication
       if (!user) return false
       
       // If we don't have usage data yet, be conservative and only show free models
@@ -62,6 +73,11 @@ export default function ModelSelector({
       // Premium tier requires login and available calls
       if (model.tier === 'premium') {
         return canUsePremiumModel(usage)
+      }
+      
+      // Special tier requires login and available calls
+      if (model.tier === 'special') {
+        return canUseSpecialModel(usage)
       }
       
       // BYOK tier requires BYOK enabled
@@ -178,7 +194,10 @@ export default function ModelSelector({
                 {models.map((model) => {
                   const badges = getPerformanceBadge(model.performance)
                   const isLocked = !availableModels.find(m => m.id === model.id)
-                  const canSelect = !isLocked || (model.tier === 'premium' && user && usage && canUsePremiumModel(usage))
+                  const canSelect = !isLocked || 
+                    (model.tier === 'premium' && user && usage && canUsePremiumModel(usage)) ||
+                    (model.tier === 'special' && user && usage && canUseSpecialModel(usage)) ||
+                    (model.tier === 'vertex-ai' && usage && (user ? canUsePremiumModel(usage) : usage.premiumCalls < 10))
                   
                   return (
                     <button
@@ -213,6 +232,24 @@ export default function ModelSelector({
                               <span>left</span>
                             </span>
                           )}
+                          {model.tier === 'special' && user && usage && (
+                            <span className="text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                              <span>{getRemainingSpecialCalls(usage)}</span>
+                              <span>left</span>
+                            </span>
+                          )}
+                          {model.tier === 'vertex-ai' && !user && usage && (
+                            <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                              <span>{10 - usage.premiumCalls}</span>
+                              <span>left</span>
+                            </span>
+                          )}
+                          {model.tier === 'vertex-ai' && user && usage && (
+                            <span className="text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                              <span>{getRemainingPremiumCalls(usage)}</span>
+                              <span>left</span>
+                            </span>
+                          )}
                           {model.tier === 'byok' && (
                             <span className="text-xs bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded-full flex items-center gap-1">
                               {usage?.byokEnabled ? <LockOpenIcon className="w-3 h-3" /> : <LockClosedIcon className="w-3 h-3" />}
@@ -224,7 +261,17 @@ export default function ModelSelector({
                           {model.description}
                           {model.tier === 'premium' && !user && (
                             <span className="block text-xs text-amber-600 dark:text-amber-400 mt-1">
-                              ⚠️ Sign in for 10 free calls
+                              ⚠️ Sign in for 18 free calls/day
+                            </span>
+                          )}
+                          {model.tier === 'special' && !user && (
+                            <span className="block text-xs text-amber-600 dark:text-amber-400 mt-1">
+                              ⚠️ Sign in for 2 free calls/day
+                            </span>
+                          )}
+                          {model.tier === 'vertex-ai' && !user && (
+                            <span className="block text-xs text-blue-600 dark:text-blue-400 mt-1">
+                              💡 10 free calls/day for anonymous users
                             </span>
                           )}
                           {model.tier === 'byok' && !usage?.byokEnabled && (

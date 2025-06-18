@@ -1,0 +1,94 @@
+{
+  "timestamp": "2025-06-17T16:50:08.462Z",
+  "query": "What is the capital of France? Please provide a brief answer.",
+  "summary": {
+    "totalTests": 5,
+    "successful": 3,
+    "failed": 2
+  },
+  "results": [
+    {
+      "name": "Google Gemini 2.5 Flash Preview",
+      "provider": "google",
+      "model": "gemini-2.5-flash-preview-05-20",
+      "description": "Latest Gemini with enhanced reasoning",
+      "statusCode": 200,
+      "success": true,
+      "timing": {
+        "firstChunkMs": 777.205625,
+        "totalMs": 777.665042,
+        "streamingMs": 0.4594169999999167
+      },
+      "responseLength": 31,
+      "responseText": "The capital of France is Paris....",
+      "responsePreview": "The capital of France is Paris.",
+      "error": null
+    },
+    {
+      "name": "Google Gemini 2.0 Flash",
+      "provider": "google",
+      "model": "gemini-2.0-flash",
+      "description": "Fast and versatile Gemini 2.0",
+      "statusCode": 200,
+      "success": true,
+      "timing": {
+        "firstChunkMs": 558.849209,
+        "totalMs": 562.764209,
+        "streamingMs": 3.9150000000000773
+      },
+      "responseLength": 32,
+      "responseText": "The capital of France is Paris.\n...",
+      "responsePreview": "The capital of France is Paris.\n",
+      "error": null
+    },
+    {
+      "name": "Google Gemini 1.5 Flash",
+      "provider": "google",
+      "model": "gemini-1.5-flash",
+      "description": "Stable Gemini 1.5 version",
+      "statusCode": 200,
+      "success": true,
+      "timing": {
+        "firstChunkMs": 509.155541,
+        "totalMs": 552.65925,
+        "streamingMs": 43.503709000000015
+      },
+      "responseLength": 32,
+      "responseText": "The capital of France is Paris.\n...",
+      "responsePreview": "The capital of France is Paris.\n",
+      "error": null
+    },
+    {
+      "name": "OpenAI GPT-4o Mini (Azure)",
+      "provider": "openai",
+      "model": "gpt-4o-mini-azure",
+      "description": "GPT-4o Mini via Azure/OpenAI",
+      "statusCode": 200,
+      "success": true,
+      "timing": {
+        "firstChunkMs": 678.310166,
+        "totalMs": 678.515416,
+        "streamingMs": 0.20524999999997817
+      },
+      "responseLength": 0,
+      "responsePreview": "",
+      "error": null
+    },
+    {
+      "name": "Azure OpenAI Direct",
+      "provider": "openai",
+      "model": "gpt-4o-mini-azure",
+      "description": "Testing Azure OpenAI deployment",
+      "statusCode": 200,
+      "success": true,
+      "timing": {
+        "firstChunkMs": 261.057708,
+        "totalMs": 261.180458,
+        "streamingMs": 0.12274999999999636
+      },
+      "responseLength": 0,
+      "responsePreview": "",
+      "error": null
+    }
+  ]
+}

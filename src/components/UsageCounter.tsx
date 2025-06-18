@@ -7,7 +7,7 @@ import type { UserUsage } from '@/lib/usage-tracker'
 
 export default function UsageCounter() {
   const { user, isAnonymous } = useAuth()
-  const { getUsage, getRemainingPremiumCalls } = useUsageTracking()
+  const { getUsage, getRemainingPremiumCalls, getRemainingAnonymousCalls } = useUsageTracking()
   const [usage, setUsage] = useState<UserUsage | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -39,19 +39,33 @@ export default function UsageCounter() {
     )
   }
 
-  if (isAnonymous || !user || !usage) {
+  if (isAnonymous && usage) {
+    const remaining = getRemainingAnonymousCalls(usage)
+    const total = 10
+    
     return (
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-100 dark:bg-green-900 text-xs">
-        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-        <span className="text-green-700 dark:text-green-300 font-medium">
-          Free: Gemini 2.5 Flash
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-100 dark:bg-blue-900 text-xs">
+        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+        <span className="text-blue-700 dark:text-blue-300 font-medium">
+          Anonymous: {remaining}/{total} Vertex AI calls
+        </span>
+      </div>
+    )
+  }
+  
+  if (!user || !usage) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs">
+        <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+        <span className="text-gray-700 dark:text-gray-300 font-medium">
+          Loading...
         </span>
       </div>
     )
   }
 
   const remaining = getRemainingPremiumCalls(usage)
-  const total = 10
+  const total = 20 // 18 general + 2 special = 20 total for logged-in users
 
   const getStatusColor = () => {
     if (usage.byokEnabled) return 'text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900'
@@ -76,7 +90,7 @@ export default function UsageCounter() {
     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs ${getStatusColor()}`}>
       <div className="w-2 h-2 rounded-full bg-current"></div>
       <span className="font-medium">
-        Premium: {remaining}/{total} free calls
+        Free: {remaining}/{total} calls/day
       </span>
     </div>
   )

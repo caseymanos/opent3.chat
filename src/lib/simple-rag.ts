@@ -1,4 +1,5 @@
-import { loadPDFJS } from './pdf-loader'
+// Lazy import to avoid loading PDF.js until needed
+let loadPDFJS: typeof import('./pdf-loader')['loadPDFJS'] | null = null
 
 export interface SimpleDocument {
   id: string
@@ -30,6 +31,11 @@ class SimpleRAGProcessor {
       if (file.type === 'application/pdf') {
         // Extract text from PDF
         try {
+          // Lazy load PDF.js only when needed
+          if (!loadPDFJS) {
+            const pdfModule = await import('./pdf-loader')
+            loadPDFJS = pdfModule.loadPDFJS
+          }
           const pdfjs = await loadPDFJS()
           if (pdfjs) {
             const arrayBuffer = await file.arrayBuffer()

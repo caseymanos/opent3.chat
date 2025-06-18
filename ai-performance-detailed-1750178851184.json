@@ -1,0 +1,95 @@
+{
+  "timestamp": "2025-06-17T16:47:31.184Z",
+  "query": "What is the capital of France?",
+  "results": [
+    {
+      "name": "Google Gemini 2.5 Flash (Free)",
+      "provider": "google",
+      "model": "gemini-2.5-flash-preview-05-20",
+      "tier": "free",
+      "description": "Latest Google Gemini with free tier",
+      "success": true,
+      "timing": {
+        "totalMs": 26.632166,
+        "firstChunkMs": 26.555958,
+        "streamingMs": 0.07620800000000116
+      },
+      "responseLength": 0
+    },
+    {
+      "name": "Google Gemini 2.0 Flash (Free)",
+      "provider": "google",
+      "model": "gemini-2.0-flash",
+      "tier": "free",
+      "description": "Google Gemini 2.0 Flash free tier",
+      "success": true,
+      "timing": {
+        "totalMs": 2898.094291,
+        "firstChunkMs": 669.007625,
+        "streamingMs": 2229.086666
+      },
+      "responseLength": 1389,
+      "response": "The capital of France is **Paris**.\n\nParis is more than just the capital city; it's the country's largest city and its cultural, economic, political, and historical heart. Here's a bit more about why Paris holds such significance:\n\n*   **Cultural Hub:** Paris is renowned for its museums (like the Louvre, Musée d'Orsay, and Centre Pompidou), monuments (Eiffel Tower, Arc de Triomphe, Notre-Dame Cathedral), theaters, fashion, cuisine, and overall artistic atmosphere. It has been a major center for ..."
+    },
+    {
+      "name": "Azure OpenAI GPT-4o Mini (Free)",
+      "provider": "azure",
+      "model": "gpt-4o-mini-azure",
+      "tier": "free",
+      "description": "GPT-4o Mini via Azure (free tier)",
+      "success": false,
+      "statusCode": 500,
+      "error": "azure API error: Unsupported provider: azure",
+      "timing": {
+        "totalMs": 56.291208,
+        "firstChunkMs": 56.240166,
+        "streamingMs": 0.05104199999999537
+      }
+    },
+    {
+      "name": "OpenAI Direct (GPT-4o)",
+      "provider": "openai",
+      "model": "gpt-4o",
+      "tier": "byok",
+      "description": "OpenAI GPT-4o with direct API key",
+      "success": false,
+      "statusCode": 401,
+      "error": "Premium models require sign-in. Please sign in or use free models like Gemini 2.5 Flash.",
+      "timing": {
+        "totalMs": 38.905625,
+        "firstChunkMs": 38.862458,
+        "streamingMs": 0.04316700000000395
+      }
+    },
+    {
+      "name": "Anthropic Direct (Claude 3.5 Sonnet)",
+      "provider": "anthropic",
+      "model": "claude-3-5-sonnet-20241022",
+      "tier": "byok",
+      "description": "Claude 3.5 Sonnet with direct API key",
+      "success": false,
+      "statusCode": 401,
+      "error": "Premium models require sign-in. Please sign in or use free models like Gemini 2.5 Flash.",
+      "timing": {
+        "totalMs": 30.591041,
+        "firstChunkMs": 30.428875,
+        "streamingMs": 0.16216599999999914
+      }
+    },
+    {
+      "name": "Google Direct (Gemini 2.5 Pro)",
+      "provider": "google",
+      "model": "gemini-2.5-pro-experimental",
+      "tier": "byok",
+      "description": "Gemini 2.5 Pro Experimental with API key",
+      "success": false,
+      "statusCode": 401,
+      "error": "Premium models require sign-in. Please sign in or use free models like Gemini 2.5 Flash.",
+      "timing": {
+        "totalMs": 32.949541,
+        "firstChunkMs": 32.903166,
+        "streamingMs": 0.04637500000000472
+      }
+    }
+  ]
+}

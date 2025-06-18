@@ -1,4 +1,6 @@
-import { simpleRAG, type SimpleDocument } from './simple-rag'
+// Lazy import to avoid loading unnecessary modules
+import type { SimpleDocument } from './simple-rag'
+let simpleRAG: typeof import('./simple-rag')['simpleRAG'] | null = null
 
 interface DocumentStoreState {
   documents: SimpleDocument[]
@@ -29,6 +31,11 @@ class DocumentStore {
 
   async addDocument(file: File): Promise<void> {
     try {
+      // Lazy load simpleRAG when needed
+      if (!simpleRAG) {
+        const ragModule = await import('./simple-rag')
+        simpleRAG = ragModule.simpleRAG
+      }
       const doc = await simpleRAG.processDocument(file)
       this.state.documents = [...this.state.documents, doc]
       this.notify()
@@ -39,13 +46,17 @@ class DocumentStore {
   }
 
   removeDocument(id: string): void {
-    simpleRAG.removeDocument(id)
+    if (simpleRAG) {
+      simpleRAG.removeDocument(id)
+    }
     this.state.documents = this.state.documents.filter(d => d.id !== id)
     this.notify()
   }
 
   clearAllDocuments(): void {
-    simpleRAG.clearAllDocuments()
+    if (simpleRAG) {
+      simpleRAG.clearAllDocuments()
+    }
     this.state.documents = []
     this.notify()
   }
@@ -58,6 +69,12 @@ class DocumentStore {
   async searchForContext(query: string): Promise<string> {
     if (!this.state.isRAGEnabled || this.state.documents.length === 0) {
       return ''
+    }
+
+    // Lazy load simpleRAG when needed
+    if (!simpleRAG) {
+      const ragModule = await import('./simple-rag')
+      simpleRAG = ragModule.simpleRAG
     }
 
     const results = await simpleRAG.searchDocuments(query, 3)

@@ -1,0 +1,81 @@
+{
+  "timestamp": "2025-06-17T16:48:44.075Z",
+  "query": "What is the capital of France?",
+  "results": [
+    {
+      "name": "Google (Direct API)",
+      "provider": "google",
+      "model": "gemini-2.0-flash",
+      "description": "Google Gemini 2.0 Flash with paid API key",
+      "statusCode": 200,
+      "success": true,
+      "timing": {
+        "firstChunkMs": 23,
+        "totalMs": 23
+      },
+      "responseLength": 0,
+      "responsePreview": "",
+      "error": null
+    },
+    {
+      "name": "OpenAI (Direct API)",
+      "provider": "openai",
+      "model": "gpt-4o-mini-azure",
+      "description": "OpenAI GPT-4o Mini with API key",
+      "statusCode": 200,
+      "success": true,
+      "timing": {
+        "firstChunkMs": 617,
+        "totalMs": 617
+      },
+      "responseLength": 0,
+      "responsePreview": "",
+      "error": null
+    },
+    {
+      "name": "Anthropic (Direct API)",
+      "provider": "anthropic",
+      "model": "claude-3-haiku-20240307",
+      "description": "Claude 3 Haiku with API key",
+      "statusCode": 401,
+      "success": false,
+      "timing": {
+        "firstChunkMs": 21,
+        "totalMs": 21
+      },
+      "responseLength": 0,
+      "responsePreview": "",
+      "error": "{\"error\":\"Premium models require sign-in. Please sign in or use free models like Gemini 2.5 Flash.\",\"type\":\"auth_required\"}"
+    },
+    {
+      "name": "Google Gemini 2.5 Flash",
+      "provider": "google",
+      "model": "gemini-2.5-flash-preview-05-20",
+      "description": "Latest Gemini 2.5 Flash Preview",
+      "statusCode": 200,
+      "success": true,
+      "timing": {
+        "firstChunkMs": 35,
+        "totalMs": 35
+      },
+      "responseLength": 0,
+      "responsePreview": "",
+      "error": null
+    },
+    {
+      "name": "Google Gemini 1.5 Flash",
+      "provider": "google",
+      "model": "gemini-1.5-flash",
+      "description": "Gemini 1.5 Flash stable version",
+      "statusCode": 200,
+      "success": true,
+      "timing": {
+        "firstChunkMs": 732,
+        "totalMs": 3804
+      },
+      "responseLength": 2310,
+      "responsePreview": "The capital of France is **Paris**.\n\nParis is located in northern France, on the Seine River.  It's a major global center for art, fashion, gastronomy",
+      "error": null
+    }
+  ]
+}
