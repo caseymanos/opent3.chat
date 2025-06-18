@@ -68,6 +68,7 @@ export type Database = {
           usage_last_reset?: string
           byok_enabled?: boolean
           api_keys?: Record<string, string>
+          traits_enabled?: boolean
         }
         Insert: {
           id: string
@@ -80,6 +81,7 @@ export type Database = {
           usage_last_reset?: string
           byok_enabled?: boolean
           api_keys?: Record<string, string>
+          traits_enabled?: boolean
         }
         Update: {
           id?: string
@@ -92,6 +94,7 @@ export type Database = {
           usage_last_reset?: string
           byok_enabled?: boolean
           api_keys?: Record<string, string>
+          traits_enabled?: boolean
         }
       }
       conversations: {
@@ -217,6 +220,47 @@ export type Database = {
           status?: string
           last_seen?: string
           typing_indicator?: boolean
+        }
+      }
+      user_preferences: {
+        Row: {
+          id: string
+          user_id: string
+          display_name: string | null
+          occupation: string | null
+          personality_traits: string[] | null
+          additional_context: string | null
+          model_instructions: Record<string, unknown> | null
+          export_settings: Record<string, unknown> | null
+          created_at: string
+          updated_at: string
+          traits_enabled?: boolean
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          display_name?: string | null
+          occupation?: string | null
+          personality_traits?: string[] | null
+          additional_context?: string | null
+          model_instructions?: Record<string, unknown> | null
+          export_settings?: Record<string, unknown> | null
+          created_at?: string
+          updated_at?: string
+          traits_enabled?: boolean
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          display_name?: string | null
+          occupation?: string | null
+          personality_traits?: string[] | null
+          additional_context?: string | null
+          model_instructions?: Record<string, unknown> | null
+          export_settings?: Record<string, unknown> | null
+          created_at?: string
+          updated_at?: string
+          traits_enabled?: boolean
         }
       }
     }

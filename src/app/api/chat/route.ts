@@ -25,6 +25,28 @@ export async function POST(req: Request) {
     const isAuthenticated = !!user;
     const userId = user?.id || 'anonymous';
     
+    // Get user preferences for traits
+    let userTraits: string | null = null;
+    if (user) {
+      const { data: preferences } = await supabase
+        .from('user_preferences')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+        
+      if (preferences && preferences.traits_enabled !== false) {
+        const traits = [];
+        if (preferences.display_name) traits.push(`Name: ${preferences.display_name}`);
+        if (preferences.occupation) traits.push(`Role: ${preferences.occupation}`);
+        if (preferences.personality_traits?.length) traits.push(`Traits: ${preferences.personality_traits.join(', ')}`);
+        if (preferences.additional_context) traits.push(`Additional Context: ${preferences.additional_context}`);
+        
+        if (traits.length > 0) {
+          userTraits = `User Context:\n${traits.map(t => `- ${t}`).join('\n')}\n\nPlease tailor your responses considering these user characteristics.`;
+        }
+      }
+    }
+    
     
     const modelInfo = getModelById(model);
     if (!modelInfo) {
@@ -82,10 +104,13 @@ export async function POST(req: Request) {
           modelInstance = vertexProvider.vertex;
         }
         
+        const baseSystemPrompt = "You are a helpful AI assistant. Provide comprehensive, detailed, and accurate responses. When users ask about topics, give thorough explanations with background information, examples, and practical details. Be informative and complete in your answers.";
+        const systemPrompt = userTraits ? `${baseSystemPrompt}\n\n${userTraits}` : baseSystemPrompt;
+        
         const result = await streamText({
           model: modelInstance,
           messages: messages,
-          system: "You are a helpful AI assistant. Provide comprehensive, detailed, and accurate responses. When users ask about topics, give thorough explanations with background information, examples, and practical details. Be informative and complete in your answers.",
+          system: systemPrompt,
           temperature: 0.7,
           maxTokens: 4000,
         });
@@ -121,6 +146,7 @@ export async function POST(req: Request) {
         const result = await streamText({
           model: openai(modelInfo.id),
           messages: messages,
+          system: userTraits || undefined,
           temperature: 0.7,
           maxTokens: 4000,
         });
@@ -155,6 +181,7 @@ export async function POST(req: Request) {
         const result = await streamText({
           model: anthropic(modelInfo.id),
           messages: messages,
+          system: userTraits || undefined,
           temperature: 0.7,
           maxTokens: 4000,
         });
