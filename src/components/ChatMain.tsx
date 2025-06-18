@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect, useState, useCallback } from 'react'
 import { useRealtimeChat } from '@/hooks/useRealtimeChat'
 import { useAIChat } from '@/lib/ai'
 import MessageList from './MessageList'
@@ -13,6 +13,7 @@ import CostTracker from './CostTracker'
 import ModelComparison from './ModelComparison'
 import TaskExtractor from './TaskExtractor'
 import OpenRouterSettings from './OpenRouterSettings'
+import { useScrollPosition } from '@/hooks/useScrollPosition'
 import type { Database } from '@/lib/supabase'
 
 type Message = Database['public']['Tables']['messages']['Row']
@@ -40,6 +41,14 @@ export default function ChatMain({
 }: ChatMainProps) {
   const { sendMessage, updateTypingStatus } = useRealtimeChat(conversationId)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messageListRef = useRef<HTMLDivElement>(null)
+  const [showScrollButton, setShowScrollButton] = useState(false)
+  const [isUserScrolling, setIsUserScrolling] = useState(false)
+  const scrollTimeoutRef = useRef<NodeJS.Timeout>()
+  const scrollDebounceRef = useRef<NodeJS.Timeout>()
+  
+  // Use scroll position hook
+  const { saveScrollPosition } = useScrollPosition(conversationId, messageListRef)
   
   // Branching state
   const [showBranchNavigator, setShowBranchNavigator] = useState(false)
@@ -243,18 +252,79 @@ export default function ChatMain({
     return error.message
   }
 
-  // Auto-scroll to bottom only for new user/assistant messages
-  useEffect(() => {
-    if (messages.length > 0) {
-      const lastMessage = messages[messages.length - 1]
-      // Only auto-scroll for recent messages (within last 5 seconds)
-      const messageTime = new Date(lastMessage.created_at).getTime()
-      const now = Date.now()
-      if (now - messageTime < 5000) {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-      }
+  // Enhanced auto-scroll with user scroll detection
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    if (messageListRef.current) {
+      messageListRef.current.scrollTop = messageListRef.current.scrollHeight
     }
-  }, [messages])
+  }, [])
+
+  // Handle scroll events to detect user scrolling with debouncing
+  const handleScroll = useCallback(() => {
+    if (!messageListRef.current) return
+    
+    // Clear existing debounce
+    if (scrollDebounceRef.current) {
+      clearTimeout(scrollDebounceRef.current)
+    }
+    
+    // Debounce scroll handling for better performance
+    scrollDebounceRef.current = setTimeout(() => {
+      if (!messageListRef.current) return
+      
+      const { scrollTop, scrollHeight, clientHeight } = messageListRef.current
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 100
+      
+      setShowScrollButton(!isAtBottom)
+      
+      // If user scrolls up, set flag to prevent auto-scroll
+      if (!isAtBottom) {
+        setIsUserScrolling(true)
+        saveScrollPosition()
+        
+        // Clear existing timeout
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current)
+        }
+        // Reset after 30 seconds of no scrolling
+        scrollTimeoutRef.current = setTimeout(() => {
+          setIsUserScrolling(false)
+        }, 30000)
+      } else {
+        setIsUserScrolling(false)
+      }
+    }, 50) // 50ms debounce
+  }, [saveScrollPosition])
+
+  // Auto-scroll when new messages arrive (unless user is scrolling)
+  useEffect(() => {
+    if (messages.length > 0 && !isUserScrolling) {
+      // Double RAF for better timing with React updates
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          scrollToBottom('smooth')
+        })
+      })
+    }
+  }, [messages, isUserScrolling, scrollToBottom])
+
+  // Auto-scroll when AI messages are streaming
+  useEffect(() => {
+    if (aiMessages.length > 0 && isAILoading && !isUserScrolling) {
+      // Use auto behavior for streaming to reduce jank
+      requestAnimationFrame(() => {
+        scrollToBottom('auto')
+      })
+    }
+  }, [aiMessages, isAILoading, isUserScrolling, scrollToBottom])
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current)
+      if (scrollDebounceRef.current) clearTimeout(scrollDebounceRef.current)
+    }
+  }, [])
 
   // Send pending message when conversation is created
   useEffect(() => {
@@ -564,13 +634,31 @@ export default function ChatMain({
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
           ) : activeTab === 'chat' ? (
-            <div className="h-full flex flex-col">
+            <div className="h-full flex flex-col relative">
               <MessageList 
+                ref={messageListRef}
                 messages={messages} 
                 aiMessages={conversationId ? aiMessages : []} 
                 onCreateBranch={handleCreateBranch}
+                onScroll={handleScroll}
               />
               <div ref={messagesEndRef} className="flex-shrink-0 h-4" />
+              
+              {/* Scroll to bottom button */}
+              {showScrollButton && (
+                <button
+                  onClick={() => {
+                    setIsUserScrolling(false)
+                    scrollToBottom('smooth')
+                  }}
+                  className="absolute bottom-4 right-4 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 gpu-accelerated"
+                  aria-label="Scroll to bottom"
+                >
+                  <svg className="w-5 h-5 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                  </svg>
+                </button>
+              )}
             </div>
           ) : (
             <div className="h-full flex items-center justify-center">

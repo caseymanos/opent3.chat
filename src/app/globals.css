@@ -104,6 +104,42 @@ html {
   contain: strict;
 }
 
+/* Optimize message rendering performance */
+.message-container {
+  contain: content;
+  will-change: contents;
+}
+
+/* Smooth animations for message entry */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.2s ease-out forwards;
+}
+
+/* Reduce reflows for better scrolling */
+.message-list {
+  isolation: isolate;
+  z-index: 0;
+}
+
+/* Optimize virtual scrolling */
+.virtual-scroll-container {
+  position: relative;
+  height: 100%;
+  overflow-y: auto;
+  overflow-anchor: none;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;

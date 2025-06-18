@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, useCallback, memo } from 'react'
+import React, { useState, useMemo, useCallback, memo, forwardRef, startTransition, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import rehypeHighlight from 'rehype-highlight'
 import MessageActions from './MessageActions'
@@ -15,6 +15,7 @@ interface MessageListProps {
   messages: DBMessage[]
   aiMessages?: AIMessage[]
   onCreateBranch?: (messageId: string) => void
+  onScroll?: () => void
 }
 
 // Memoized markdown components to prevent recreation on every render
@@ -143,7 +144,7 @@ const MessageBubble = memo(({ message, onCreateBranch }: MessageBubbleProps) => 
   }
 
   return (
-    <div className="group relative animate-slide-in gpu-accelerated">
+    <div className="group relative animate-slide-in gpu-accelerated message-container">
       <div className="flex flex-col gap-2">
         {/* Role Label */}
         <div className="flex items-center gap-2">
@@ -200,13 +201,15 @@ const MessageBubble = memo(({ message, onCreateBranch }: MessageBubbleProps) => 
 
 MessageBubble.displayName = 'MessageBubble'
 
-// Main MessageList component with memoization
-const MessageList = memo(({ messages, aiMessages = [], onCreateBranch }: MessageListProps) => {
+// Main MessageList component with memoization and ref forwarding
+const MessageList = memo(forwardRef<HTMLDivElement, MessageListProps>(({ messages, aiMessages = [], onCreateBranch, onScroll }, ref) => {
+  // Use startTransition for non-urgent updates
+  const [visibleMessages, setVisibleMessages] = useState<DBMessage[]>([])
+  
   console.log('🔄 [MessageList] Rendering with:', { 
     dbMessages: messages.length, 
     aiMessages: aiMessages.length,
-    firstDbMessageId: messages[0]?.id,
-    firstAiMessageContent: aiMessages[0]?.content?.substring(0, 50)
+    visibleMessages: visibleMessages.length
   })
   
   // Memoize the combined messages to prevent recalculation
@@ -241,18 +244,30 @@ const MessageList = memo(({ messages, aiMessages = [], onCreateBranch }: Message
     return combined
   }, [messages, aiMessages])
 
-  if (allMessages.length === 0) {
+  // Update visible messages with React 18 transitions for better performance
+  useEffect(() => {
+    startTransition(() => {
+      setVisibleMessages(allMessages)
+    })
+  }, [allMessages])
+
+  if (visibleMessages.length === 0 && allMessages.length === 0) {
     return <EmptyState />
   }
 
   return (
-    <div className="flex-1 overflow-y-auto scroll-optimized" style={{ height: '100%' }}>
-      <div className="max-w-3xl mx-auto px-4 py-8 space-y-6 contain-layout">
-        {allMessages.map((message, index) => (
+    <div 
+      ref={ref}
+      className="flex-1 overflow-y-auto scroll-optimized" 
+      style={{ height: '100%' }}
+      onScroll={onScroll}
+    >
+      <div className="max-w-3xl mx-auto px-4 py-8 space-y-6 contain-layout message-list">
+        {(visibleMessages.length > 0 ? visibleMessages : allMessages).map((message, index) => (
           <MessageBubble
             key={message.id}
             message={message}
-            isLast={index === allMessages.length - 1}
+            isLast={index === visibleMessages.length - 1}
             onCreateBranch={onCreateBranch}
           />
         ))}
@@ -261,7 +276,7 @@ const MessageList = memo(({ messages, aiMessages = [], onCreateBranch }: Message
       </div>
     </div>
   )
-}, (prevProps, nextProps) => {
+}), (prevProps, nextProps) => {
   // Custom comparison to prevent unnecessary re-renders
   return prevProps.messages.length === nextProps.messages.length &&
          prevProps.messages[prevProps.messages.length - 1]?.id === 
