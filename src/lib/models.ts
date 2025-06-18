@@ -1,7 +1,7 @@
 export interface AIModel {
   id: string
   name: string
-  provider: 'openai' | 'anthropic' | 'google' | 'xai'
+  provider: 'openai' | 'anthropic' | 'google' | 'xai' | 'azure' | 'azure-ai' | 'vertex-ai'
   maxTokens: number
   description: string
   pricing: {
@@ -24,6 +24,28 @@ export interface AIModel {
 
 export const AI_MODELS: AIModel[] = [
   // Free Tier Models
+  {
+    id: 'gpt-4o-mini-azure',
+    name: 'GPT-4o Mini (Azure)',
+    provider: 'azure',
+    maxTokens: 128000,
+    description: 'Fast and efficient GPT-4o via Azure OpenAI - Better performance than free tier',
+    pricing: { input: 0.15, output: 0.60, currency: 'USD' },
+    capabilities: { vision: true, functionCalling: true, codeGeneration: true, multimodal: true },
+    performance: { speed: 'fast', quality: 'high' },
+    tier: 'free'
+  },
+  {
+    id: 'gemini-2.5-flash-azure',
+    name: 'Gemini 2.5 Flash (Azure AI)',
+    provider: 'azure-ai',
+    maxTokens: 1000000,
+    description: 'Google Gemini hosted on Azure infrastructure - Low latency and high reliability',
+    pricing: { input: 0.15, output: 0.60, currency: 'USD' },
+    capabilities: { vision: true, functionCalling: true, codeGeneration: true, multimodal: true },
+    performance: { speed: 'fast', quality: 'high' },
+    tier: 'free'
+  },
   {
     id: 'gemini-2.5-flash-preview-05-20',
     name: 'Gemini 2.5 Flash Preview',
@@ -56,6 +78,30 @@ export const AI_MODELS: AIModel[] = [
     capabilities: { vision: true, functionCalling: true, codeGeneration: true, multimodal: true },
     performance: { speed: 'fast', quality: 'high' },
     tier: 'free'
+  },
+  
+  // Vertex AI Models (BYOK)
+  {
+    id: 'gemini-2.5-flash-vertex',
+    name: 'Gemini 2.5 Flash (Vertex AI)',
+    provider: 'vertex-ai',
+    maxTokens: 1000000,
+    description: 'Enterprise-grade Gemini hosted on Google Cloud with enhanced security and compliance',
+    pricing: { input: 0.15, output: 0.60, currency: 'USD' },
+    capabilities: { vision: true, functionCalling: true, codeGeneration: true, multimodal: true },
+    performance: { speed: 'fast', quality: 'high' },
+    tier: 'byok'
+  },
+  {
+    id: 'gemini-2.5-flash-lite-vertex',
+    name: 'Gemini 2.5 Flash Lite (Vertex AI)',
+    provider: 'vertex-ai',
+    maxTokens: 1000000,
+    description: 'Lightweight Gemini model optimized for cost and speed on Google Cloud',
+    pricing: { input: 0.075, output: 0.30, currency: 'USD' },
+    capabilities: { vision: true, functionCalling: true, codeGeneration: true, multimodal: false },
+    performance: { speed: 'fast', quality: 'medium' },
+    tier: 'byok'
   },
   
   // Premium Tier Models (10 free calls for logged-in users)

@@ -3,10 +3,14 @@ import { anthropic } from '@ai-sdk/anthropic'
 import { openai } from '@ai-sdk/openai'
 import { google } from '@ai-sdk/google'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
+import { getAzureProvider } from '@/lib/azure-openai-provider'
+import { getAzureAIProvider } from '@/lib/azure-ai-provider'
+import { getVertexAIProvider } from '@/lib/vertex-ai-provider'
 import { REASONING_SYSTEM_PROMPT } from '@/lib/reasoning'
 import { OPENROUTER_MODEL_MAP } from '@/lib/openrouter'
 import { getServerUsageTracker } from '@/lib/usage-tracker-server'
 import { getModelById } from '@/lib/models'
+import { responseCache } from '@/lib/response-cache'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import type { Database } from '@/lib/supabase'
@@ -16,14 +20,25 @@ const log = isDev ? console.log : () => {}
 const logError = console.error // Always log errors
 
 export async function POST(req: Request) {
+  const timings: Record<string, number> = {}
   const startTime = Date.now()
+  timings.requestStart = startTime
+  
+  const logTiming = (stage: string) => {
+    timings[stage] = Date.now()
+    const elapsed = timings[stage] - startTime
+    log(`⏱️ [TIMING] ${stage}: ${elapsed}ms (total: ${elapsed}ms)`)
+  }
+  
   log('🚀 [CHAT API] Request received at', new Date().toISOString())
+  logTiming('requestReceived')
   
   try {
     // Start processing request body immediately while auth check happens in parallel
     const contentType = req.headers.get('content-type') || ''
     
     // Create auth promise but don't await it yet
+    logTiming('authStart')
     const supabase = createServerComponentClient<Database>({ cookies })
     const authPromise = supabase.auth.getUser()
     
@@ -57,6 +72,8 @@ export async function POST(req: Request) {
       // Handle JSON (no file attachments)
       body = await req.json()
     }
+    
+    logTiming('bodyParsed')
     
     const { 
       messages, 
@@ -104,16 +121,44 @@ export async function POST(req: Request) {
       )
     }
     
+    // Check if we have a valid API key for the provider
+    const hasValidApiKey = () => {
+      switch (provider) {
+        case 'anthropic':
+          const anthropicKey = process.env.ANTHROPIC_API_KEY
+          return anthropicKey && anthropicKey !== 'your-anthropic-api-key' && anthropicKey.startsWith('sk-ant-')
+        case 'openai':
+          const openaiKey = process.env.OPENAI_API_KEY
+          return openaiKey && openaiKey !== 'your-openai-api-key' && openaiKey.startsWith('sk-')
+        case 'google':
+          const googleKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
+          return googleKey && googleKey !== 'your-google-api-key'
+        case 'azure':
+          return !!getAzureProvider()
+        case 'azure-ai':
+          return !!getAzureAIProvider()
+        case 'vertex-ai':
+          return !!getVertexAIProvider()
+        default:
+          return false
+      }
+    }
+    
     // For free models, skip auth entirely
     let user = null
     let userUsage = null
     
-    if (modelInfo.tier === 'free') {
-      log('✅ [USAGE] Free model detected - skipping auth and usage checks')
+    // Skip auth if we have a valid API key for BYOK models or if it's a free model
+    const skipAuth = modelInfo.tier === 'free' || (modelInfo.tier === 'byok' && hasValidApiKey())
+    
+    if (skipAuth) {
+      log('✅ [USAGE] Free model or BYOK with API key - skipping auth checks')
+      logTiming('authSkipped')
     } else {
-      // Only await auth for non-free models
+      // Only await auth for non-free models without API keys
       const { data: authData, error: authError } = await authPromise
       user = authData?.user || null
+      logTiming('authCompleted')
       
       log('🔐 [CHAT API] Auth check:', {
         hasUser: !!user,
@@ -169,6 +214,7 @@ export async function POST(req: Request) {
         }
         
         // Process all files in parallel for better performance
+        logTiming('fileProcessingStart')
         const fileProcessingPromises = attachedFiles.map(async (file) => {
           log('📎 [FILES] Processing file:', {
             name: file.name,
@@ -204,6 +250,7 @@ export async function POST(req: Request) {
         // Wait for all files to be processed
         const processedFiles = await Promise.all(fileProcessingPromises)
         enhancedContent.push(...processedFiles)
+        logTiming('fileProcessingCompleted')
         
         // Update the message with enhanced content
         processedMessages[lastUserMessageIndex] = {
@@ -224,10 +271,29 @@ export async function POST(req: Request) {
     const currentUserId = user?.id
     const tracker = getServerUsageTracker()
     
-    if (modelInfo.tier !== 'free' && currentUserId) {
+    // Skip usage checks if we have a valid API key for BYOK models
+    const skipUsageCheck = modelInfo.tier === 'byok' && hasValidApiKey()
+    
+    if (modelInfo.tier !== 'free' && !skipUsageCheck) {
+      if (!currentUserId) {
+        log('🚫 [USAGE] Authentication required for non-free models without API key')
+        return new Response(
+          JSON.stringify({
+            error: 'Premium models require sign-in. Please sign in or use free models like Gemini 2.5 Flash.',
+            type: 'auth_required'
+          }),
+          { 
+            status: 401, 
+            headers: { 'Content-Type': 'application/json' }
+          }
+        )
+      }
+      
       // Get usage data once and reuse it
+      logTiming('usageCheckStart')
       userUsage = await tracker.getUsage(currentUserId)
       const canUse = await tracker.canUseModelWithUsage(currentUserId, modelInfo.tier, userUsage)
+      logTiming('usageCheckCompleted')
       
       if (!canUse) {
         log('🚫 [USAGE] Model access denied:', {
@@ -240,13 +306,9 @@ export async function POST(req: Request) {
         
         let errorMessage = 'Access denied to this model.'
         if (modelInfo.tier === 'premium') {
-          if (!currentUserId) {
-            errorMessage = 'Premium models require sign-in. Please sign in or use free models like Gemini 2.5 Flash.'
-          } else {
-            errorMessage = `Premium model limit reached. You have used ${userUsage.premiumCalls}/10 free calls for premium models. Please use free models or enable BYOK.`
-          }
+          errorMessage = `Premium model limit reached. You have used ${userUsage.premiumCalls}/10 free calls for premium models. Please use free models or enable BYOK.`
         } else if (modelInfo.tier === 'byok') {
-          errorMessage = 'This model requires BYOK (Bring Your Own Key) to be enabled.'
+          errorMessage = 'This model requires BYOK (Bring Your Own Key) to be enabled in settings or a valid API key in environment.'
         }
         
         return new Response(
@@ -267,15 +329,117 @@ export async function POST(req: Request) {
       }
     }
 
+    // Check cache for common queries first
+    const lastUserMessage = messages?.[messages.length - 1]
+    if (lastUserMessage?.role === 'user' && typeof lastUserMessage.content === 'string') {
+      const query = lastUserMessage.content
+      
+      if (responseCache.shouldCache(query)) {
+        logTiming('cacheCheckStart')
+        const cachedResponse = responseCache.get(query, model, provider)
+        logTiming('cacheCheckCompleted')
+        
+        if (cachedResponse) {
+          log('🚀 [CACHE] Returning cached response, skipping AI call')
+          
+          // Return cached response in AI SDK stream format
+          const encoder = new TextEncoder()
+          const messageId = `msg-${Math.random().toString(36).substring(2)}`
+          
+          const stream = new ReadableStream({
+            start(controller) {
+              // Send message ID
+              controller.enqueue(encoder.encode(`f:{"messageId":"${messageId}"}\n`))
+              
+              // Send cached content
+              const escapedContent = cachedResponse.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+              controller.enqueue(encoder.encode(`0:"${escapedContent}"\n`))
+              
+              // Send finish message
+              controller.enqueue(encoder.encode(`e:{"finishReason":"stop","usage":{"promptTokens":0,"completionTokens":0},"isContinued":false}\n`))
+              controller.enqueue(encoder.encode(`d:{"finishReason":"stop","usage":{"promptTokens":0,"completionTokens":0}}\n`))
+              
+              controller.close()
+            }
+          })
+          
+          const totalTime = Date.now() - startTime
+          log('📊 [CACHE PERFORMANCE]', { totalTime: `${totalTime}ms`, source: 'cache' })
+          
+          return new Response(stream, {
+            headers: {
+              'Content-Type': 'text/plain; charset=utf-8',
+              'X-Vercel-AI-Data-Stream': 'v1'
+            }
+          })
+        }
+      }
+    }
+
     // Multi-provider support with OpenRouter integration
+    logTiming('aiProviderInitStart')
     try {
-      let result
+      let result: any = null
       
       // Start initializing the AI provider early to reduce latency
       let aiProvider: any = null
       
+      // Check if we should use Azure AI (Gemini models)
+      const azureAIProvider = getAzureAIProvider()
+      if (azureAIProvider && azureAIProvider.isAvailable && provider === 'azure-ai') {
+        log('🌟 [AZURE AI] Using Azure AI Studio (Gemini)')
+        logTiming('aiProviderInitCompleted')
+        
+        log('🤖 [AZURE AI] Starting API call with model:', model)
+        logTiming('aiCallStart')
+        
+        try {
+          result = await streamText({
+            model: azureAIProvider.provider(model),
+            messages: processedMessages,
+            system: "You are a helpful AI assistant. Provide comprehensive, detailed, and accurate responses. When users ask about topics, give thorough explanations with background information, examples, and practical details. Be informative and complete in your answers.",
+            temperature: 0.7,
+            maxTokens: 4000,
+            onError: (errorObj: any) => {
+              logError('🚨 [AZURE AI STREAM ERROR]:', errorObj);
+            }
+          })
+        } catch (azureAIError) {
+          logError('❌ [AZURE AI] Failed:', azureAIError)
+          result = null
+        }
+      }
+      
+      // Check if we should use Azure OpenAI
+      if (!result) {
+        const azureProvider = getAzureProvider()
+        if (azureProvider && azureProvider.isAvailable && provider === 'azure') {
+          log('🔷 [AZURE] Using Azure OpenAI')
+          logTiming('aiProviderInitCompleted')
+          
+          log('🤖 [AZURE] Starting API call with deployment:', azureProvider.deploymentName)
+          logTiming('aiCallStart')
+          
+          try {
+            result = await streamText({
+              model: azureProvider.provider(azureProvider.deploymentName),
+              messages: processedMessages,
+              system: "You are a helpful AI assistant. Provide comprehensive, detailed, and accurate responses. When users ask about topics, give thorough explanations with background information, examples, and practical details. Be informative and complete in your answers.",
+              temperature: 0.7,
+              maxTokens: 4000,
+              onError: (errorObj: any) => {
+                logError('🚨 [AZURE STREAM ERROR]:', errorObj);
+              }
+            })
+          } catch (azureError) {
+            logError('❌ [AZURE] Failed, falling back to other providers:', azureError)
+            result = null
+          }
+        }
+      }
+      
       // Check if we should use OpenRouter
-      if (useOpenRouter && openRouterApiKey) {
+      if (!result && useOpenRouter && openRouterApiKey) {
         log('🌐 [OPENROUTER] Using OpenRouter for model:', model)
         
         const openRouterModelId = OPENROUTER_MODEL_MAP[model]
@@ -292,8 +456,10 @@ export async function POST(req: Request) {
         })
         
         aiProvider = openRouter(openRouterModelId)
+        logTiming('aiProviderInitCompleted')
         
         log('🤖 [OPENROUTER] Starting API call with model:', openRouterModelId)
+        logTiming('aiCallStart')
         result = await streamText({
           model: aiProvider,
           messages: processedMessages,
@@ -314,7 +480,9 @@ export async function POST(req: Request) {
         })
         
         if (anthropicKey && anthropicKey !== 'your-anthropic-api-key' && anthropicKey.startsWith('sk-ant-')) {
+          logTiming('aiProviderInitCompleted')
           log('🤖 [ANTHROPIC] Starting API call with model:', model)
+          logTiming('aiCallStart')
           result = await streamText({
             model: anthropic(model),
             messages: processedMessages,
@@ -338,7 +506,9 @@ export async function POST(req: Request) {
         })
         
         if (openaiKey && openaiKey !== 'your-openai-api-key' && openaiKey.startsWith('sk-')) {
+          logTiming('aiProviderInitCompleted')
           log('🤖 [OPENAI] Starting API call with model:', model)
+          logTiming('aiCallStart')
           result = await streamText({
             model: openai(model),
             messages: processedMessages,
@@ -360,7 +530,9 @@ export async function POST(req: Request) {
         })
         
         if (googleKey && googleKey !== 'your-google-api-key') {
+          logTiming('aiProviderInitCompleted')
           log('🤖 [GOOGLE] Starting API call with model:', model)
+          logTiming('aiCallStart')
           
           result = await streamText({
             model: google(model),
@@ -375,13 +547,73 @@ export async function POST(req: Request) {
         } else {
           throw new Error('Invalid Google API key')
         }
-      } else {
-        throw new Error(`Unsupported provider: ${provider}`)
+      } else if (provider === 'vertex-ai') {
+        const vertexProvider = getVertexAIProvider()
+        log('🔑 [VERTEX AI] Provider check:', {
+          hasProvider: !!vertexProvider,
+          isAvailable: vertexProvider?.isAvailable,
+        })
+        
+        if (vertexProvider && vertexProvider.isAvailable) {
+          logTiming('aiProviderInitCompleted')
+          const vertexModelId = vertexProvider.getModelId(model)
+          log('🤖 [VERTEX AI] Starting API call with model:', { 
+            requestedModel: model, 
+            vertexModelId,
+            projectId: vertexProvider.projectId,
+            location: vertexProvider.location
+          })
+          logTiming('aiCallStart')
+          
+          try {
+            result = await streamText({
+              model: vertexProvider.provider(vertexModelId),
+              messages: processedMessages,
+              system: "You are a helpful AI assistant. Provide comprehensive, detailed, and accurate responses. When users ask about topics, give thorough explanations with background information, examples, and practical details. Be informative and complete in your answers.",
+              temperature: 0.7,
+              maxTokens: 4000,
+              onError: (errorObj: any) => {
+                logError('🚨 [VERTEX AI STREAM ERROR]:', errorObj);
+              }
+            })
+          } catch (vertexError: any) {
+            logError('❌ [VERTEX AI] Error details:', {
+              message: vertexError?.message,
+              stack: vertexError?.stack,
+              cause: vertexError?.cause,
+              vertexModelId,
+              projectId: vertexProvider.projectId
+            })
+            throw new Error(`Vertex AI error: ${vertexError?.message || 'Unknown error'}`)
+          }
+        } else {
+          throw new Error('Vertex AI is not configured. Please set up Google Cloud credentials.')
+        }
       }
 
+      // If no result was generated, throw an error
+      if (!result) {
+        throw new Error(`Provider ${provider} is not configured or unavailable`)
+      }
+
+      logTiming('aiCallCompleted')
+      
       const actualProvider = useOpenRouter ? 'OPENROUTER' : provider.toUpperCase()
       log(`✅ [${actualProvider}] API call successful, returning stream response`)
-      log('⏱️ [CHAT API] Total request time:', Date.now() - startTime, 'ms')
+      
+      // Log detailed timing breakdown
+      const totalTime = Date.now() - startTime
+      log('📊 [PERFORMANCE SUMMARY]', {
+        totalTime: `${totalTime}ms`,
+        breakdown: {
+          auth: timings.authCompleted ? `${timings.authCompleted - timings.authStart}ms` : 'skipped',
+          bodyParsing: `${timings.bodyParsed - timings.requestReceived}ms`,
+          fileProcessing: timings.fileProcessingCompleted ? `${timings.fileProcessingCompleted - timings.fileProcessingStart}ms` : 'none',
+          usageCheck: timings.usageCheckCompleted ? `${timings.usageCheckCompleted - timings.usageCheckStart}ms` : 'skipped',
+          aiProviderInit: `${timings.aiProviderInitCompleted - timings.aiProviderInitStart}ms`,
+          aiCall: `${timings.aiCallCompleted - timings.aiCallStart}ms`
+        }
+      })
       
       // Increment usage for premium models
       if (modelInfo && modelInfo.tier === 'premium' && currentUserId) {
@@ -409,6 +641,21 @@ export async function POST(req: Request) {
             return `Stream processing error: ${error?.message || error}`;
           }
         })
+        
+        // Cache the response for future requests if it's cacheable
+        if (lastUserMessage?.role === 'user' && typeof lastUserMessage.content === 'string') {
+          const query = lastUserMessage.content
+          if (responseCache.shouldCache(query)) {
+            // Get the full response text for caching
+            result.text.then((fullText: string) => {
+              if (fullText && fullText.length > 50) {
+                responseCache.set(query, model, provider, fullText)
+              }
+            }).catch(() => {
+              // Ignore cache errors
+            })
+          }
+        }
         
         // Return response immediately without cloning for better performance
         return response
