@@ -50,7 +50,7 @@ export default function ModelComparison({
         return prev
       })
     }
-  }, [selectedModels])
+  }, [selectedModels[0]]) // Only depend on the first model to avoid array reference issues
 
   const calculateModelScore = (model: AIModel): ModelScore => {
     // Speed scoring (higher is better)

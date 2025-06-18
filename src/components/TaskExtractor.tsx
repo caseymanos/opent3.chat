@@ -1,13 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   ClipboardDocumentListIcon,
   ExclamationTriangleIcon,
-  ClockIcon
+  ClockIcon,
+  XMarkIcon,
+  SparklesIcon,
+  CheckCircleIcon,
+  TagIcon,
+  ArrowDownIcon
 } from '@heroicons/react/24/outline'
 import { Button } from './ui/Button'
-import { Card } from './ui/Card'
 import { Badge } from './ui/badge'
 import type { Task, TaskExtractionResult } from '@/lib/task-extractor'
 
@@ -18,7 +23,7 @@ interface TaskExtractorProps {
 }
 
 export default function TaskExtractor({ conversationId, className = '', messageCount = 0 }: TaskExtractorProps) {
-  const [isPanelOpen, setIsPanelOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
   const [isExtracting, setIsExtracting] = useState(false)
   const [extractionResult, setExtractionResult] = useState<TaskExtractionResult | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -28,7 +33,7 @@ export default function TaskExtractor({ conversationId, className = '', messageC
     if (!conversationId) return
 
     // Show modal immediately and start extracting
-    setIsPanelOpen(true)
+    setIsOpen(true)
     setIsExtracting(true)
     setError(null)
     setExtractionResult(null) // Clear previous results
@@ -49,7 +54,6 @@ export default function TaskExtractor({ conversationId, className = '', messageC
       setExtractionResult(result)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred')
-      setIsPanelOpen(false) // Close modal on error
     } finally {
       setIsExtracting(false)
     }
@@ -97,43 +101,55 @@ export default function TaskExtractor({ conversationId, className = '', messageC
         )}
       </button>
 
-
-
-      {/* Extract Tasks Modal - OpenRouter Style */}
-      {isPanelOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b">
-              <div>
-                <h3 className="text-xl font-semibold flex items-center gap-2">
-                  📋 {extractionResult ? 'Extracted Tasks' : 'Task Extraction'}
-                  {extractionResult && (
-                    <Badge variant="outline" className="text-purple-600">
-                      {extractionResult.totalTasksFound} tasks
-                    </Badge>
-                  )}
-                </h3>
-                <p className="text-sm text-slate-500 mt-1">
-                  {extractionResult 
-                    ? `${extractionResult.extractionMetadata.complexity} complexity • ${extractionResult.extractionMetadata.conversationLength} messages`
-                    : 'Analyzing conversation for actionable items...'
-                  }
-                </p>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+            onClick={(e) => e.target === e.currentTarget && setIsOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+            >
+              {/* Header */}
+              <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
+                      <ClipboardDocumentListIcon className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+                        Extracted Tasks
+                      </h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">
+                        {extractionResult.totalTasksFound} tasks found • {extractionResult.extractionMetadata.complexity} complexity
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                  >
+                    <XMarkIcon className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => setIsPanelOpen(false)}>
-                ✕
-              </Button>
-            </div>
 
-            
-            <div className="p-6 space-y-6">
-              {!extractionResult ? (
+              {/* Content */}
+              <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+              {isExtracting ? (
                 <div className="text-center py-12">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
                   <p className="text-gray-600 dark:text-gray-300">Analyzing conversation...</p>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">This may take a few seconds</p>
                 </div>
-              ) : (
+              ) : extractionResult ? (
                 <>
                   {/* Summary */}
                   {extractionResult.summary && (
@@ -240,10 +256,18 @@ export default function TaskExtractor({ conversationId, className = '', messageC
                   </div>
                 )}
                 </>
+              ) : (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <ExclamationTriangleIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>Failed to extract tasks</p>
+                  <p className="text-sm mt-1">{error || 'Please try again'}</p>
+                </div>
               )}
+              </div>
               
               {/* Footer */}
-              <div className="flex items-center justify-between pt-6 border-t">
+              <div className="p-6 pt-0">
+                <div className="flex items-center justify-between pt-6 border-t">
                 <div className="text-xs text-gray-500 dark:text-gray-400">
                   {extractionResult 
                     ? `Extracted from ${extractionResult.extractionMetadata.conversationLength} messages`
@@ -251,7 +275,7 @@ export default function TaskExtractor({ conversationId, className = '', messageC
                   }
                 </div>
                 <div className="flex gap-3">
-                  <Button variant="ghost" onClick={() => setIsPanelOpen(false)}>
+                  <Button variant="ghost" onClick={() => setIsOpen(false)}>
                     Close
                   </Button>
                   {extractionResult && (
@@ -265,10 +289,11 @@ export default function TaskExtractor({ conversationId, className = '', messageC
                   )}
                 </div>
               </div>
-            </div>
-          </Card>
-        </div>
-      )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 }

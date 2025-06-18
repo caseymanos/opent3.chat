@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Project Type:** Next.js Application
 **Branch:** extract-sidebutton
-**Focus Area:** Development work on extract-sidebutton
+**Focus Area:** Multi-model AI chat application
 
 ## Project Overview
 
@@ -14,7 +14,7 @@ This is a Next.js React application with server-side rendering capabilities.
 
 ## Branch Purpose
 
-This branch (extract-sidebutton) is focused on: Development work on extract-sidebutton
+This branch (extract-sidebutton) is focused on: Development work on extract-sidebutton for the multi-model AI chat application
 
 ## Development Guidelines
 
@@ -66,4 +66,5 @@ npm run dev, npm run build, npm run start
 - Always verify functionality in the development environment
 - Run linting and type checking before committing
 - Create meaningful commit messages that describe the changes
+- Follow security best practices and never commit sensitive credentials
 - Focus on the specific goals of this branch: Development work on extract-sidebutton

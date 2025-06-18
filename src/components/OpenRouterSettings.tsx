@@ -9,6 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { OPENROUTER_FEE_PERCENTAGE } from '@/lib/openrouter'
 import { AI_MODELS } from '@/lib/ai'
+import { useUsageTracking } from '@/lib/usage-tracker'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface OpenRouterSettingsProps {
   isOpen: boolean
@@ -27,11 +29,35 @@ export default function OpenRouterSettings({
   const [apiKey, setApiKey] = useState(currentConfig.apiKey)
   const [isValidating, setIsValidating] = useState(false)
   const [validationResult, setValidationResult] = useState<'valid' | 'invalid' | null>(null)
+  const { updateByokStatus, getUsage } = useUsageTracking()
+  const { user } = useAuth()
 
   useEffect(() => {
     setEnabled(currentConfig.enabled)
     setApiKey(currentConfig.apiKey)
   }, [currentConfig])
+
+  // Load config from user profile on mount
+  useEffect(() => {
+    const loadFromProfile = async () => {
+      if (user) {
+        const usage = await getUsage()
+        if (usage?.apiKeys?.openRouter) {
+          const profileConfig = {
+            enabled: true,
+            apiKey: usage.apiKeys.openRouter
+          }
+          setEnabled(true)
+          setApiKey(usage.apiKeys.openRouter)
+          // Also update localStorage for consistency
+          localStorage.setItem('openrouter-config', JSON.stringify(profileConfig))
+          // Notify parent component
+          onConfigChange(profileConfig)
+        }
+      }
+    }
+    loadFromProfile()
+  }, [user, getUsage, onConfigChange])
 
   const validateApiKey = async () => {
     if (!apiKey || apiKey.length < 10) {
@@ -51,7 +77,7 @@ export default function OpenRouterSettings({
     }
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const config = {
       enabled: enabled && !!apiKey,
       apiKey: apiKey
@@ -59,6 +85,13 @@ export default function OpenRouterSettings({
     
     // Store in localStorage
     localStorage.setItem('openrouter-config', JSON.stringify(config))
+    
+    // Update BYOK status in usage tracker
+    if (config.enabled && config.apiKey) {
+      await updateByokStatus(true, { openRouter: config.apiKey })
+    } else {
+      await updateByokStatus(false, {})
+    }
     
     onConfigChange(config)
     onClose()

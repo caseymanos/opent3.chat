@@ -1,28 +1,42 @@
 import { createClient } from '@supabase/supabase-js'
 import { createBrowserClient, createServerClient as createServerClientSSR } from '@supabase/ssr'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://nhadlfbxbivlhtkbolve.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5oYWRsZmJ4Yml2bGh0a2JvbHZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk0NzMxMzIsImV4cCI6MjA2NTA0OTEzMn0.c3iSIX3NJv3gX8J1J4MNGKgU6ugv6VJE8ckE8mNc_F4'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-// Validate Supabase configuration
-if (!supabaseUrl.includes('supabase.co')) {
-  console.error('❌ Invalid Supabase URL:', supabaseUrl)
+// Log warnings in development if env vars are missing
+if (typeof window !== 'undefined') {
+  if (!supabaseUrl || supabaseUrl === 'undefined') {
+    console.error('❌ Missing NEXT_PUBLIC_SUPABASE_URL environment variable')
+  }
+  
+  if (!supabaseAnonKey || supabaseAnonKey === 'undefined') {
+    console.error('❌ Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable')
+  }
 }
 
-if (!supabaseAnonKey || supabaseAnonKey === 'placeholder-key') {
+// Validate Supabase configuration
+if (supabaseUrl && !supabaseUrl.includes('supabase.co') && !supabaseUrl.includes('supabase.in')) {
+  console.warn('⚠️  Supabase URL may be invalid:', supabaseUrl)
+}
+
+if (!supabaseAnonKey || supabaseAnonKey === 'placeholder-key' || supabaseAnonKey === 'undefined') {
   console.error('❌ Invalid Supabase anon key')
 }
 
 // Client-side Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder-key'
+)
 
 // Server-side Supabase client for Server Components
 export const createServerClient = async () => {
   const { cookies } = await import('next/headers')
   const cookieStore = await cookies()
   return createServerClientSSR(
-    supabaseUrl,
-    supabaseAnonKey,
+    supabaseUrl || 'https://placeholder.supabase.co',
+    supabaseAnonKey || 'placeholder-key',
     {
       cookies: {
         getAll() {
@@ -47,7 +61,10 @@ let clientComponentClient: ReturnType<typeof createBrowserClient> | null = null
 
 export const createClientComponentClient = () => {
   if (!clientComponentClient) {
-    clientComponentClient = createBrowserClient(supabaseUrl, supabaseAnonKey)
+    clientComponentClient = createBrowserClient(
+      supabaseUrl || 'https://placeholder.supabase.co',
+      supabaseAnonKey || 'placeholder-key'
+    )
   }
   return clientComponentClient
 }
@@ -68,6 +85,7 @@ export type Database = {
           usage_last_reset?: string
           byok_enabled?: boolean
           api_keys?: Record<string, string>
+          traits_enabled?: boolean
         }
         Insert: {
           id: string
@@ -80,6 +98,7 @@ export type Database = {
           usage_last_reset?: string
           byok_enabled?: boolean
           api_keys?: Record<string, string>
+          traits_enabled?: boolean
         }
         Update: {
           id?: string
@@ -92,6 +111,7 @@ export type Database = {
           usage_last_reset?: string
           byok_enabled?: boolean
           api_keys?: Record<string, string>
+          traits_enabled?: boolean
         }
       }
       conversations: {
@@ -217,6 +237,47 @@ export type Database = {
           status?: string
           last_seen?: string
           typing_indicator?: boolean
+        }
+      }
+      user_preferences: {
+        Row: {
+          id: string
+          user_id: string
+          display_name: string | null
+          occupation: string | null
+          personality_traits: string[] | null
+          additional_context: string | null
+          model_instructions: Record<string, unknown> | null
+          export_settings: Record<string, unknown> | null
+          created_at: string
+          updated_at: string
+          traits_enabled?: boolean
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          display_name?: string | null
+          occupation?: string | null
+          personality_traits?: string[] | null
+          additional_context?: string | null
+          model_instructions?: Record<string, unknown> | null
+          export_settings?: Record<string, unknown> | null
+          created_at?: string
+          updated_at?: string
+          traits_enabled?: boolean
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          display_name?: string | null
+          occupation?: string | null
+          personality_traits?: string[] | null
+          additional_context?: string | null
+          model_instructions?: Record<string, unknown> | null
+          export_settings?: Record<string, unknown> | null
+          created_at?: string
+          updated_at?: string
+          traits_enabled?: boolean
         }
       }
     }

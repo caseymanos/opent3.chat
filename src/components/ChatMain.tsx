@@ -1,19 +1,19 @@
 'use client'
 
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect, useState, useCallback } from 'react'
 import { useRealtimeChat } from '@/hooks/useRealtimeChat'
 import { useAIChat } from '@/lib/ai'
 import MessageList from './MessageList'
 import MessageInput from './MessageInput'
 import ModelSelector from './ModelSelector'
-import BranchNavigator from './BranchNavigator'
-import FileUpload from './FileUpload'
-import FileSummaries from './FileSummaries'
 import CostTracker from './CostTracker'
 import ModelComparison from './ModelComparison'
 import TaskExtractor from './TaskExtractor'
 import OpenRouterSettings from './OpenRouterSettings'
+import { useScrollPosition } from '@/hooks/useScrollPosition'
 import type { Database } from '@/lib/supabase'
+import { useUsageTracking } from '@/lib/usage-tracker'
+import { useAuth } from '@/contexts/AuthContext'
 
 type Message = Database['public']['Tables']['messages']['Row']
 
@@ -40,9 +40,20 @@ export default function ChatMain({
 }: ChatMainProps) {
   const { sendMessage, updateTypingStatus } = useRealtimeChat(conversationId)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messageListRef = useRef<HTMLDivElement>(null)
+  const [showScrollButton, setShowScrollButton] = useState(false)
+  const [isUserScrolling, setIsUserScrolling] = useState(false)
+  const [isAIResponding, setIsAIResponding] = useState(false)
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const scrollDebounceRef = useRef<NodeJS.Timeout | null>(null)
+  const lastMessageCountRef = useRef(0)
+  const { updateByokStatus, getUsage } = useUsageTracking()
+  const { user } = useAuth()
+  
+  // Use scroll position hook
+  const { saveScrollPosition } = useScrollPosition(conversationId, messageListRef)
   
   // Branching state
-  const [showBranchNavigator, setShowBranchNavigator] = useState(false)
   const [activeBranchId, setActiveBranchId] = useState<string | undefined>()
   
   // State for pending message when no conversation exists
@@ -52,20 +63,50 @@ export default function ChatMain({
   const [openRouterConfig, setOpenRouterConfig] = useState({ enabled: false, apiKey: '' })
   const [showOpenRouterSettings, setShowOpenRouterSettings] = useState(false)
   
-  // Tab state for side panels
-  const [activeTab, setActiveTab] = useState<'chat' | 'files' | 'summaries'>('chat')
-  
-  // Load OpenRouter config from localStorage
+  // Load OpenRouter config from localStorage or user profile
   useEffect(() => {
-    const stored = localStorage.getItem('openrouter-config')
-    if (stored) {
-      try {
-        setOpenRouterConfig(JSON.parse(stored))
-      } catch (error) {
-        console.warn('Failed to parse OpenRouter config from localStorage:', error)
+    const loadOpenRouterConfig = async () => {
+      // First check localStorage
+      const stored = localStorage.getItem('openrouter-config')
+      if (stored) {
+        try {
+          const config = JSON.parse(stored)
+          setOpenRouterConfig(config)
+          
+          // Update BYOK status based on OpenRouter config
+          if (config.enabled && config.apiKey) {
+            updateByokStatus(true, { openRouter: config.apiKey })
+          }
+          return // Exit if found in localStorage
+        } catch (error) {
+          console.warn('Failed to parse OpenRouter config from localStorage:', error)
+        }
+      }
+      
+      // If not in localStorage and user is logged in, check profile
+      if (user) {
+        const usage = await getUsage()
+        if (usage?.apiKeys?.openRouter) {
+          const profileConfig = {
+            enabled: true,
+            apiKey: usage.apiKeys.openRouter
+          }
+          setOpenRouterConfig(profileConfig)
+          // Save to localStorage for consistency
+          localStorage.setItem('openrouter-config', JSON.stringify(profileConfig))
+          // Update BYOK status
+          updateByokStatus(true, { openRouter: usage.apiKeys.openRouter })
+        }
+      } else {
+        // User logged out - clear OpenRouter config
+        setOpenRouterConfig({ enabled: false, apiKey: '' })
+        localStorage.removeItem('openrouter-config')
+        updateByokStatus(false, {})
       }
     }
-  }, [])
+    
+    loadOpenRouterConfig()
+  }, [user]) // Re-run when user changes (login/logout)
 
 
   // Convert database messages to AI SDK format for initialization
@@ -140,6 +181,8 @@ export default function ChatMain({
       console.log('🎯 [ChatMain] AI response finished:', message)
       // Save AI response to Supabase
       await sendMessage(message.content, 'assistant')
+      // Refresh usage counter after AI response is complete
+      onMessageSent?.()
     }
   })
 
@@ -154,52 +197,6 @@ export default function ChatMain({
     onModelChange(model, provider)
   }
 
-  const handleCreateBranch = async (parentMessageId: string) => {
-    console.log('🌿 [ChatMain] Creating branch from message:', { 
-      parentMessageId, 
-      conversationId,
-      currentMessages: messages.length 
-    })
-    
-    try {
-      // Find the parent message to get its branch info
-      const parentMessage = messages.find(m => m.id === parentMessageId)
-      if (!parentMessage) {
-        console.error('Parent message not found')
-        return
-      }
-
-      // Calculate next branch index for this parent
-      const siblingBranches = messages.filter(m => m.parent_id === parentMessageId)
-      const nextBranchIndex = siblingBranches.length
-
-      console.log(`🌿 Creating branch ${nextBranchIndex} from message ${parentMessageId}`)
-      
-      // Set up for branching - user can now respond and it will create a new branch
-      setActiveBranchId(parentMessageId)
-      setShowBranchNavigator(true)
-      
-      // Store the branch context for next message
-      // When user sends next message, it will use this parent and branch index
-      
-    } catch (error) {
-      console.error('Error creating branch:', error)
-    }
-  }
-
-  const handleBranchSelect = (messageId: string) => {
-    console.log('🎯 [ChatMain] Branch selected:', { messageId, conversationId })
-    setActiveBranchId(messageId)
-    
-    // In a full implementation, this would filter messages to show only the selected branch path
-    // For now, we'll highlight the selected branch in the navigator
-    
-    // TODO: Implement branch path filtering to show only messages in the selected branch
-    // This would involve:
-    // 1. Finding all ancestor messages from root to selected message
-    // 2. Finding all descendant messages from selected message
-    // 3. Filtering the message list to show only this path
-  }
 
   // Debug AI messages and handle errors
   useEffect(() => {
@@ -243,18 +240,114 @@ export default function ChatMain({
     return error.message
   }
 
-  // Auto-scroll to bottom only for new user/assistant messages
+  // Enhanced auto-scroll with user scroll detection
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    if (messageListRef.current) {
+      messageListRef.current.scrollTop = messageListRef.current.scrollHeight
+    }
+  }, [])
+
+  // Handle scroll events to detect user scrolling with debouncing
+  const handleScroll = useCallback(() => {
+    if (!messageListRef.current) return
+    
+    // Don't allow user scrolling while AI is responding
+    if (isAIResponding) {
+      // Force scroll back to bottom during AI response
+      requestAnimationFrame(() => {
+        if (messageListRef.current) {
+          messageListRef.current.scrollTop = messageListRef.current.scrollHeight
+        }
+      })
+      return
+    }
+    
+    // Clear existing debounce
+    if (scrollDebounceRef.current) {
+      clearTimeout(scrollDebounceRef.current)
+    }
+    
+    // Debounce scroll handling for better performance
+    scrollDebounceRef.current = setTimeout(() => {
+      if (!messageListRef.current || isAIResponding) return
+      
+      const { scrollTop, scrollHeight, clientHeight } = messageListRef.current
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 100
+      
+      setShowScrollButton(!isAtBottom)
+      
+      // If user scrolls up, set flag to prevent auto-scroll
+      if (!isAtBottom) {
+        setIsUserScrolling(true)
+        saveScrollPosition()
+        
+        // Clear existing timeout
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current)
+        }
+        // Reset after 30 seconds of no scrolling
+        scrollTimeoutRef.current = setTimeout(() => {
+          setIsUserScrolling(false)
+        }, 30000)
+      } else {
+        setIsUserScrolling(false)
+      }
+    }, 50) // 50ms debounce
+  }, [saveScrollPosition, isAIResponding])
+
+  // Track AI responding state
   useEffect(() => {
-    if (messages.length > 0) {
-      const lastMessage = messages[messages.length - 1]
-      // Only auto-scroll for recent messages (within last 5 seconds)
-      const messageTime = new Date(lastMessage.created_at).getTime()
-      const now = Date.now()
-      if (now - messageTime < 5000) {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    // Check if we have a new user message (message count increased)
+    if (messages.length > lastMessageCountRef.current) {
+      const newMessages = messages.slice(lastMessageCountRef.current)
+      const hasNewUserMessage = newMessages.some(msg => msg.role === 'user')
+      
+      if (hasNewUserMessage) {
+        // User sent a message, start AI response mode
+        setIsAIResponding(true)
+        setIsUserScrolling(false)
+        console.log('🚀 Starting AI response mode')
       }
     }
+    lastMessageCountRef.current = messages.length
   }, [messages])
+
+  // Monitor AI loading state
+  useEffect(() => {
+    if (!isAILoading && isAIResponding) {
+      // AI finished responding, allow free scrolling
+      setIsAIResponding(false)
+      console.log('✅ AI response complete, enabling free scroll')
+    }
+  }, [isAILoading, isAIResponding])
+
+  // Auto-scroll when messages arrive or during AI response
+  useEffect(() => {
+    if (messages.length > 0 && (isAIResponding || !isUserScrolling)) {
+      // Always scroll to bottom during AI response or when user hasn't scrolled
+      requestAnimationFrame(() => {
+        scrollToBottom('auto')
+      })
+    }
+  }, [messages, isAIResponding, isUserScrolling, scrollToBottom])
+
+  // Auto-scroll when AI messages are streaming
+  useEffect(() => {
+    if (aiMessages.length > 0 && (isAILoading || isAIResponding)) {
+      // Continuous scroll during AI response
+      requestAnimationFrame(() => {
+        scrollToBottom('auto')
+      })
+    }
+  }, [aiMessages, isAILoading, isAIResponding, scrollToBottom])
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current)
+      if (scrollDebounceRef.current) clearTimeout(scrollDebounceRef.current)
+    }
+  }, [])
 
   // Send pending message when conversation is created
   useEffect(() => {
@@ -378,7 +471,7 @@ export default function ChatMain({
             </svg>
           </div>
           <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
-            Welcome to T3 Crusher
+            Welcome to OpenT3
           </h3>
           <p className="text-slate-600 dark:text-slate-400 mb-4">
             Start a new conversation to begin chatting with AI
@@ -397,60 +490,12 @@ export default function ChatMain({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-              T3 Crusher
+              OpenT3
             </h2>
             <span className="text-sm text-slate-500 dark:text-slate-400">
               Conversation {conversationId.split('-')[0]}
             </span>
             
-            {/* Tab Buttons */}
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setActiveTab('chat')}
-                className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                  activeTab === 'chat'
-                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/30'
-                }`}
-              >
-                💬 Chat
-              </button>
-              <button
-                onClick={() => setActiveTab('files')}
-                className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                  activeTab === 'files'
-                    ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-green-50 dark:hover:bg-green-900/30'
-                }`}
-              >
-                📁 Upload
-              </button>
-              <button
-                onClick={() => setActiveTab('summaries')}
-                className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                  activeTab === 'summaries'
-                    ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-purple-50 dark:hover:bg-purple-900/30'
-                }`}
-              >
-                📄 Files
-              </button>
-              {activeTab === 'chat' && (
-                <>
-                  <button
-                    onClick={() => setShowBranchNavigator(!showBranchNavigator)}
-                    className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                      showBranchNavigator
-                        ? 'bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-orange-50 dark:hover:bg-orange-900/30'
-                    }`}
-                    title="Toggle conversation tree"
-                  >
-                    🌿 Tree
-                  </button>
-                </>
-              )}
-            </div>
           </div>
           
           {/* Right side controls */}
@@ -490,46 +535,6 @@ export default function ChatMain({
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar Content */}
-        {(activeTab !== 'chat' || showBranchNavigator) && (
-          <div className="w-80 border-r border-slate-200 dark:border-slate-700 bg-white/30 dark:bg-slate-900/30 backdrop-blur-sm overflow-y-auto flex-shrink-0">
-            {activeTab === 'chat' && showBranchNavigator && (
-              <BranchNavigator
-                messages={messages}
-                activeMessageId={activeBranchId}
-                onBranchSelect={handleBranchSelect}
-                onCreateBranch={handleCreateBranch}
-              />
-            )}
-            {activeTab === 'files' && conversationId && (
-              <div className="p-4">
-                <FileUpload
-                  conversationId={conversationId}
-                  onAnalysisComplete={(summary, fileInfo) => {
-                    console.log('File analysis completed:', { summary, fileInfo })
-                    // Optionally switch back to chat tab or add message
-                    setActiveTab('chat')
-                  }}
-                />
-              </div>
-            )}
-            {activeTab === 'files' && !conversationId && (
-              <div className="p-4 text-center text-slate-500 dark:text-slate-400">
-                <p>Start a conversation first to upload files</p>
-              </div>
-            )}
-            {activeTab === 'summaries' && conversationId && (
-              <div className="p-4">
-                <FileSummaries conversationId={conversationId} />
-              </div>
-            )}
-            {activeTab === 'summaries' && !conversationId && (
-              <div className="p-4 text-center text-slate-500 dark:text-slate-400">
-                <p>Start a conversation first to view summaries</p>
-              </div>
-            )}
-          </div>
-        )}
         
         {/* Main Content Area */}
         <div className="flex-1 relative min-w-0">
@@ -552,7 +557,7 @@ export default function ChatMain({
                   </svg>
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                  Welcome to T3 Crusher
+                  Welcome to OpenT3
                 </h3>
                 <p className="text-slate-600 dark:text-slate-400 mb-4">
                   Start a conversation by typing a message below.
@@ -563,31 +568,39 @@ export default function ChatMain({
             <div className="h-full flex items-center justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
-          ) : activeTab === 'chat' ? (
-            <div className="h-full flex flex-col">
+          ) : (
+            <div className="h-full flex flex-col relative">
               <MessageList 
+                ref={messageListRef}
                 messages={messages} 
                 aiMessages={conversationId ? aiMessages : []} 
-                onCreateBranch={handleCreateBranch}
+                onScroll={handleScroll}
+                isAIResponding={isAIResponding}
               />
               <div ref={messagesEndRef} className="flex-shrink-0 h-4" />
-            </div>
-          ) : (
-            <div className="h-full flex items-center justify-center">
-              <div className="text-center text-slate-500 dark:text-slate-400">
-                <div className="text-4xl mb-4">
-                  {activeTab === 'files' ? '📁' : '📄'}
+              
+              {/* Scroll to bottom button - only show when not AI responding */}
+              {showScrollButton && !isAIResponding && (
+                <button
+                  onClick={() => {
+                    setIsUserScrolling(false)
+                    scrollToBottom('smooth')
+                  }}
+                  className="absolute bottom-4 right-4 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 gpu-accelerated"
+                  aria-label="Scroll to bottom"
+                >
+                  <svg className="w-5 h-5 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                  </svg>
+                </button>
+              )}
+              
+              {/* AI responding indicator */}
+              {isAIResponding && (
+                <div className="absolute bottom-4 right-4 px-3 py-2 bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700/50 rounded-full text-xs text-blue-700 dark:text-blue-300 animate-pulse">
+                  AI responding...
                 </div>
-                <p className="text-lg font-medium mb-2">
-                  {activeTab === 'files' ? 'File Upload & Analysis' : 'File Summaries'}
-                </p>
-                <p className="text-sm">
-                  {activeTab === 'files' 
-                    ? 'Use the sidebar to upload and analyze files with your selected AI model'
-                    : 'View and manage your analyzed file summaries from the sidebar'
-                  }
-                </p>
-              </div>
+              )}
             </div>
           )}
         </div>
@@ -608,7 +621,10 @@ export default function ChatMain({
                 <div className="text-xs">{getErrorMessage(aiError)}</div>
               </div>
               <button 
-                onClick={() => window.location.reload()}
+                onClick={() => {
+                  setIsAIResponding(false)
+                  window.location.reload()
+                }}
                 className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200 text-xs"
               >
                 Retry
