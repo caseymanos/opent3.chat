@@ -6,6 +6,7 @@ import { CurrencyDollarIcon, ChartBarIcon, ClockIcon, SparklesIcon } from '@hero
 import { getModelById } from '@/lib/ai'
 import { createClientComponentClient } from '@/lib/supabase'
 import { getOpenRouterProvider } from '@/lib/openrouter'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface CostTrackerProps {
   conversationId: string
@@ -52,7 +53,9 @@ export default function CostTracker({
   })
   const [recentUsage, setRecentUsage] = useState<TokenUsage[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [loadAttempts, setLoadAttempts] = useState(0)
   const supabase = createClientComponentClient()
+  const { user } = useAuth()
 
   // Estimate token count for text (rough approximation: 1 token ≈ 4 characters)
   const estimateTokens = (text: string): number => {
@@ -85,6 +88,21 @@ export default function CostTracker({
   useEffect(() => {
     const loadCostData = async () => {
       if (!conversationId) return
+      
+      // Prevent repeated failed attempts
+      if (loadAttempts >= 3) return
+      
+      // Skip if no user session (demo mode)
+      if (!user) {
+        setCostSummary({
+          totalCost: 0,
+          messagesCount: 0,
+          tokenUsage: { input: 0, output: 0, total: 0 },
+          byModel: {}
+        })
+        setRecentUsage([])
+        return
+      }
 
       setIsLoading(true)
       try {
@@ -96,9 +114,15 @@ export default function CostTracker({
           .order('created_at', { ascending: true })
 
         if (error) {
-          console.error('Error loading messages for cost tracking:', error)
+          setLoadAttempts(prev => prev + 1)
+          if (loadAttempts === 0) { // Only log on first attempt
+            console.error('Error loading messages for cost tracking:', error)
+          }
           return
         }
+        
+        // Reset attempts on success
+        setLoadAttempts(0)
 
         if (!messages || messages.length === 0) {
           setCostSummary({
@@ -185,7 +209,7 @@ export default function CostTracker({
     }
 
     loadCostData()
-  }, [conversationId, selectedModel, openRouterConfig, supabase])
+  }, [conversationId, selectedModel, openRouterConfig, supabase, user, loadAttempts])
 
   const formatCost = (cost: number) => {
     if (cost >= 1) return `$${cost.toFixed(2)}`
