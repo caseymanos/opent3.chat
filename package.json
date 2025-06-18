@@ -59,6 +59,8 @@
     "next": "15.3.3",
     "node-fetch": "^3.3.2",
     "pdfjs-dist": "^3.11.174",
+    "posthog-js": "^1.255.0",
+    "posthog-node": "^5.1.1",
     "prism-react-renderer": "^2.4.1",
     "prismjs": "^1.30.0",
     "react": "^19.0.0",

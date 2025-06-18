@@ -122,7 +122,7 @@ export default function TaskExtractor({ conversationId, className = '' }: TaskEx
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute top-full left-0 mt-2 p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-800 dark:text-red-200 z-10"
+          className="absolute top-full left-0 mt-2 p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-800 dark:text-red-200 z-[9999]"
         >
           Failed to extract tasks: {error}
         </motion.div>
@@ -134,7 +134,7 @@ export default function TaskExtractor({ conversationId, className = '' }: TaskEx
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
             onClick={(e) => e.target === e.currentTarget && setIsOpen(false)}
           >
             <motion.div

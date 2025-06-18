@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "T3 Crusher - AI Chat Platform",
+  title: "OpenT3 - AI Chat Platform",
   description: "Advanced AI chat platform with multi-model support, real-time collaboration, and intelligent conversation branching",
 };
 

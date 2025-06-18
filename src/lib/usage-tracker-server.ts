@@ -141,6 +141,27 @@ export class ServerUsageTracker {
       apiKeys: {}
     }
     
+    // For anonymous users, check if we have usage data in cache
+    if (!userId) {
+      const cachedAnonymous = this.usageCache.get('anonymous')
+      if (cachedAnonymous) {
+        // Check if we need to reset anonymous usage (daily)
+        const lastReset = new Date(cachedAnonymous.data.lastReset || new Date())
+        const daysSinceReset = (Date.now() - lastReset.getTime()) / (1000 * 60 * 60 * 24)
+        
+        if (daysSinceReset >= RESET_INTERVAL_DAYS) {
+          // Reset anonymous usage
+          log('📊 [USAGE] Resetting anonymous user usage (daily reset)')
+          const resetUsage = { ...defaultUsage, lastReset: new Date().toISOString() }
+          this.usageCache.set('anonymous', { data: resetUsage, timestamp: Date.now() })
+          return resetUsage
+        }
+        
+        log('📊 [USAGE] Returning cached anonymous usage:', cachedAnonymous.data.premiumCalls)
+        return cachedAnonymous.data
+      }
+    }
+    
     // Cache even the default usage to avoid repeated calls
     this.usageCache.set(cacheKey, { data: defaultUsage, timestamp: Date.now() })
     
@@ -162,10 +183,21 @@ export class ServerUsageTracker {
   // Increment premium calls used with provided usage data (avoids extra query)
   async incrementUsageWithData(userId: string, modelId: string, usage: UserUsage, modelTier?: 'premium' | 'special'): Promise<boolean> {
     try {
-      // Handle anonymous users
+      // Handle anonymous users - track in cache only
       if (userId === 'anonymous' || !userId) {
-        log('📊 [USAGE] Anonymous user usage tracking handled by client-side')
-        // Anonymous usage is tracked client-side via localStorage
+        log('📊 [USAGE] Tracking anonymous user usage in server cache')
+        const cacheKey = 'anonymous'
+        const currentUsage = this.usageCache.get(cacheKey)?.data || usage
+        
+        // Increment the usage count
+        const updatedUsage = {
+          ...currentUsage,
+          premiumCalls: currentUsage.premiumCalls + 1
+        }
+        
+        // Store in cache
+        this.usageCache.set(cacheKey, { data: updatedUsage, timestamp: Date.now() })
+        log(`📊 [USAGE] Anonymous usage incremented: ${currentUsage.premiumCalls} → ${updatedUsage.premiumCalls}`)
         return true
       }
       // Determine which counter to increment based on model tier

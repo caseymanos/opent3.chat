@@ -35,21 +35,10 @@ export default function LandingPage() {
             <span className="text-white font-bold text-sm">T3</span>
           </div>
           <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            T3 Crusher
+            OpenT3
           </span>
         </div>
         
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm">
-            About
-          </Button>
-          <Button variant="ghost" size="sm" onClick={scrollToFeatures}>
-            Features
-          </Button>
-          <Button variant="outline" size="sm" onClick={openGitHub}>
-            GitHub
-          </Button>
-        </div>
       </nav>
 
       {/* Hero Section */}
@@ -92,8 +81,8 @@ export default function LandingPage() {
             transition={{ delay: 0.5, duration: 0.8 }}
             className="text-xl lg:text-2xl text-gray-600 dark:text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed"
           >
-            Experience conversation branching, multi-model AI support, real-time collaboration, 
-            and advanced integrations in one powerful platform.
+            Experience advanced AI chat capabilities with multiple models, 
+            conversation branching, file attachments, and seamless authentication.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -129,28 +118,32 @@ export default function LandingPage() {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9, duration: 0.8 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl w-full"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl w-full"
         >
           {[
             {
-              icon: '🌳',
-              title: 'Conversation Branching',
-              description: 'Explore multiple conversation paths from any message'
+              icon: '🤖',
+              title: 'Chat with Various LLMs',
+              description: 'Support for multiple language models and providers',
+              category: 'required'
             },
             {
-              icon: '🤖',
-              title: 'Multi-Model AI',
-              description: 'Switch between OpenAI, Anthropic, and Google models seamlessly'
+              icon: '🔐',
+              title: 'Authentication & Sync',
+              description: 'User authentication with chat history synchronization',
+              category: 'required'
+            },
+            {
+              icon: '🌍',
+              title: 'Browser Friendly',
+              description: 'Optimized web experience accessible from any browser',
+              category: 'required'
             },
             {
               icon: '⚡',
-              title: 'Real-time Collaboration',
-              description: 'Live cursors, presence indicators, and instant updates'
-            },
-            {
-              icon: '🔗',
-              title: 'Advanced Integrations',
-              description: 'GitHub, Linear, Stripe, and more via MCP protocol'
+              title: 'Easy to Try',
+              description: 'Get started quickly with our streamlined interface',
+              category: 'required'
             }
           ].map((feature, index) => (
             <motion.div
@@ -158,7 +151,11 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1 + index * 0.1, duration: 0.6 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700"
+              className={`bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border ${
+                feature.category === 'required' 
+                  ? 'border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-900/20' 
+                  : 'border-gray-100 dark:border-gray-700'
+              }`}
             >
               <div className="text-3xl mb-4">{feature.icon}</div>
               <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white">

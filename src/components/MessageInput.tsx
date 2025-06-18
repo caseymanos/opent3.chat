@@ -3,9 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Button } from './ui/Button'
 import { PaperAirplaneIcon } from '@heroicons/react/24/outline'
-import FileAttachment from './FileAttachment'
 import VoiceInput from './VoiceInput'
-import { IntegrationsPanel } from './IntegrationsPanel'
 
 interface AttachedFile {
   file: File
@@ -85,12 +83,12 @@ export default function MessageInput({
 
   return (
     <div className="relative space-y-3">
-      {/* File Attachments */}
-      <FileAttachment
+      {/* File Attachments - Removed */}
+      {/* <FileAttachment
         attachedFiles={attachedFiles}
         onFilesChange={setAttachedFiles}
         disabled={disabled}
-      />
+      /> */}
 
       <div className="flex items-end gap-4 p-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20">
         {/* Text Input */}
@@ -116,14 +114,6 @@ export default function MessageInput({
             className="flex-shrink-0"
           />
 
-          {/* Integrations Panel */}
-          <IntegrationsPanel
-            onContentSelect={(content) => {
-              const newValue = value ? `${value}\n\n${content}` : content
-              onChange(newValue)
-            }}
-            className="flex-shrink-0"
-          />
 
           {/* Send Button */}
           <Button
@@ -158,7 +148,7 @@ export default function MessageInput({
         <div className="text-xs text-slate-400 dark:text-slate-500 hidden sm:block">
           {attachedFiles.length > 0 
             ? '⏎ Send with files' 
-            : '⏎ Send • ⇧⏎ New line • 🎤 Voice • 📎 Files'
+            : '⏎ Send • ⇧⏎ New line • 🎤 Voice'
           }
         </div>
       </div>

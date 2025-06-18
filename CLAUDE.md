@@ -5,8 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Context
 
 **Project Type:** Next.js Application
-**Branch:** hide-supabase-security
-**Focus Area:** Security improvements and authentication
+**Branch:** main
+**Focus Area:** Multi-model AI chat application
 
 ## Project Overview
 
@@ -14,7 +14,7 @@ This is a Next.js React application with server-side rendering capabilities.
 
 ## Branch Purpose
 
-This branch (hide-supabase-security) is focused on: Security improvements and authentication
+This is the main branch containing the production-ready code for the multi-model AI chat application
 
 ## Development Guidelines
 
@@ -66,4 +66,4 @@ npm run dev, npm run build, npm run start
 - Always verify functionality in the development environment
 - Run linting and type checking before committing
 - Create meaningful commit messages that describe the changes
-- Focus on the specific goals of this branch: Security improvements and authentication
+- Follow security best practices and never commit sensitive credentials

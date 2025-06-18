@@ -6,15 +6,14 @@ import { useAIChat } from '@/lib/ai'
 import MessageList from './MessageList'
 import MessageInput from './MessageInput'
 import ModelSelector from './ModelSelector'
-import BranchNavigator from './BranchNavigator'
-import FileUpload from './FileUpload'
-import FileSummaries from './FileSummaries'
 import CostTracker from './CostTracker'
 import ModelComparison from './ModelComparison'
 import TaskExtractor from './TaskExtractor'
 import OpenRouterSettings from './OpenRouterSettings'
 import { useScrollPosition } from '@/hooks/useScrollPosition'
 import type { Database } from '@/lib/supabase'
+import { useUsageTracking } from '@/lib/usage-tracker'
+import { useAuth } from '@/contexts/AuthContext'
 
 type Message = Database['public']['Tables']['messages']['Row']
 
@@ -48,12 +47,13 @@ export default function ChatMain({
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const scrollDebounceRef = useRef<NodeJS.Timeout | null>(null)
   const lastMessageCountRef = useRef(0)
+  const { updateByokStatus, getUsage } = useUsageTracking()
+  const { user } = useAuth()
   
   // Use scroll position hook
   const { saveScrollPosition } = useScrollPosition(conversationId, messageListRef)
   
   // Branching state
-  const [showBranchNavigator, setShowBranchNavigator] = useState(false)
   const [activeBranchId, setActiveBranchId] = useState<string | undefined>()
   
   // State for pending message when no conversation exists
@@ -63,20 +63,50 @@ export default function ChatMain({
   const [openRouterConfig, setOpenRouterConfig] = useState({ enabled: false, apiKey: '' })
   const [showOpenRouterSettings, setShowOpenRouterSettings] = useState(false)
   
-  // Tab state for side panels
-  const [activeTab, setActiveTab] = useState<'chat' | 'files' | 'summaries'>('chat')
-  
-  // Load OpenRouter config from localStorage
+  // Load OpenRouter config from localStorage or user profile
   useEffect(() => {
-    const stored = localStorage.getItem('openrouter-config')
-    if (stored) {
-      try {
-        setOpenRouterConfig(JSON.parse(stored))
-      } catch (error) {
-        console.warn('Failed to parse OpenRouter config from localStorage:', error)
+    const loadOpenRouterConfig = async () => {
+      // First check localStorage
+      const stored = localStorage.getItem('openrouter-config')
+      if (stored) {
+        try {
+          const config = JSON.parse(stored)
+          setOpenRouterConfig(config)
+          
+          // Update BYOK status based on OpenRouter config
+          if (config.enabled && config.apiKey) {
+            updateByokStatus(true, { openRouter: config.apiKey })
+          }
+          return // Exit if found in localStorage
+        } catch (error) {
+          console.warn('Failed to parse OpenRouter config from localStorage:', error)
+        }
+      }
+      
+      // If not in localStorage and user is logged in, check profile
+      if (user) {
+        const usage = await getUsage()
+        if (usage?.apiKeys?.openRouter) {
+          const profileConfig = {
+            enabled: true,
+            apiKey: usage.apiKeys.openRouter
+          }
+          setOpenRouterConfig(profileConfig)
+          // Save to localStorage for consistency
+          localStorage.setItem('openrouter-config', JSON.stringify(profileConfig))
+          // Update BYOK status
+          updateByokStatus(true, { openRouter: usage.apiKeys.openRouter })
+        }
+      } else {
+        // User logged out - clear OpenRouter config
+        setOpenRouterConfig({ enabled: false, apiKey: '' })
+        localStorage.removeItem('openrouter-config')
+        updateByokStatus(false, {})
       }
     }
-  }, [])
+    
+    loadOpenRouterConfig()
+  }, [user]) // Re-run when user changes (login/logout)
 
 
   // Convert database messages to AI SDK format for initialization
@@ -151,6 +181,8 @@ export default function ChatMain({
       console.log('🎯 [ChatMain] AI response finished:', message)
       // Save AI response to Supabase
       await sendMessage(message.content, 'assistant')
+      // Refresh usage counter after AI response is complete
+      onMessageSent?.()
     }
   })
 
@@ -165,52 +197,6 @@ export default function ChatMain({
     onModelChange(model, provider)
   }
 
-  const handleCreateBranch = async (parentMessageId: string) => {
-    console.log('🌿 [ChatMain] Creating branch from message:', { 
-      parentMessageId, 
-      conversationId,
-      currentMessages: messages.length 
-    })
-    
-    try {
-      // Find the parent message to get its branch info
-      const parentMessage = messages.find(m => m.id === parentMessageId)
-      if (!parentMessage) {
-        console.error('Parent message not found')
-        return
-      }
-
-      // Calculate next branch index for this parent
-      const siblingBranches = messages.filter(m => m.parent_id === parentMessageId)
-      const nextBranchIndex = siblingBranches.length
-
-      console.log(`🌿 Creating branch ${nextBranchIndex} from message ${parentMessageId}`)
-      
-      // Set up for branching - user can now respond and it will create a new branch
-      setActiveBranchId(parentMessageId)
-      setShowBranchNavigator(true)
-      
-      // Store the branch context for next message
-      // When user sends next message, it will use this parent and branch index
-      
-    } catch (error) {
-      console.error('Error creating branch:', error)
-    }
-  }
-
-  const handleBranchSelect = (messageId: string) => {
-    console.log('🎯 [ChatMain] Branch selected:', { messageId, conversationId })
-    setActiveBranchId(messageId)
-    
-    // In a full implementation, this would filter messages to show only the selected branch path
-    // For now, we'll highlight the selected branch in the navigator
-    
-    // TODO: Implement branch path filtering to show only messages in the selected branch
-    // This would involve:
-    // 1. Finding all ancestor messages from root to selected message
-    // 2. Finding all descendant messages from selected message
-    // 3. Filtering the message list to show only this path
-  }
 
   // Debug AI messages and handle errors
   useEffect(() => {
@@ -485,7 +471,7 @@ export default function ChatMain({
             </svg>
           </div>
           <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
-            Welcome to T3 Crusher
+            Welcome to OpenT3
           </h3>
           <p className="text-slate-600 dark:text-slate-400 mb-4">
             Start a new conversation to begin chatting with AI
@@ -504,60 +490,12 @@ export default function ChatMain({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-              T3 Crusher
+              OpenT3
             </h2>
             <span className="text-sm text-slate-500 dark:text-slate-400">
               Conversation {conversationId.split('-')[0]}
             </span>
             
-            {/* Tab Buttons */}
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setActiveTab('chat')}
-                className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                  activeTab === 'chat'
-                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/30'
-                }`}
-              >
-                💬 Chat
-              </button>
-              <button
-                onClick={() => setActiveTab('files')}
-                className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                  activeTab === 'files'
-                    ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-green-50 dark:hover:bg-green-900/30'
-                }`}
-              >
-                📁 Upload
-              </button>
-              <button
-                onClick={() => setActiveTab('summaries')}
-                className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                  activeTab === 'summaries'
-                    ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-purple-50 dark:hover:bg-purple-900/30'
-                }`}
-              >
-                📄 Files
-              </button>
-              {activeTab === 'chat' && (
-                <>
-                  <button
-                    onClick={() => setShowBranchNavigator(!showBranchNavigator)}
-                    className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                      showBranchNavigator
-                        ? 'bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-orange-50 dark:hover:bg-orange-900/30'
-                    }`}
-                    title="Toggle conversation tree"
-                  >
-                    🌿 Tree
-                  </button>
-                </>
-              )}
-            </div>
           </div>
           
           {/* Right side controls */}
@@ -597,46 +535,6 @@ export default function ChatMain({
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar Content */}
-        {(activeTab !== 'chat' || showBranchNavigator) && (
-          <div className="w-80 border-r border-slate-200 dark:border-slate-700 bg-white/30 dark:bg-slate-900/30 backdrop-blur-sm overflow-y-auto flex-shrink-0">
-            {activeTab === 'chat' && showBranchNavigator && (
-              <BranchNavigator
-                messages={messages}
-                activeMessageId={activeBranchId}
-                onBranchSelect={handleBranchSelect}
-                onCreateBranch={handleCreateBranch}
-              />
-            )}
-            {activeTab === 'files' && conversationId && (
-              <div className="p-4">
-                <FileUpload
-                  conversationId={conversationId}
-                  onAnalysisComplete={(summary, fileInfo) => {
-                    console.log('File analysis completed:', { summary, fileInfo })
-                    // Optionally switch back to chat tab or add message
-                    setActiveTab('chat')
-                  }}
-                />
-              </div>
-            )}
-            {activeTab === 'files' && !conversationId && (
-              <div className="p-4 text-center text-slate-500 dark:text-slate-400">
-                <p>Start a conversation first to upload files</p>
-              </div>
-            )}
-            {activeTab === 'summaries' && conversationId && (
-              <div className="p-4">
-                <FileSummaries conversationId={conversationId} />
-              </div>
-            )}
-            {activeTab === 'summaries' && !conversationId && (
-              <div className="p-4 text-center text-slate-500 dark:text-slate-400">
-                <p>Start a conversation first to view summaries</p>
-              </div>
-            )}
-          </div>
-        )}
         
         {/* Main Content Area */}
         <div className="flex-1 relative min-w-0">
@@ -659,7 +557,7 @@ export default function ChatMain({
                   </svg>
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                  Welcome to T3 Crusher
+                  Welcome to OpenT3
                 </h3>
                 <p className="text-slate-600 dark:text-slate-400 mb-4">
                   Start a conversation by typing a message below.
@@ -670,13 +568,12 @@ export default function ChatMain({
             <div className="h-full flex items-center justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
-          ) : activeTab === 'chat' ? (
+          ) : (
             <div className="h-full flex flex-col relative">
               <MessageList 
                 ref={messageListRef}
                 messages={messages} 
                 aiMessages={conversationId ? aiMessages : []} 
-                onCreateBranch={handleCreateBranch}
                 onScroll={handleScroll}
                 isAIResponding={isAIResponding}
               />
@@ -704,23 +601,6 @@ export default function ChatMain({
                   AI responding...
                 </div>
               )}
-            </div>
-          ) : (
-            <div className="h-full flex items-center justify-center">
-              <div className="text-center text-slate-500 dark:text-slate-400">
-                <div className="text-4xl mb-4">
-                  {activeTab === 'files' ? '📁' : '📄'}
-                </div>
-                <p className="text-lg font-medium mb-2">
-                  {activeTab === 'files' ? 'File Upload & Analysis' : 'File Summaries'}
-                </p>
-                <p className="text-sm">
-                  {activeTab === 'files' 
-                    ? 'Use the sidebar to upload and analyze files with your selected AI model'
-                    : 'View and manage your analyzed file summaries from the sidebar'
-                  }
-                </p>
-              </div>
             </div>
           )}
         </div>
