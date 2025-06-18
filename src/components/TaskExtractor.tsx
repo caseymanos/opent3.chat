@@ -32,7 +32,6 @@ export default function TaskExtractor({ conversationId, className = '' }: TaskEx
 
   const extractTasks = async () => {
     console.log('Extract Tasks button clicked!', { conversationId })
-    alert('Extract Tasks button clicked!')
     
     if (!conversationId) return
 
@@ -100,30 +99,60 @@ export default function TaskExtractor({ conversationId, className = '' }: TaskEx
   }
 
   return (
-    <div className={`relative z-10 ${className}`}>
-      <Button
-        onClick={extractTasks}
-        disabled={isExtracting || !conversationId}
-        variant="outline"
-        size="sm"
-        className="flex items-center gap-2 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-300 dark:hover:bg-purple-900/50 border border-purple-300 dark:border-purple-700"
-        title="Extract action items and tasks from conversation"
-      >
-        {isExtracting ? (
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          >
-            <SparklesIcon className="w-4 h-4" />
-          </motion.div>
-        ) : (
-          <ClipboardDocumentListIcon className="w-4 h-4" />
-        )}
-        <span>
-          {isExtracting ? 'Extracting...' : 'Extract Tasks'}
-        </span>
-      </Button>
+    <>
+      {/* Header Button - Compact Version */}
+      <div className={`relative ${className}`}>
+        <Button
+          onClick={extractTasks}
+          disabled={isExtracting || !conversationId}
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-1 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-300 dark:hover:bg-purple-900/50 border border-purple-300 dark:border-purple-700 px-2 py-1"
+          title="Extract action items and tasks from conversation"
+        >
+          {isExtracting ? (
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            >
+              <SparklesIcon className="w-4 h-4" />
+            </motion.div>
+          ) : (
+            <ClipboardDocumentListIcon className="w-4 h-4" />
+          )}
+          <span className="text-xs hidden lg:inline">
+            {isExtracting ? 'Extracting...' : 'Tasks'}
+          </span>
+        </Button>
+      </div>
 
+      {/* Floating Action Button - More Prominent */}
+      {conversationId && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="fixed bottom-20 right-6 z-50"
+        >
+          <Button
+            onClick={extractTasks}
+            disabled={isExtracting || !conversationId}
+            size="lg"
+            className="rounded-full w-14 h-14 shadow-lg hover:shadow-xl bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white border-0 transition-all duration-300 hover:scale-110"
+            title="Extract action items and tasks from conversation"
+          >
+            {isExtracting ? (
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              >
+                <SparklesIcon className="w-6 h-6" />
+              </motion.div>
+            ) : (
+              <ClipboardDocumentListIcon className="w-6 h-6" />
+            )}
+          </Button>
+        </motion.div>
+      )}
       {error && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -316,6 +345,6 @@ export default function TaskExtractor({ conversationId, className = '' }: TaskEx
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </>
   )
 }
