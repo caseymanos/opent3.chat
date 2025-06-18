@@ -12,20 +12,30 @@ export const OPENROUTER_MODEL_MAP: Record<string, string> = {
   'o3-pro': 'openai/o3-pro',
   'o3': 'openai/o3',
   'gpt-4o': 'openai/gpt-4o',
+  'gpt-4o-mini': 'openai/gpt-4o-mini',
+  'gpt-4o-mini-azure': 'openai/gpt-4o-mini',
+  'gpt-4-vision': 'openai/gpt-4-turbo',
   
   // Anthropic Models  
   'claude-4-opus': 'anthropic/claude-4-opus',
+  'claude-4-sonnet': 'anthropic/claude-3.5-sonnet',
+  'claude-sonnet-4': 'anthropic/claude-3.5-sonnet',
+  'claude-4-sonnet-reasoning': 'anthropic/claude-3.5-sonnet',
   'claude-3-5-sonnet-20241022': 'anthropic/claude-3.5-sonnet',
   'claude-3-haiku-20240307': 'anthropic/claude-3-haiku',
   
   // Google Models
-  'gemini-2.5-pro': 'google/gemini-2.5-pro',
-  'gemini-2.5-flash-preview-05-20': 'google/gemini-2.5-flash',
-  'gemini-2.5-flash-reasoning': 'google/gemini-2.5-flash-reasoning',
+  'gemini-2.5-pro': 'google/gemini-pro-1.5',
+  'gemini-2.5-pro-experimental': 'google/gemini-pro-1.5',
+  'gemini-2.5-flash-preview-05-20': 'google/gemini-flash-1.5',
+  'gemini-2.5-flash-azure': 'google/gemini-flash-1.5',
+  'gemini-2.0-flash': 'google/gemini-flash-1.5',
+  'gemini-1.5-flash': 'google/gemini-flash-1.5',
+  'gemini-2.5-flash-vertex': 'google/gemini-flash-1.5',
+  'gemini-2.5-flash-lite-vertex': 'google/gemini-flash-1.5',
   
-  // Performance Leaders
-  'deepseek-r1-distill-qwen-1.5b': 'deepseek/r1-distill-qwen-1.5b',
-  'gemma-3-4b': 'google/gemma-3-4b'
+  // xAI Models
+  'grok-3-reasoning': 'x-ai/grok-3'
 }
 
 // OpenRouter charges a 5% fee on top of direct API costs
