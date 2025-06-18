@@ -16,6 +16,7 @@ interface MessageListProps {
   aiMessages?: AIMessage[]
   onCreateBranch?: (messageId: string) => void
   onScroll?: () => void
+  isAIResponding?: boolean
 }
 
 // Memoized markdown components to prevent recreation on every render
@@ -202,7 +203,7 @@ const MessageBubble = memo(({ message, onCreateBranch }: MessageBubbleProps) => 
 MessageBubble.displayName = 'MessageBubble'
 
 // Main MessageList component with memoization and ref forwarding
-const MessageList = memo(forwardRef<HTMLDivElement, MessageListProps>(({ messages, aiMessages = [], onCreateBranch, onScroll }, ref) => {
+const MessageList = memo(forwardRef<HTMLDivElement, MessageListProps>(({ messages, aiMessages = [], onCreateBranch, onScroll, isAIResponding = false }, ref) => {
   // Use startTransition for non-urgent updates
   const [visibleMessages, setVisibleMessages] = useState<DBMessage[]>([])
   
@@ -258,7 +259,7 @@ const MessageList = memo(forwardRef<HTMLDivElement, MessageListProps>(({ message
   return (
     <div 
       ref={ref}
-      className="flex-1 overflow-y-auto scroll-optimized" 
+      className={`flex-1 overflow-y-auto scroll-optimized ${isAIResponding ? 'pointer-events-none' : ''}`}
       style={{ height: '100%' }}
       onScroll={onScroll}
     >

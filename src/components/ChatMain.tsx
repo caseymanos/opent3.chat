@@ -44,8 +44,10 @@ export default function ChatMain({
   const messageListRef = useRef<HTMLDivElement>(null)
   const [showScrollButton, setShowScrollButton] = useState(false)
   const [isUserScrolling, setIsUserScrolling] = useState(false)
+  const [isAIResponding, setIsAIResponding] = useState(false)
   const scrollTimeoutRef = useRef<NodeJS.Timeout>()
   const scrollDebounceRef = useRef<NodeJS.Timeout>()
+  const lastMessageCountRef = useRef(0)
   
   // Use scroll position hook
   const { saveScrollPosition } = useScrollPosition(conversationId, messageListRef)
@@ -263,6 +265,17 @@ export default function ChatMain({
   const handleScroll = useCallback(() => {
     if (!messageListRef.current) return
     
+    // Don't allow user scrolling while AI is responding
+    if (isAIResponding) {
+      // Force scroll back to bottom during AI response
+      requestAnimationFrame(() => {
+        if (messageListRef.current) {
+          messageListRef.current.scrollTop = messageListRef.current.scrollHeight
+        }
+      })
+      return
+    }
+    
     // Clear existing debounce
     if (scrollDebounceRef.current) {
       clearTimeout(scrollDebounceRef.current)
@@ -270,7 +283,7 @@ export default function ChatMain({
     
     // Debounce scroll handling for better performance
     scrollDebounceRef.current = setTimeout(() => {
-      if (!messageListRef.current) return
+      if (!messageListRef.current || isAIResponding) return
       
       const { scrollTop, scrollHeight, clientHeight } = messageListRef.current
       const isAtBottom = scrollHeight - scrollTop - clientHeight < 100
@@ -294,29 +307,53 @@ export default function ChatMain({
         setIsUserScrolling(false)
       }
     }, 50) // 50ms debounce
-  }, [saveScrollPosition])
+  }, [saveScrollPosition, isAIResponding])
 
-  // Auto-scroll when new messages arrive (unless user is scrolling)
+  // Track AI responding state
   useEffect(() => {
-    if (messages.length > 0 && !isUserScrolling) {
-      // Double RAF for better timing with React updates
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          scrollToBottom('smooth')
-        })
-      })
+    // Check if we have a new user message (message count increased)
+    if (messages.length > lastMessageCountRef.current) {
+      const newMessages = messages.slice(lastMessageCountRef.current)
+      const hasNewUserMessage = newMessages.some(msg => msg.role === 'user')
+      
+      if (hasNewUserMessage) {
+        // User sent a message, start AI response mode
+        setIsAIResponding(true)
+        setIsUserScrolling(false)
+        console.log('🚀 Starting AI response mode')
+      }
     }
-  }, [messages, isUserScrolling, scrollToBottom])
+    lastMessageCountRef.current = messages.length
+  }, [messages])
 
-  // Auto-scroll when AI messages are streaming
+  // Monitor AI loading state
   useEffect(() => {
-    if (aiMessages.length > 0 && isAILoading && !isUserScrolling) {
-      // Use auto behavior for streaming to reduce jank
+    if (!isAILoading && isAIResponding) {
+      // AI finished responding, allow free scrolling
+      setIsAIResponding(false)
+      console.log('✅ AI response complete, enabling free scroll')
+    }
+  }, [isAILoading, isAIResponding])
+
+  // Auto-scroll when messages arrive or during AI response
+  useEffect(() => {
+    if (messages.length > 0 && (isAIResponding || !isUserScrolling)) {
+      // Always scroll to bottom during AI response or when user hasn't scrolled
       requestAnimationFrame(() => {
         scrollToBottom('auto')
       })
     }
-  }, [aiMessages, isAILoading, isUserScrolling, scrollToBottom])
+  }, [messages, isAIResponding, isUserScrolling, scrollToBottom])
+
+  // Auto-scroll when AI messages are streaming
+  useEffect(() => {
+    if (aiMessages.length > 0 && (isAILoading || isAIResponding)) {
+      // Continuous scroll during AI response
+      requestAnimationFrame(() => {
+        scrollToBottom('auto')
+      })
+    }
+  }, [aiMessages, isAILoading, isAIResponding, scrollToBottom])
 
   // Cleanup timeouts on unmount
   useEffect(() => {
@@ -641,11 +678,12 @@ export default function ChatMain({
                 aiMessages={conversationId ? aiMessages : []} 
                 onCreateBranch={handleCreateBranch}
                 onScroll={handleScroll}
+                isAIResponding={isAIResponding}
               />
               <div ref={messagesEndRef} className="flex-shrink-0 h-4" />
               
-              {/* Scroll to bottom button */}
-              {showScrollButton && (
+              {/* Scroll to bottom button - only show when not AI responding */}
+              {showScrollButton && !isAIResponding && (
                 <button
                   onClick={() => {
                     setIsUserScrolling(false)
@@ -658,6 +696,13 @@ export default function ChatMain({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                   </svg>
                 </button>
+              )}
+              
+              {/* AI responding indicator */}
+              {isAIResponding && (
+                <div className="absolute bottom-4 right-4 px-3 py-2 bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700/50 rounded-full text-xs text-blue-700 dark:text-blue-300 animate-pulse">
+                  AI responding...
+                </div>
               )}
             </div>
           ) : (
@@ -696,7 +741,10 @@ export default function ChatMain({
                 <div className="text-xs">{getErrorMessage(aiError)}</div>
               </div>
               <button 
-                onClick={() => window.location.reload()}
+                onClick={() => {
+                  setIsAIResponding(false)
+                  window.location.reload()
+                }}
                 className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200 text-xs"
               >
                 Retry
