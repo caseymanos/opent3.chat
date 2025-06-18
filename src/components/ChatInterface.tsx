@@ -162,9 +162,21 @@ function ChatInterface({ initialConversationId }: ChatInterfaceProps) {
   const sidebarRef = useRef<{ refresh: () => void }>(null)
   
   // Model selection state - moved up from ChatMain to ensure new conversations use current model
-  // Default to free model for all users
-  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash-preview-05-20')
-  const [selectedProvider, setSelectedProvider] = useState('google')
+  // Default to Vertex AI model for anonymous users, free model for logged-in users
+  const [selectedModel, setSelectedModel] = useState(() => {
+    return isAnonymous ? 'gemini-2.5-flash-vertex' : 'gemini-2.5-flash-preview-05-20'
+  })
+  const [selectedProvider, setSelectedProvider] = useState(() => {
+    return isAnonymous ? 'vertex-ai' : 'google'
+  })
+  
+  // Update default model when auth status changes
+  useEffect(() => {
+    if (isAnonymous && selectedModel === 'gemini-2.5-flash-preview-05-20') {
+      setSelectedModel('gemini-2.5-flash-vertex')
+      setSelectedProvider('vertex-ai')
+    }
+  }, [isAnonymous, selectedModel])
   
   // Initialize with provided conversation ID only once
   useEffect(() => {

@@ -18,13 +18,21 @@ interface ModelSelectorProps {
 const PROVIDER_ICONS = {
   openai: '🤖',
   anthropic: '🧠', 
-  google: '🔍'
+  google: '🔍',
+  'vertex-ai': '☁️',
+  'azure': '🔷',
+  'azure-ai': '🌟',
+  xai: '🚀'
 }
 
 const PROVIDER_COLORS = {
   openai: 'bg-green-500',
   anthropic: 'bg-orange-500',
-  google: 'bg-blue-500'
+  google: 'bg-blue-500',
+  'vertex-ai': 'bg-sky-500',
+  'azure': 'bg-indigo-500',
+  'azure-ai': 'bg-purple-500',
+  xai: 'bg-red-500'
 }
 
 export default function ModelSelector({ 
@@ -98,6 +106,20 @@ export default function ModelSelector({
     acc[model.provider].push(model)
     return acc
   }, {} as Record<string, AIModel[]>)
+  
+  // Sort providers to show vertex-ai first for anonymous users
+  const providerOrder = user 
+    ? ['google', 'openai', 'anthropic', 'azure', 'azure-ai', 'vertex-ai', 'xai']
+    : ['vertex-ai', 'google', 'openai', 'anthropic', 'azure', 'azure-ai', 'xai']
+  
+  const sortedProviders = Object.keys(groupedModels).sort((a, b) => {
+    const aIndex = providerOrder.indexOf(a)
+    const bIndex = providerOrder.indexOf(b)
+    if (aIndex === -1 && bIndex === -1) return 0
+    if (aIndex === -1) return 1
+    if (bIndex === -1) return -1
+    return aIndex - bIndex
+  })
 
   const handleModelSelect = (model: AIModel) => {
     onModelChange(model.id, model.provider)
@@ -183,7 +205,11 @@ export default function ModelSelector({
               transition={{ duration: 0.15 }}
               className="absolute bottom-full left-0 mb-2 w-72 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl z-[9999] max-h-96 overflow-y-auto"
             >
-            {Object.entries(groupedModels).map(([provider, models]) => (
+            {sortedProviders.map((provider) => {
+              const models = groupedModels[provider]
+              if (!models || models.length === 0) return null
+              
+              return (
               <div key={provider} className="p-2">
                 <div className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                   <span className="text-base">{PROVIDER_ICONS[provider as keyof typeof PROVIDER_ICONS]}</span>
@@ -226,28 +252,25 @@ export default function ModelSelector({
                               Active
                             </span>
                           )}
-                          {model.tier === 'premium' && user && usage && (
-                            <span className="text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded-full flex items-center gap-1">
-                              <span>{getRemainingPremiumCalls(usage)}</span>
-                              <span>left</span>
+                          {/* Show tier badges */}
+                          {model.tier === 'free' && (
+                            <span className="text-xs bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full">
+                              Free
                             </span>
                           )}
-                          {model.tier === 'special' && user && usage && (
-                            <span className="text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 px-2 py-0.5 rounded-full flex items-center gap-1">
-                              <span>{getRemainingSpecialCalls(usage)}</span>
-                              <span>left</span>
+                          {model.tier === 'premium' && (
+                            <span className="text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded-full">
+                              Premium
                             </span>
                           )}
-                          {model.tier === 'vertex-ai' && !user && usage && (
-                            <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full flex items-center gap-1">
-                              <span>{10 - usage.premiumCalls}</span>
-                              <span>left</span>
+                          {model.tier === 'special' && (
+                            <span className="text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 px-2 py-0.5 rounded-full">
+                              Claude
                             </span>
                           )}
-                          {model.tier === 'vertex-ai' && user && usage && (
-                            <span className="text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded-full flex items-center gap-1">
-                              <span>{getRemainingPremiumCalls(usage)}</span>
-                              <span>left</span>
+                          {model.tier === 'vertex-ai' && (
+                            <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">
+                              Vertex AI
                             </span>
                           )}
                           {model.tier === 'byok' && (
@@ -256,27 +279,73 @@ export default function ModelSelector({
                               <span>BYOK</span>
                             </span>
                           )}
+                          
+                          {/* Show usage for available models */}
+                          {model.tier === 'premium' && user && usage && !usage.byokEnabled && canUsePremiumModel(usage) && (
+                            <span className="text-xs text-purple-600 dark:text-purple-400 flex items-center gap-1">
+                              <span>{getRemainingPremiumCalls(usage)}</span>
+                              <span>left</span>
+                            </span>
+                          )}
+                          {model.tier === 'special' && user && usage && !usage.byokEnabled && canUseSpecialModel(usage) && (
+                            <span className="text-xs text-yellow-600 dark:text-yellow-400 flex items-center gap-1">
+                              <span>{getRemainingSpecialCalls(usage)}</span>
+                              <span>left</span>
+                            </span>
+                          )}
+                          {model.tier === 'vertex-ai' && !user && usage && usage.premiumCalls < 10 && (
+                            <span className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                              <span>{10 - usage.premiumCalls}</span>
+                              <span>left</span>
+                            </span>
+                          )}
                         </div>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                           {model.description}
+                          {/* Show tier-specific messages */}
+                          {model.tier === 'free' && (
+                            <span className="block text-xs text-gray-600 dark:text-gray-400 mt-1">
+                              Always available • No limits
+                            </span>
+                          )}
                           {model.tier === 'premium' && !user && (
                             <span className="block text-xs text-amber-600 dark:text-amber-400 mt-1">
-                              ⚠️ Sign in for 18 free calls/day
+                              Sign in for 18 free calls/day
+                            </span>
+                          )}
+                          {model.tier === 'premium' && user && !usage?.byokEnabled && (
+                            <span className="block text-xs text-purple-600 dark:text-purple-400 mt-1">
+                              Part of 18 daily premium calls
                             </span>
                           )}
                           {model.tier === 'special' && !user && (
                             <span className="block text-xs text-amber-600 dark:text-amber-400 mt-1">
-                              ⚠️ Sign in for 2 free calls/day
+                              Sign in for 2 free calls/day
+                            </span>
+                          )}
+                          {model.tier === 'special' && user && !usage?.byokEnabled && (
+                            <span className="block text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+                              Limited to 2 calls/day
                             </span>
                           )}
                           {model.tier === 'vertex-ai' && !user && (
                             <span className="block text-xs text-blue-600 dark:text-blue-400 mt-1">
-                              💡 10 free calls/day for anonymous users
+                              10 free calls/day for anonymous
+                            </span>
+                          )}
+                          {model.tier === 'vertex-ai' && user && !usage?.byokEnabled && (
+                            <span className="block text-xs text-purple-600 dark:text-purple-400 mt-1">
+                              Part of 18 daily premium calls
                             </span>
                           )}
                           {model.tier === 'byok' && !usage?.byokEnabled && (
                             <span className="block text-xs text-orange-600 dark:text-orange-400 mt-1">
-                              🔐 Requires API key
+                              Requires API key setup
+                            </span>
+                          )}
+                          {usage?.byokEnabled && model.tier !== 'free' && (
+                            <span className="block text-xs text-green-600 dark:text-green-400 mt-1">
+                              Unlimited with BYOK
                             </span>
                           )}
                         </p>
@@ -320,7 +389,8 @@ export default function ModelSelector({
                   )
                 })}
               </div>
-            ))}
+              )
+            })}
             </motion.div>
           </>
         )}

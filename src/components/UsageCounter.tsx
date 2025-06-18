@@ -7,7 +7,7 @@ import type { UserUsage } from '@/lib/usage-tracker'
 
 export default function UsageCounter() {
   const { user, isAnonymous } = useAuth()
-  const { getUsage, getRemainingPremiumCalls, getRemainingAnonymousCalls } = useUsageTracking()
+  const { getUsage, getRemainingPremiumCalls, getRemainingAnonymousCalls, getRemainingSpecialCalls } = useUsageTracking()
   const [usage, setUsage] = useState<UserUsage | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -23,11 +23,7 @@ export default function UsageCounter() {
       }
     }
 
-    if (user) {
-      loadUsage()
-    } else {
-      setLoading(false)
-    }
+    loadUsage()
   }, [user, getUsage])
 
   if (loading) {
@@ -39,7 +35,12 @@ export default function UsageCounter() {
     )
   }
 
-  if (isAnonymous && usage) {
+  if (!usage) {
+    return null
+  }
+
+  // Anonymous users - show X/10 for Vertex AI models only
+  if (isAnonymous) {
     const remaining = getRemainingAnonymousCalls(usage)
     const total = 10
     
@@ -47,51 +48,57 @@ export default function UsageCounter() {
       <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-100 dark:bg-blue-900 text-xs">
         <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
         <span className="text-blue-700 dark:text-blue-300 font-medium">
-          Anonymous: {remaining}/{total} Vertex AI calls
-        </span>
-      </div>
-    )
-  }
-  
-  if (!user || !usage) {
-    return (
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs">
-        <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-        <span className="text-gray-700 dark:text-gray-300 font-medium">
-          Loading...
+          {remaining}/{total} Vertex AI calls
         </span>
       </div>
     )
   }
 
-  const remaining = getRemainingPremiumCalls(usage)
-  const total = 20 // 18 general + 2 special = 20 total for logged-in users
-
-  const getStatusColor = () => {
-    if (usage.byokEnabled) return 'text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900'
-    if (remaining > 5) return 'text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900'
-    if (remaining > 2) return 'text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900'
-    if (remaining > 0) return 'text-orange-700 dark:text-orange-300 bg-orange-100 dark:bg-orange-900'
-    return 'text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900'
-  }
-
+  // BYOK users - show unlimited
   if (usage.byokEnabled) {
     return (
-      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs ${getStatusColor()}`}>
-        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-purple-100 dark:bg-purple-900 text-xs">
+        <svg className="w-3 h-3 text-purple-700 dark:text-purple-300" fill="currentColor" viewBox="0 0 24 24">
           <path d="M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10A2,2 0 0,1 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z"/>
         </svg>
-        <span className="font-medium">BYOK Enabled</span>
+        <span className="text-purple-700 dark:text-purple-300 font-medium">Unlimited (BYOK)</span>
       </div>
     )
   }
 
-  return (
-    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs ${getStatusColor()}`}>
-      <div className="w-2 h-2 rounded-full bg-current"></div>
-      <span className="font-medium">
-        Free: {remaining}/{total} calls/day
-      </span>
-    </div>
-  )
+  // Logged-in users - show X/20 with separate Claude counter
+  if (user) {
+    const remainingPremium = getRemainingPremiumCalls(usage)
+    const remainingSpecial = getRemainingSpecialCalls(usage)
+    const totalPremium = 18
+    const totalSpecial = 2
+    const totalCombined = 20
+
+    const getStatusColor = () => {
+      const totalRemaining = remainingPremium + remainingSpecial
+      if (totalRemaining > 10) return 'text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900'
+      if (totalRemaining > 5) return 'text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900'
+      if (totalRemaining > 0) return 'text-orange-700 dark:text-orange-300 bg-orange-100 dark:bg-orange-900'
+      return 'text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900'
+    }
+
+    return (
+      <div className={`flex items-center gap-3 px-3 py-1.5 rounded-lg text-xs ${getStatusColor()}`}>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-current"></div>
+          <span className="font-medium">
+            {remainingPremium + remainingSpecial}/{totalCombined} calls/day
+          </span>
+        </div>
+        {remainingSpecial < totalSpecial && (
+          <div className="flex items-center gap-1 text-[10px] opacity-75">
+            <span>Claude: {remainingSpecial}/{totalSpecial}</span>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Fallback - should not reach here
+  return null
 }
