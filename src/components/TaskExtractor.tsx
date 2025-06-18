@@ -27,7 +27,13 @@ export default function TaskExtractor({ conversationId, className = '' }: TaskEx
   const [extractionResult, setExtractionResult] = useState<TaskExtractionResult | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  // Debug logging
+  console.log('TaskExtractor rendered with conversationId:', conversationId)
+
   const extractTasks = async () => {
+    console.log('Extract Tasks button clicked!', { conversationId })
+    alert('Extract Tasks button clicked!')
+    
     if (!conversationId) return
 
     setIsExtracting(true)
@@ -94,13 +100,13 @@ export default function TaskExtractor({ conversationId, className = '' }: TaskEx
   }
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative z-10 ${className}`}>
       <Button
         onClick={extractTasks}
         disabled={isExtracting || !conversationId}
-        variant="ghost"
+        variant="outline"
         size="sm"
-        className="flex items-center gap-2 text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
+        className="flex items-center gap-2 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-300 dark:hover:bg-purple-900/50 border border-purple-300 dark:border-purple-700"
         title="Extract action items and tasks from conversation"
       >
         {isExtracting ? (
@@ -113,7 +119,7 @@ export default function TaskExtractor({ conversationId, className = '' }: TaskEx
         ) : (
           <ClipboardDocumentListIcon className="w-4 h-4" />
         )}
-        <span className="hidden sm:inline">
+        <span>
           {isExtracting ? 'Extracting...' : 'Extract Tasks'}
         </span>
       </Button>
@@ -134,14 +140,14 @@ export default function TaskExtractor({ conversationId, className = '' }: TaskEx
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start justify-center p-4 overflow-y-auto"
             onClick={(e) => e.target === e.currentTarget && setIsOpen(false)}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+              className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden my-8"
             >
               {/* Header */}
               <div className="p-6 border-b border-gray-200 dark:border-gray-700">
@@ -274,15 +280,32 @@ export default function TaskExtractor({ conversationId, className = '' }: TaskEx
                     Extracted from {extractionResult.extractionMetadata.conversationLength} messages
                   </div>
                   <div className="flex gap-3">
-                    <Button variant="ghost" onClick={() => setIsOpen(false)}>
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => setIsOpen(false)}
+                    >
                       Close
                     </Button>
                     <Button 
                       onClick={() => {
-                        // Future: Export tasks to project management tools
-                        console.log('Export tasks:', extractionResult.tasks)
+                        // Export tasks to clipboard as JSON
+                        const tasksJson = JSON.stringify(extractionResult.tasks, null, 2)
+                        navigator.clipboard.writeText(tasksJson).then(() => {
+                          // Show success feedback
+                          const button = document.querySelector('[data-export-button]') as HTMLButtonElement
+                          if (button) {
+                            const originalText = button.textContent
+                            button.textContent = 'Copied!'
+                            setTimeout(() => {
+                              button.textContent = originalText
+                            }, 2000)
+                          }
+                        }).catch((err) => {
+                          console.error('Failed to copy tasks:', err)
+                        })
                       }}
                       className="bg-purple-600 hover:bg-purple-700 text-white"
+                      data-export-button
                     >
                       Export Tasks
                     </Button>

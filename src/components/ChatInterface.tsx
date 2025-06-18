@@ -372,7 +372,7 @@ function ChatInterface({ initialConversationId }: ChatInterfaceProps) {
       <div className={`
         fixed lg:static inset-y-0 left-0 z-30
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} 
-        ${sidebarOpen ? 'w-80' : 'lg:w-0'} 
+        ${sidebarOpen ? 'w-80' : 'lg:w-20'} 
         transition-all duration-300 ease-in-out 
         border-r border-gray-200/50 dark:border-gray-700/50
         bg-white/80 dark:bg-gray-900/80 
@@ -380,7 +380,7 @@ function ChatInterface({ initialConversationId }: ChatInterfaceProps) {
         flex-shrink-0
         shadow-lg lg:shadow-sm
       `}>
-        <ChatSidebar {...sidebarProps} />
+        <ChatSidebar {...sidebarProps} isCollapsed={!sidebarOpen} />
       </div>
 
       {/* Main Chat Area */}
