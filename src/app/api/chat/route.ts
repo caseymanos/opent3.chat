@@ -4,6 +4,7 @@ import { getModelById, type AIModel } from "@/lib/models";
 import { createServerClient } from "@/lib/supabase";
 import { openai } from "@ai-sdk/openai";
 import { anthropic } from "@ai-sdk/anthropic";
+import { UsageTracker } from "@/lib/usage-tracker";
 
 const isDev = process.env.NODE_ENV === "development";
 const log = isDev ? console.log : () => {};
@@ -24,6 +25,10 @@ export async function POST(req: Request) {
     const { data: { user } } = await supabase.auth.getUser();
     const isAuthenticated = !!user;
     const userId = user?.id || 'anonymous';
+    
+    // Initialize usage tracker
+    const usageTracker = new UsageTracker();
+    const currentUsage = await usageTracker.getUsage(user?.id);
     
     // Get user preferences for traits
     let userTraits: string | null = null;
@@ -59,6 +64,43 @@ export async function POST(req: Request) {
       });
     }
     
+    // Check usage limits
+    if (!isAuthenticated) {
+      // Anonymous users - check if they can use Vertex AI models
+      if (!usageTracker.canUseAnonymousModel(currentUsage, model)) {
+        return new Response(JSON.stringify({
+          error: "You have reached your daily limit of 10 free requests. Please sign in to continue.",
+          type: "usage_limit",
+          remainingCalls: 0
+        }), {
+          status: 429,
+          headers: { "Content-Type": "application/json" }
+        });
+      }
+    } else {
+      // Authenticated users - check based on model tier
+      if (!currentUsage.byokEnabled) {
+        if (modelInfo.tier === "special" && !usageTracker.canUseSpecialModel(currentUsage)) {
+          return new Response(JSON.stringify({
+            error: "You have reached your daily limit of 2 Claude requests. You can still use other models or enable BYOK in settings.",
+            type: "usage_limit",
+            remainingCalls: 0
+          }), {
+            status: 429,
+            headers: { "Content-Type": "application/json" }
+          });
+        } else if (modelInfo.tier !== "special" && !usageTracker.canUsePremiumModel(currentUsage)) {
+          return new Response(JSON.stringify({
+            error: "You have reached your daily limit of 20 requests. Please try again tomorrow or enable BYOK in settings.",
+            type: "usage_limit",
+            remainingCalls: 0
+          }), {
+            status: 429,
+            headers: { "Content-Type": "application/json" }
+          });
+        }
+      }
+    }
     
     // Check tier-based access control
     if (!isAuthenticated && modelInfo.tier !== "vertex-ai") {
@@ -115,6 +157,12 @@ export async function POST(req: Request) {
           maxTokens: 4000,
         });
         
+        // Increment usage counter
+        if (!isAuthenticated) {
+          await usageTracker.incrementPremiumCalls(undefined);
+        } else if (!currentUsage.byokEnabled) {
+          await usageTracker.incrementPremiumCalls(user.id);
+        }
         
         return result.toDataStreamResponse();
       } catch (vertexError) {
@@ -151,6 +199,11 @@ export async function POST(req: Request) {
           maxTokens: 4000,
         });
         
+        // Increment usage counter for authenticated users
+        if (!currentUsage.byokEnabled && user) {
+          await usageTracker.incrementPremiumCalls(user.id);
+        }
+        
         return result.toDataStreamResponse();
       } catch (openaiError) {
         logError("[OPENAI] Error:", openaiError);
@@ -185,6 +238,15 @@ export async function POST(req: Request) {
           temperature: 0.7,
           maxTokens: 4000,
         });
+        
+        // Increment usage counter for authenticated users
+        if (!currentUsage.byokEnabled && user) {
+          if (modelInfo.tier === "special") {
+            await usageTracker.incrementSpecialCalls(user.id);
+          } else {
+            await usageTracker.incrementPremiumCalls(user.id);
+          }
+        }
         
         return result.toDataStreamResponse();
       } catch (anthropicError) {
