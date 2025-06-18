@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Button } from './ui/Button'
 import { PaperAirplaneIcon } from '@heroicons/react/24/outline'
-import FileAttachment from './FileAttachment'
 import VoiceInput from './VoiceInput'
 
 interface AttachedFile {
@@ -84,12 +83,12 @@ export default function MessageInput({
 
   return (
     <div className="relative space-y-3">
-      {/* File Attachments */}
-      <FileAttachment
+      {/* File Attachments - Removed */}
+      {/* <FileAttachment
         attachedFiles={attachedFiles}
         onFilesChange={setAttachedFiles}
         disabled={disabled}
-      />
+      /> */}
 
       <div className="flex items-end gap-4 p-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20">
         {/* Text Input */}
