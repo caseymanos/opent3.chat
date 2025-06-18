@@ -5,8 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Context
 
 **Project Type:** Next.js Application
-**Branch:** compare
-**Focus Area:** Development work on compare
+**Branch:** hide-supabase-security
+**Focus Area:** Security improvements and authentication
 
 ## Project Overview
 
@@ -14,7 +14,7 @@ This is a Next.js React application with server-side rendering capabilities.
 
 ## Branch Purpose
 
-This branch (compare) is focused on: Development work on compare
+This branch (hide-supabase-security) is focused on: Security improvements and authentication
 
 ## Development Guidelines
 
@@ -66,4 +66,4 @@ npm run dev, npm run build, npm run start
 - Always verify functionality in the development environment
 - Run linting and type checking before committing
 - Create meaningful commit messages that describe the changes
-- Focus on the specific goals of this branch: Development work on compare
+- Focus on the specific goals of this branch: Security improvements and authentication
