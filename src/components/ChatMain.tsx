@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect, useState, useCallback } from 'react'
 import { useRealtimeChat } from '@/hooks/useRealtimeChat'
 import { useAIChat } from '@/lib/ai'
 import MessageList from './MessageList'
@@ -13,6 +13,7 @@ import CostTracker from './CostTracker'
 import ModelComparison from './ModelComparison'
 import TaskExtractor from './TaskExtractor'
 import OpenRouterSettings from './OpenRouterSettings'
+import { useScrollPosition } from '@/hooks/useScrollPosition'
 import type { Database } from '@/lib/supabase'
 
 type Message = Database['public']['Tables']['messages']['Row']
@@ -40,6 +41,16 @@ export default function ChatMain({
 }: ChatMainProps) {
   const { sendMessage, updateTypingStatus } = useRealtimeChat(conversationId)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messageListRef = useRef<HTMLDivElement>(null)
+  const [showScrollButton, setShowScrollButton] = useState(false)
+  const [isUserScrolling, setIsUserScrolling] = useState(false)
+  const [isAIResponding, setIsAIResponding] = useState(false)
+  const scrollTimeoutRef = useRef<NodeJS.Timeout>()
+  const scrollDebounceRef = useRef<NodeJS.Timeout>()
+  const lastMessageCountRef = useRef(0)
+  
+  // Use scroll position hook
+  const { saveScrollPosition } = useScrollPosition(conversationId, messageListRef)
   
   // Branching state
   const [showBranchNavigator, setShowBranchNavigator] = useState(false)
@@ -243,18 +254,114 @@ export default function ChatMain({
     return error.message
   }
 
-  // Auto-scroll to bottom only for new user/assistant messages
+  // Enhanced auto-scroll with user scroll detection
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    if (messageListRef.current) {
+      messageListRef.current.scrollTop = messageListRef.current.scrollHeight
+    }
+  }, [])
+
+  // Handle scroll events to detect user scrolling with debouncing
+  const handleScroll = useCallback(() => {
+    if (!messageListRef.current) return
+    
+    // Don't allow user scrolling while AI is responding
+    if (isAIResponding) {
+      // Force scroll back to bottom during AI response
+      requestAnimationFrame(() => {
+        if (messageListRef.current) {
+          messageListRef.current.scrollTop = messageListRef.current.scrollHeight
+        }
+      })
+      return
+    }
+    
+    // Clear existing debounce
+    if (scrollDebounceRef.current) {
+      clearTimeout(scrollDebounceRef.current)
+    }
+    
+    // Debounce scroll handling for better performance
+    scrollDebounceRef.current = setTimeout(() => {
+      if (!messageListRef.current || isAIResponding) return
+      
+      const { scrollTop, scrollHeight, clientHeight } = messageListRef.current
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 100
+      
+      setShowScrollButton(!isAtBottom)
+      
+      // If user scrolls up, set flag to prevent auto-scroll
+      if (!isAtBottom) {
+        setIsUserScrolling(true)
+        saveScrollPosition()
+        
+        // Clear existing timeout
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current)
+        }
+        // Reset after 30 seconds of no scrolling
+        scrollTimeoutRef.current = setTimeout(() => {
+          setIsUserScrolling(false)
+        }, 30000)
+      } else {
+        setIsUserScrolling(false)
+      }
+    }, 50) // 50ms debounce
+  }, [saveScrollPosition, isAIResponding])
+
+  // Track AI responding state
   useEffect(() => {
-    if (messages.length > 0) {
-      const lastMessage = messages[messages.length - 1]
-      // Only auto-scroll for recent messages (within last 5 seconds)
-      const messageTime = new Date(lastMessage.created_at).getTime()
-      const now = Date.now()
-      if (now - messageTime < 5000) {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    // Check if we have a new user message (message count increased)
+    if (messages.length > lastMessageCountRef.current) {
+      const newMessages = messages.slice(lastMessageCountRef.current)
+      const hasNewUserMessage = newMessages.some(msg => msg.role === 'user')
+      
+      if (hasNewUserMessage) {
+        // User sent a message, start AI response mode
+        setIsAIResponding(true)
+        setIsUserScrolling(false)
+        console.log('🚀 Starting AI response mode')
       }
     }
+    lastMessageCountRef.current = messages.length
   }, [messages])
+
+  // Monitor AI loading state
+  useEffect(() => {
+    if (!isAILoading && isAIResponding) {
+      // AI finished responding, allow free scrolling
+      setIsAIResponding(false)
+      console.log('✅ AI response complete, enabling free scroll')
+    }
+  }, [isAILoading, isAIResponding])
+
+  // Auto-scroll when messages arrive or during AI response
+  useEffect(() => {
+    if (messages.length > 0 && (isAIResponding || !isUserScrolling)) {
+      // Always scroll to bottom during AI response or when user hasn't scrolled
+      requestAnimationFrame(() => {
+        scrollToBottom('auto')
+      })
+    }
+  }, [messages, isAIResponding, isUserScrolling, scrollToBottom])
+
+  // Auto-scroll when AI messages are streaming
+  useEffect(() => {
+    if (aiMessages.length > 0 && (isAILoading || isAIResponding)) {
+      // Continuous scroll during AI response
+      requestAnimationFrame(() => {
+        scrollToBottom('auto')
+      })
+    }
+  }, [aiMessages, isAILoading, isAIResponding, scrollToBottom])
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current)
+      if (scrollDebounceRef.current) clearTimeout(scrollDebounceRef.current)
+    }
+  }, [])
 
   // Send pending message when conversation is created
   useEffect(() => {
@@ -564,13 +671,39 @@ export default function ChatMain({
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
           ) : activeTab === 'chat' ? (
-            <div className="h-full flex flex-col">
+            <div className="h-full flex flex-col relative">
               <MessageList 
+                ref={messageListRef}
                 messages={messages} 
                 aiMessages={conversationId ? aiMessages : []} 
                 onCreateBranch={handleCreateBranch}
+                onScroll={handleScroll}
+                isAIResponding={isAIResponding}
               />
               <div ref={messagesEndRef} className="flex-shrink-0 h-4" />
+              
+              {/* Scroll to bottom button - only show when not AI responding */}
+              {showScrollButton && !isAIResponding && (
+                <button
+                  onClick={() => {
+                    setIsUserScrolling(false)
+                    scrollToBottom('smooth')
+                  }}
+                  className="absolute bottom-4 right-4 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 gpu-accelerated"
+                  aria-label="Scroll to bottom"
+                >
+                  <svg className="w-5 h-5 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                  </svg>
+                </button>
+              )}
+              
+              {/* AI responding indicator */}
+              {isAIResponding && (
+                <div className="absolute bottom-4 right-4 px-3 py-2 bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700/50 rounded-full text-xs text-blue-700 dark:text-blue-300 animate-pulse">
+                  AI responding...
+                </div>
+              )}
             </div>
           ) : (
             <div className="h-full flex items-center justify-center">
@@ -608,7 +741,10 @@ export default function ChatMain({
                 <div className="text-xs">{getErrorMessage(aiError)}</div>
               </div>
               <button 
-                onClick={() => window.location.reload()}
+                onClick={() => {
+                  setIsAIResponding(false)
+                  window.location.reload()
+                }}
                 className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200 text-xs"
               >
                 Retry
