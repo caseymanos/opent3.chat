@@ -5,7 +5,6 @@ import { Button } from './ui/Button'
 import { PaperAirplaneIcon } from '@heroicons/react/24/outline'
 import FileAttachment from './FileAttachment'
 import VoiceInput from './VoiceInput'
-import { IntegrationsPanel } from './IntegrationsPanel'
 
 interface AttachedFile {
   file: File
@@ -116,14 +115,6 @@ export default function MessageInput({
             className="flex-shrink-0"
           />
 
-          {/* Integrations Panel */}
-          <IntegrationsPanel
-            onContentSelect={(content) => {
-              const newValue = value ? `${value}\n\n${content}` : content
-              onChange(newValue)
-            }}
-            className="flex-shrink-0"
-          />
 
           {/* Send Button */}
           <Button
@@ -158,7 +149,7 @@ export default function MessageInput({
         <div className="text-xs text-slate-400 dark:text-slate-500 hidden sm:block">
           {attachedFiles.length > 0 
             ? '⏎ Send with files' 
-            : '⏎ Send • ⇧⏎ New line • 🎤 Voice • 📎 Files'
+            : '⏎ Send • ⇧⏎ New line • 🎤 Voice'
           }
         </div>
       </div>
