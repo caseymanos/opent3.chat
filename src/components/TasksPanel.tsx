@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   XMarkIcon,
@@ -8,7 +9,11 @@ import {
   ExclamationTriangleIcon,
   ClockIcon,
   TagIcon,
-  ArrowDownIcon
+  ArrowDownIcon,
+  MinusIcon,
+  Bars3Icon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from '@heroicons/react/24/outline'
 import { Button } from './ui/Button'
 import type { Task, TaskExtractionResult } from '@/lib/task-extractor'
@@ -61,6 +66,30 @@ const handleExportClick = (extractionResult: TaskExtractionResult | null, onExpo
 }
 
 export default function TasksPanel({ isOpen, onClose, extractionResult, onExport }: TasksPanelProps) {
+  const [isMinimized, setIsMinimized] = useState(false)
+  const [isResizing, setIsResizing] = useState(false)
+  const [panelWidth, setPanelWidth] = useState(420)
+  
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    setIsResizing(true)
+    const startX = e.clientX
+    const startWidth = panelWidth
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      const diff = startX - e.clientX
+      const newWidth = Math.max(300, Math.min(800, startWidth + diff))
+      setPanelWidth(newWidth)
+    }
+    
+    const handleMouseUp = () => {
+      setIsResizing(false)
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+    
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+  }, [panelWidth])
   const getPriorityIcon = (priority: Task['priority']) => {
     switch (priority) {
       case 'urgent':
@@ -104,41 +133,83 @@ export default function TasksPanel({ isOpen, onClose, extractionResult, onExport
       {isOpen && (
         <motion.div
           initial={{ x: '100%' }}
-          animate={{ x: 0 }}
+          animate={{ x: isMinimized ? `calc(100% - 60px)` : 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="fixed right-0 top-0 h-full w-[480px] bg-white dark:bg-slate-800 border-l border-gray-200 dark:border-gray-700 shadow-2xl z-50 flex flex-col"
+          className="fixed right-0 top-0 h-full bg-white dark:bg-slate-800 border-l border-gray-200 dark:border-gray-700 shadow-2xl z-50 flex"
+          style={{ width: isMinimized ? '60px' : `${panelWidth}px` }}
         >
+          {/* Resize Handle */}
+          <div
+            className={`w-1 bg-gray-300 dark:bg-gray-600 hover:bg-purple-500 cursor-col-resize transition-colors ${
+              isResizing ? 'bg-purple-500' : ''
+            } ${isMinimized ? 'hidden' : ''}`}
+            onMouseDown={handleMouseDown}
+          />
+          
+          {/* Panel Content */}
+          <div className="flex-1 flex flex-col">
           {/* Header */}
           <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+            {isMinimized ? (
+              <div className="flex flex-col items-center gap-2">
+                <button
+                  onClick={() => setIsMinimized(false)}
+                  className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                  title="Expand Tasks Panel"
+                >
+                  <ChevronLeftIcon className="w-5 h-5" />
+                </button>
                 <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
                   <ClipboardDocumentListIcon className="w-4 h-4 text-white" />
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                    Extracted Tasks
-                  </h3>
-                  {extractionResult && (
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      {extractionResult.totalTasksFound} tasks found • {extractionResult.extractionMetadata.complexity} complexity
-                    </p>
-                  )}
+                {extractionResult && (
+                  <div className="text-xs text-center text-slate-500 dark:text-slate-400 writing-mode-vertical transform rotate-180">
+                    {extractionResult.totalTasksFound}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
+                    <ClipboardDocumentListIcon className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                      Extracted Tasks
+                    </h3>
+                    {extractionResult && (
+                      <p className="text-sm text-slate-500 dark:text-slate-400">
+                        {extractionResult.totalTasksFound} tasks found • {extractionResult.extractionMetadata.complexity} complexity
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setIsMinimized(true)}
+                    className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                    title="Minimize Panel"
+                  >
+                    <ChevronRightIcon className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={onClose}
+                    className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                    title="Close Panel"
+                  >
+                    <XMarkIcon className="w-5 h-5" />
+                  </button>
                 </div>
               </div>
-              <button
-                onClick={onClose}
-                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-              >
-                <XMarkIcon className="w-5 h-5" />
-              </button>
-            </div>
+            )}
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-4">
-            {extractionResult ? (
+          {!isMinimized && (
+            <div className="flex-1 overflow-y-auto p-4">
+              {extractionResult ? (
               <>
                 {/* Summary - Always show if we have extraction result */}
                 {extractionResult.summary && (
@@ -241,10 +312,11 @@ export default function TasksPanel({ isOpen, onClose, extractionResult, onExport
                 <p>No tasks extracted yet.</p>
               </div>
             )}
-          </div>
+            </div>
+          )}
 
           {/* Footer */}
-          {extractionResult && (
+          {extractionResult && !isMinimized && (
             <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
               <div className="flex items-center justify-between">
                 <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -260,6 +332,7 @@ export default function TasksPanel({ isOpen, onClose, extractionResult, onExport
               </div>
             </div>
           )}
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

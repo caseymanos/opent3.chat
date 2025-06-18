@@ -36,7 +36,7 @@ type TaskExtractionResult = z.infer<typeof TaskExtractionResult>
 
 interface ConversationMessage {
   id: string
-  content: { text: string }
+  content: any // JSONB field from database
   role: 'user' | 'assistant'
   created_at: string
 }
@@ -47,6 +47,11 @@ export class TaskExtractor {
   async extractTasks(messages: ConversationMessage[]): Promise<TaskExtractionResult> {
     logger.group('TaskExtractor.extractTasks')
     logger.info('Extracting tasks from conversation', { messageCount: messages.length })
+    
+    // Check if API key is available
+    if (!process.env.ANTHROPIC_API_KEY) {
+      throw new Error('ANTHROPIC_API_KEY environment variable is not set')
+    }
     
     try {
       // Prepare conversation context
@@ -74,7 +79,31 @@ export class TaskExtractor {
 
   private formatConversation(messages: ConversationMessage[]): string {
     return messages
-      .map(msg => `[${msg.role.toUpperCase()}]: ${msg.content.text}`)
+      .map(msg => {
+        // Extract text content from the JSONB content field
+        let text = ''
+        if (typeof msg.content === 'string') {
+          text = msg.content
+        } else if (msg.content && typeof msg.content === 'object') {
+          // Handle different possible structures
+          if (msg.content.text) {
+            text = msg.content.text
+          } else if (msg.content.content) {
+            text = msg.content.content
+          } else if (Array.isArray(msg.content)) {
+            // Handle array of content blocks
+            text = msg.content
+              .map(block => block.text || block.content || JSON.stringify(block))
+              .join(' ')
+          } else {
+            text = JSON.stringify(msg.content)
+          }
+        } else {
+          text = String(msg.content || '')
+        }
+        
+        return `[${msg.role.toUpperCase()}]: ${text}`
+      })
       .join('\n\n')
   }
 

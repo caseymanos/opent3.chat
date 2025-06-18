@@ -48,6 +48,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Extract tasks using AI
+    logger.info('About to extract tasks', { 
+      messageCount: messages.length,
+      firstMessage: typeof messages[0]?.content === 'string' 
+        ? messages[0].content.substring(0, 100) + '...' 
+        : 'Content not string type'
+    })
+    
     const result = await taskExtractor.extractTasks(messages)
     
     // Optionally save tasks to database for persistence
