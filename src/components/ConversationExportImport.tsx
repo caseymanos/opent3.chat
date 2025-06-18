@@ -33,7 +33,7 @@ export default function ConversationExportImport() {
       if (convError) throw convError
 
       // Fetch all messages for these conversations
-      const conversationIds = conversations?.map(c => c.id) || []
+      const conversationIds = conversations?.map((c: any) => c.id) || []
       const { data: messages, error: msgError } = await supabase
         .from('messages')
         .select('*')
@@ -58,9 +58,9 @@ export default function ConversationExportImport() {
           email: user.email,
           preferences: preferences || null
         },
-        conversations: conversations?.map(conv => ({
+        conversations: conversations?.map((conv: any) => ({
           ...conv,
-          messages: messages?.filter(m => m.conversation_id === conv.id) || []
+          messages: messages?.filter((m: any) => m.conversation_id === conv.id) || []
         })) || [],
         stats: {
           total_conversations: conversations?.length || 0,
