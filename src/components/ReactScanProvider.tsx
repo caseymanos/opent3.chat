@@ -9,16 +9,11 @@ export default function ReactScanProvider() {
         scan({
           enabled: true,
           log: false, // Set to true to see console logs
-          includeChildren: true,
-          renderCountThreshold: 1,
-          // Performance options
-          report: true,
-          // Show component names
-          showComponentName: true,
-          // Highlight renders
-          onRender: (fiber: any, phase: string, actualDuration: number) => {
-            if (actualDuration > 16) { // Log slow renders (> 16ms for 60fps)
-              console.warn(`Slow render detected: ${fiber.type?.name || 'Unknown'} took ${actualDuration}ms`);
+          onRender: (fiber: any, renders: any[]) => {
+            // Check if any render took more than 16ms
+            const slowRender = renders.find((r: any) => r.time > 16);
+            if (slowRender) {
+              console.warn(`Slow render detected: ${fiber.type?.name || 'Unknown'} took ${slowRender.time}ms`);
             }
           }
         });

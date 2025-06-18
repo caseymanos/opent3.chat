@@ -50,7 +50,7 @@ export function useOptimizedDebounce<T extends (...args: any[]) => any>(
   callback: T,
   delay: number
 ): T {
-  const timeoutRef = useRef<NodeJS.Timeout>()
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const callbackRef = useRef(callback)
   
   // Update callback ref without causing re-renders
@@ -71,7 +71,7 @@ export function useOptimizedDebounce<T extends (...args: any[]) => any>(
 export function useRAFThrottle<T extends (...args: any[]) => any>(
   callback: T
 ): T {
-  const frameRef = useRef<number>()
+  const frameRef = useRef<number | null>(null)
   const callbackRef = useRef(callback)
   
   callbackRef.current = callback

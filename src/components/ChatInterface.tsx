@@ -389,7 +389,7 @@ function ChatInterface({ initialConversationId }: ChatInterfaceProps) {
         <ChatHeader
           sidebarOpen={sidebarOpen}
           onToggleSidebar={toggleSidebar}
-          conversationTitle={conversation?.title}
+          conversationTitle={conversation?.title || undefined}
           user={user}
           isAnonymous={isAnonymous}
           onSignOut={handleSignOut}

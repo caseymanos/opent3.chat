@@ -162,7 +162,7 @@ export function extractCodeBlocks(text: string): CodeBlock[] {
   
   // Find fenced code blocks
   const fencedRegex = /```(\w*)\n([\s\S]*?)```/g
-  let match
+  let match: RegExpExecArray | null
   
   while ((match = fencedRegex.exec(text)) !== null) {
     const language = match[1] || detectCodeLanguage(match[2]) || 'plaintext'
@@ -179,16 +179,17 @@ export function extractCodeBlocks(text: string): CodeBlock[] {
   
   while ((match = inlineRegex.exec(text)) !== null) {
     // Skip if already part of a fenced block
+    const matchIndex = match.index
     const isInFenced = codeBlocks.some(
-      block => match.index >= block.startIndex && match.index <= block.endIndex
+      block => matchIndex >= block.startIndex && matchIndex <= block.endIndex
     )
     
     if (!isInFenced) {
       codeBlocks.push({
         language: 'prisma',
         code: match[1].trim(),
-        startIndex: match.index,
-        endIndex: match.index + match[0].length
+        startIndex: matchIndex,
+        endIndex: matchIndex + match[0].length
       })
     }
   }

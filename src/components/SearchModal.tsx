@@ -41,7 +41,7 @@ const SearchModal = memo(({ isOpen, onClose, onSelectConversation }: SearchModal
   }, [isOpen])
 
   // Debounced search function
-  const searchDebounced = useRef<NodeJS.Timeout>()
+  const searchDebounced = useRef<NodeJS.Timeout | null>(null)
   
   const performSearch = useCallback(async (searchQuery: string) => {
     if (searchQuery.trim().length < 2) {
@@ -85,7 +85,7 @@ const SearchModal = memo(({ isOpen, onClose, onSelectConversation }: SearchModal
       const searchResults: SearchResult[] = []
       
       // Add conversation results
-      conversations?.forEach(conv => {
+      conversations?.forEach((conv: Conversation) => {
         searchResults.push({
           type: 'conversation',
           conversation: conv
@@ -93,7 +93,7 @@ const SearchModal = memo(({ isOpen, onClose, onSelectConversation }: SearchModal
       })
 
       // Add message results
-      messages?.forEach(msg => {
+      messages?.forEach((msg: any) => {
         const conversation = (msg as any).conversation
         if (conversation) {
           searchResults.push({
