@@ -15,6 +15,8 @@ import TaskExtractor from './TaskExtractor'
 import OpenRouterSettings from './OpenRouterSettings'
 import { useScrollPosition } from '@/hooks/useScrollPosition'
 import type { Database } from '@/lib/supabase'
+import { useUsageTracking } from '@/lib/usage-tracker'
+import { useAuth } from '@/contexts/AuthContext'
 
 type Message = Database['public']['Tables']['messages']['Row']
 
@@ -48,6 +50,8 @@ export default function ChatMain({
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const scrollDebounceRef = useRef<NodeJS.Timeout | null>(null)
   const lastMessageCountRef = useRef(0)
+  const { updateByokStatus, getUsage } = useUsageTracking()
+  const { user } = useAuth()
   
   // Use scroll position hook
   const { saveScrollPosition } = useScrollPosition(conversationId, messageListRef)
@@ -66,17 +70,50 @@ export default function ChatMain({
   // Tab state for side panels
   const [activeTab, setActiveTab] = useState<'chat' | 'files' | 'summaries'>('chat')
   
-  // Load OpenRouter config from localStorage
+  // Load OpenRouter config from localStorage or user profile
   useEffect(() => {
-    const stored = localStorage.getItem('openrouter-config')
-    if (stored) {
-      try {
-        setOpenRouterConfig(JSON.parse(stored))
-      } catch (error) {
-        console.warn('Failed to parse OpenRouter config from localStorage:', error)
+    const loadOpenRouterConfig = async () => {
+      // First check localStorage
+      const stored = localStorage.getItem('openrouter-config')
+      if (stored) {
+        try {
+          const config = JSON.parse(stored)
+          setOpenRouterConfig(config)
+          
+          // Update BYOK status based on OpenRouter config
+          if (config.enabled && config.apiKey) {
+            updateByokStatus(true, { openRouter: config.apiKey })
+          }
+          return // Exit if found in localStorage
+        } catch (error) {
+          console.warn('Failed to parse OpenRouter config from localStorage:', error)
+        }
+      }
+      
+      // If not in localStorage and user is logged in, check profile
+      if (user) {
+        const usage = await getUsage()
+        if (usage?.apiKeys?.openRouter) {
+          const profileConfig = {
+            enabled: true,
+            apiKey: usage.apiKeys.openRouter
+          }
+          setOpenRouterConfig(profileConfig)
+          // Save to localStorage for consistency
+          localStorage.setItem('openrouter-config', JSON.stringify(profileConfig))
+          // Update BYOK status
+          updateByokStatus(true, { openRouter: usage.apiKeys.openRouter })
+        }
+      } else {
+        // User logged out - clear OpenRouter config
+        setOpenRouterConfig({ enabled: false, apiKey: '' })
+        localStorage.removeItem('openrouter-config')
+        updateByokStatus(false, {})
       }
     }
-  }, [])
+    
+    loadOpenRouterConfig()
+  }, [user]) // Re-run when user changes (login/logout)
 
 
   // Convert database messages to AI SDK format for initialization

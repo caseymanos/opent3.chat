@@ -70,9 +70,17 @@ export class UsageTracker {
             byokEnabled: data.byok_enabled || false,
             apiKeys: data.api_keys || {}
           }
+        } else if (error && error.code !== 'PGRST116') {
+          // Only log if it's not a "no rows" error (PGRST116) or network error
+          if (!error.message?.includes('Failed to fetch')) {
+            console.warn('Error fetching profile:', error)
+          }
         }
-      } catch (error) {
-        console.error('Error fetching usage from Supabase:', error)
+      } catch (error: any) {
+        // Only log non-network errors
+        if (!error?.message?.includes('Failed to fetch')) {
+          console.error('Error fetching usage from Supabase:', error)
+        }
       }
     }
 

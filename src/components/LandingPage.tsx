@@ -39,17 +39,6 @@ export default function LandingPage() {
           </span>
         </div>
         
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm">
-            About
-          </Button>
-          <Button variant="ghost" size="sm" onClick={scrollToFeatures}>
-            Features
-          </Button>
-          <Button variant="outline" size="sm" onClick={openGitHub}>
-            GitHub
-          </Button>
-        </div>
       </nav>
 
       {/* Hero Section */}
