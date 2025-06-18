@@ -67,6 +67,43 @@ html {
   height: 100%;
 }
 
+/* Performance optimizations for 120fps */
+* {
+  /* Optimize rendering performance */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Prevent text selection on UI elements */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* GPU acceleration for transforms and filters */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Optimize scrolling performance */
+.scroll-optimized {
+  -webkit-overflow-scrolling: touch;
+  will-change: scroll-position;
+  contain: layout style paint;
+}
+
+/* Reduce paint areas for better performance */
+.contain-paint {
+  contain: paint;
+}
+
+.contain-layout {
+  contain: layout;
+}
+
+.contain-strict {
+  contain: strict;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
@@ -104,11 +141,57 @@ html {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Smooth transitions */
+/* Smooth transitions - optimized for 120fps */
 .transition-all {
   transition-property: all;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
+}
+
+/* High-performance animations */
+@media (prefers-reduced-motion: no-preference) {
+  /* Use transform instead of position for animations */
+  .animate-slide-in {
+    animation: slideIn 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  @keyframes slideIn {
+    from {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  /* Optimize common transitions */
+  .transition-transform {
+    transition-property: transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 200ms;
+    will-change: transform;
+  }
+  
+  .transition-opacity {
+    transition-property: opacity;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+    will-change: opacity;
+  }
+}
+
+/* Disable animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Syntax Highlighting Theme (GitHub Dark) */

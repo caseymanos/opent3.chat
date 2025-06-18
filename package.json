@@ -42,6 +42,7 @@
     "@tanstack/react-query": "^5.80.6",
     "@tiptap/react": "^2.14.0",
     "@tiptap/starter-kit": "^2.14.0",
+    "@types/prismjs": "^1.26.5",
     "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
     "ai": "^4.3.16",
@@ -53,6 +54,8 @@
     "next": "15.3.3",
     "node-fetch": "^3.3.2",
     "pdfjs-dist": "^3.11.174",
+    "prism-react-renderer": "^2.4.1",
+    "prismjs": "^1.30.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-dropzone": "^14.3.8",
@@ -79,6 +82,7 @@
     "jest": "^30.0.0",
     "jest-environment-jsdom": "^30.0.0",
     "postcss": "^8.4.49",
+    "react-scan": "^0.3.4",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
   }

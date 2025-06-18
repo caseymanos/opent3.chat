@@ -807,7 +807,8 @@ export async function POST(req: Request) {
         }
       )
     }
-
+  }
+  
   } catch (error) {
     logError('Error in chat API:', error)
     return new Response('Internal server error', { status: 500 })

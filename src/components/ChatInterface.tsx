@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback, useRef, memo, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useRealtimeChat } from '@/hooks/useRealtimeChat'
 import { useAuth } from '@/contexts/AuthContext'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import ChatSidebar from './ChatSidebar'
 import ChatMain from './ChatMain'
 import UsageCounter from './UsageCounter'
+import SearchModal from './SearchModal'
 import { Button } from './ui/Button'
 import { PlusIcon, UserCircleIcon } from '@heroicons/react/24/outline'
 import { ArrowLeftStartOnRectangleIcon } from '@heroicons/react/24/outline'
@@ -15,7 +17,134 @@ interface ChatInterfaceProps {
   initialConversationId?: string
 }
 
-export default function ChatInterface({ initialConversationId }: ChatInterfaceProps) {
+// Memoized header component to prevent re-renders
+const ChatHeader = memo(({ 
+  sidebarOpen, 
+  onToggleSidebar, 
+  conversationTitle, 
+  user, 
+  isAnonymous, 
+  onSignOut, 
+  onSignIn, 
+  onNewConversation,
+  creatingConversation 
+}: {
+  sidebarOpen: boolean
+  onToggleSidebar: () => void
+  conversationTitle?: string
+  user: any
+  isAnonymous: boolean
+  onSignOut: () => void
+  onSignIn: () => void
+  onNewConversation: () => void
+  creatingConversation: boolean
+}) => {
+  return (
+    <div className="h-16 border-b border-gray-200/30 dark:border-gray-700/30 bg-white/60 dark:bg-gray-900/60 backdrop-blur-2xl flex items-center justify-between px-6 shadow-sm">
+      <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onToggleSidebar}
+          className="p-2"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+        </Button>
+        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
+          {conversationTitle || 'T3 Crusher'}
+        </h1>
+      </div>
+
+      <div className="flex items-center gap-2">
+        {/* Keyboard shortcuts hint */}
+        <div className="hidden lg:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+          <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded">⌘K</kbd>
+          <span>Search</span>
+        </div>
+        
+        {/* Usage Counter */}
+        <UsageCounter />
+        
+        {/* User menu */}
+        <div className="flex items-center gap-2">
+          {user && (
+            <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800">
+              <div className="relative">
+                <UserCircleIcon className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                {!isAnonymous && (
+                  <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-green-500 rounded-full border border-white dark:border-slate-800"></div>
+                )}
+              </div>
+              <span className="text-sm text-slate-700 dark:text-slate-300">
+                {user.email?.split('@')[0] || 'User'}
+              </span>
+              {isAnonymous && (
+                <span className="text-xs text-slate-500 dark:text-slate-400">(Guest)</span>
+              )}
+            </div>
+          )}
+          
+          {!isAnonymous ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onSignOut}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeftStartOnRectangleIcon className="w-4 h-4" />
+              Sign Out
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onSignIn}
+              className="flex items-center gap-2"
+            >
+              Sign In
+            </Button>
+          )}
+        </div>
+        
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onNewConversation}
+          disabled={creatingConversation}
+          className="flex items-center gap-2"
+        >
+          {creatingConversation ? (
+            <>
+              <div className="w-4 h-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              Creating...
+            </>
+          ) : (
+            <>
+              <PlusIcon className="w-4 h-4" />
+              New Chat
+            </>
+          )}
+        </Button>
+      </div>
+    </div>
+  )
+})
+
+ChatHeader.displayName = 'ChatHeader'
+
+function ChatInterface({ initialConversationId }: ChatInterfaceProps) {
   const router = useRouter()
   const { user, isAnonymous, signOut } = useAuth()
   const [currentConversationId, setCurrentConversationId] = useState<string>('')
@@ -27,7 +156,11 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
     return true
   })
   const [creatingConversation, setCreatingConversation] = useState(false)
-  const [sidebarKey, setSidebarKey] = useState(0) // Force sidebar refresh
+  const [showSearch, setShowSearch] = useState(false)
+  
+  // Use ref for sidebar refresh instead of state to avoid re-renders
+  const sidebarRef = useRef<{ refresh: () => void }>(null)
+  
   // Model selection state - moved up from ChatMain to ensure new conversations use current model
   // Default to free model for all users
   const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash-preview-05-20')
@@ -55,7 +188,7 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
     clearAllConversations
   } = useRealtimeChat(currentConversationId)
 
-  const handleNewConversation = async () => {
+  const handleNewConversation = useCallback(async () => {
     if (creatingConversation) return // Prevent double-clicks
     
     try {
@@ -67,7 +200,8 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
         console.log('🔄 [ChatInterface] Setting new conversation ID:', newConversation.id)
         // Set the conversation ID directly without navigation for better UX
         setCurrentConversationId(newConversation.id)
-        setSidebarKey(prev => prev + 1) // Force sidebar to re-render and reload conversations
+        // Use ref to refresh sidebar without causing re-render
+        sidebarRef.current?.refresh()
         console.log('✅ [ChatInterface] Set conversation ID to:', newConversation.id)
         return newConversation.id
       } else {
@@ -82,10 +216,8 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
     } finally {
       setCreatingConversation(false)
     }
-  }
+  }, [creatingConversation, selectedProvider, selectedModel, createNewConversation])
 
-  // Remove auto-creation - conversations should only be created when first message is sent
-  
   // Handle invalid conversation IDs
   if (initialConversationId === 'default' || currentConversationId === 'default') {
     return (
@@ -98,7 +230,7 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
     )
   }
 
-  const handleConversationSelect = (conversationId: string) => {
+  const handleConversationSelect = useCallback((conversationId: string) => {
     // Only update if actually changing conversation
     if (conversationId !== currentConversationId) {
       console.log('🔄 [ChatInterface] Switching conversation from', currentConversationId, 'to', conversationId)
@@ -112,12 +244,12 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
       setSidebarOpen(false)
     }
-  }
+  }, [currentConversationId])
 
-  const handleDeleteConversation = async (conversationId: string) => {
+  const handleDeleteConversation = useCallback(async (conversationId: string) => {
     try {
       await deleteConversation(conversationId)
-      setSidebarKey(prev => prev + 1) // Force sidebar refresh
+      sidebarRef.current?.refresh() // Use ref to refresh sidebar
       // If we deleted the current conversation, clear it (don't create a new one)
       if (conversationId === currentConversationId) {
         setCurrentConversationId('')
@@ -125,9 +257,9 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
     } catch (error) {
       console.error('Failed to delete conversation:', error)
     }
-  }
+  }, [currentConversationId, deleteConversation])
 
-  const handleClearAll = async () => {
+  const handleClearAll = useCallback(async () => {
     try {
       console.log('🗑️ [ChatInterface] Starting clear all conversations')
       
@@ -141,23 +273,86 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
       await clearAllConversations()
       console.log('✅ [ChatInterface] Clear all completed, refreshing UI')
       
-      // Force sidebar refresh
-      setSidebarKey(prev => prev + 1)
+      // Force sidebar refresh using ref
+      sidebarRef.current?.refresh()
       
       // Don't create a new conversation - wait for user to send first message
     } catch (error) {
       console.error('❌ [ChatInterface] Failed to clear conversations:', error)
       // Don't create new conversation if clear failed
     }
-  }
+  }, [clearAllConversations])
+
+  const toggleSidebar = useCallback(() => {
+    setSidebarOpen(prev => !prev)
+  }, [])
+
+  const handleSignOut = useCallback(async () => {
+    await signOut()
+    router.push('/login')
+  }, [signOut, router])
+
+  const handleSignIn = useCallback(() => {
+    router.push('/login')
+  }, [router])
+
+  const handleModelChange = useCallback((model: string, provider: string) => {
+    setSelectedModel(model)
+    setSelectedProvider(provider)
+  }, [])
+
+  const handleMessageSent = useCallback(() => {
+    console.log('🔄 [ChatInterface] Message sent, refreshing sidebar')
+    sidebarRef.current?.refresh()
+  }, [])
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: 'k',
+      metaKey: true,
+      handler: () => setShowSearch(true),
+      description: 'Open search'
+    },
+    {
+      key: 'o',
+      metaKey: true,
+      shiftKey: true,
+      handler: handleNewConversation,
+      description: 'New chat'
+    },
+    {
+      key: 'b',
+      metaKey: true,
+      handler: toggleSidebar,
+      description: 'Toggle sidebar'
+    }
+  ])
+
+  // Memoize sidebar props to prevent unnecessary re-renders
+  const sidebarProps = useMemo(() => ({
+    ref: sidebarRef,
+    currentConversationId,
+    onConversationSelect: handleConversationSelect,
+    onNewConversation: handleNewConversation,
+    onDeleteConversation: handleDeleteConversation,
+    onClearAllConversations: handleClearAll
+  }), [currentConversationId, handleConversationSelect, handleNewConversation, handleDeleteConversation, handleClearAll])
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+      {/* Search Modal */}
+      <SearchModal
+        isOpen={showSearch}
+        onClose={() => setShowSearch(false)}
+        onSelectConversation={handleConversationSelect}
+      />
+      
       {/* Mobile Sidebar Backdrop */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-20 bg-black/20 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
+          onClick={toggleSidebar}
         />
       )}
       
@@ -173,118 +368,23 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
         flex-shrink-0
         shadow-lg lg:shadow-sm
       `}>
-        <ChatSidebar
-          key={sidebarKey}
-          currentConversationId={currentConversationId}
-          onConversationSelect={handleConversationSelect}
-          onNewConversation={handleNewConversation}
-          onDeleteConversation={handleDeleteConversation}
-          onClearAllConversations={handleClearAll}
-        />
+        <ChatSidebar {...sidebarProps} />
       </div>
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header */}
-        <div className="h-16 border-b border-gray-200/30 dark:border-gray-700/30 bg-white/60 dark:bg-gray-900/60 backdrop-blur-2xl flex items-center justify-between px-6 shadow-sm">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            </Button>
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
-              {conversation?.title || 'T3 Crusher'}
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Usage Counter */}
-            <UsageCounter />
-            
-            {/* User menu */}
-            <div className="flex items-center gap-2">
-              {user && (
-                <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800">
-                  <div className="relative">
-                    <UserCircleIcon className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-                    {!isAnonymous && (
-                      <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-green-500 rounded-full border border-white dark:border-slate-800"></div>
-                    )}
-                  </div>
-                  <span className="text-sm text-slate-700 dark:text-slate-300">
-                    {user.email?.split('@')[0] || 'User'}
-                  </span>
-                  {isAnonymous && (
-                    <span className="text-xs text-slate-500 dark:text-slate-400">(Guest)</span>
-                  )}
-                </div>
-              )}
-              
-              {!isAnonymous ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={async () => {
-                    await signOut()
-                    router.push('/login')
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <ArrowLeftStartOnRectangleIcon className="w-4 h-4" />
-                  Sign Out
-                </Button>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => router.push('/login')}
-                  className="flex items-center gap-2"
-                >
-                  Sign In
-                </Button>
-              )}
-            </div>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                console.log('New Chat button clicked')
-                handleNewConversation()
-              }}
-              disabled={creatingConversation}
-              className="flex items-center gap-2"
-            >
-              {creatingConversation ? (
-                <>
-                  <div className="w-4 h-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <PlusIcon className="w-4 h-4" />
-                  New Chat
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
+        <ChatHeader
+          sidebarOpen={sidebarOpen}
+          onToggleSidebar={toggleSidebar}
+          conversationTitle={conversation?.title}
+          user={user}
+          isAnonymous={isAnonymous}
+          onSignOut={handleSignOut}
+          onSignIn={handleSignIn}
+          onNewConversation={handleNewConversation}
+          creatingConversation={creatingConversation}
+        />
 
         {/* Chat Messages Area */}
         <div className="flex-1 h-full overflow-hidden">
@@ -294,18 +394,14 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
             isLoading={isLoading}
             selectedModel={selectedModel}
             selectedProvider={selectedProvider}
-            onModelChange={(model, provider) => {
-              setSelectedModel(model)
-              setSelectedProvider(provider)
-            }}
+            onModelChange={handleModelChange}
             onCreateConversation={handleNewConversation}
-            onMessageSent={() => {
-              console.log('🔄 [ChatInterface] Message sent, refreshing sidebar')
-              setSidebarKey(prev => prev + 1)
-            }}
+            onMessageSent={handleMessageSent}
           />
         </div>
       </div>
     </div>
   )
 }
+
+export default memo(ChatInterface)
