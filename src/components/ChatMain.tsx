@@ -45,8 +45,8 @@ export default function ChatMain({
   const [showScrollButton, setShowScrollButton] = useState(false)
   const [isUserScrolling, setIsUserScrolling] = useState(false)
   const [isAIResponding, setIsAIResponding] = useState(false)
-  const scrollTimeoutRef = useRef<NodeJS.Timeout>()
-  const scrollDebounceRef = useRef<NodeJS.Timeout>()
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const scrollDebounceRef = useRef<NodeJS.Timeout | null>(null)
   const lastMessageCountRef = useRef(0)
   
   // Use scroll position hook

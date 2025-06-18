@@ -10,7 +10,7 @@ interface ScrollPosition {
 
 const scrollPositions = new Map<string, ScrollPosition>()
 
-export function useScrollPosition(conversationId: string | null, messageListRef: React.RefObject<HTMLDivElement>) {
+export function useScrollPosition(conversationId: string | null, messageListRef: React.RefObject<HTMLDivElement | null>) {
   const savedPositionRef = useRef<ScrollPosition | null>(null)
 
   // Save scroll position
