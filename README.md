@@ -21,10 +21,14 @@
 ## ✨ Features
 
 ### Core AI Capabilities
-- **Multi-Provider Support** - Seamlessly switch between OpenAI, Anthropic, and Google AI models
+- **Multi-Provider Support** - Seamlessly switch between OpenAI, Anthropic, Google AI, and Azure OpenAI models
 - **Streaming Responses** - Real-time token streaming for instant feedback
 - **Vision Support** - Analyze images and screenshots with AI
 - **Cost Tracking** - Monitor token usage and costs across providers
+- **Tiered Model Access**:
+  - **Free Tier**: Gemini models and Azure-hosted GPT-4o Mini (available to all users)
+  - **Premium Tier**: Advanced models with 10 free calls for logged-in users
+  - **BYOK (Bring Your Own Key)**: Access to all models with your own API keys
 
 ### Advanced Features
 - **🔄 Real-time Sync** - Powered by Supabase for instant message updates
@@ -75,6 +79,11 @@
    OPENAI_API_KEY=your-openai-key
    ANTHROPIC_API_KEY=your-anthropic-key
    GOOGLE_AI_API_KEY=your-google-ai-key
+   
+   # Azure OpenAI (Optional - for GPT-4o Mini)
+   AZURE_OPENAI_RESOURCE_NAME=your-azure-resource-name
+   AZURE_OPENAI_API_KEY=your-azure-api-key
+   AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4o-mini
    ```
 
 4. **Set up Supabase**

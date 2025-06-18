@@ -106,6 +106,17 @@ export const AI_MODELS: AIModel[] = [
   
   // Premium Tier Models (10 free calls for logged-in users)
   {
+    id: 'gpt-4o-mini-azure-premium',
+    name: 'GPT-4o Mini (Azure Premium)',
+    provider: 'azure',
+    maxTokens: 128000,
+    description: 'Fast and efficient GPT-4o via Azure OpenAI - Premium tier with higher rate limits',
+    pricing: { input: 0.15, output: 0.60, currency: 'USD' },
+    capabilities: { vision: true, functionCalling: true, codeGeneration: true, multimodal: true },
+    performance: { speed: 'fast', quality: 'high' },
+    tier: 'premium'
+  },
+  {
     id: 'claude-sonnet-4',
     name: 'Claude Sonnet 4',
     provider: 'anthropic',
