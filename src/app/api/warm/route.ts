@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createServerClient } from '@/lib/supabase'
 import { google } from '@ai-sdk/google'
 import { getServerUsageTracker } from '@/lib/usage-tracker-server'
 
@@ -11,7 +10,7 @@ export async function GET() {
     // Warm up various services in parallel
     const warmupPromises = [
       // Warm up Supabase connection
-      createServerComponentClient({ cookies }).auth.getSession(),
+      createServerClient().then(client => client.auth.getSession()),
       
       // Initialize usage tracker singleton
       Promise.resolve(getServerUsageTracker()),

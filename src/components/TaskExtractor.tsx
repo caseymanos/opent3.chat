@@ -125,10 +125,15 @@ export default function TaskExtractor({ conversationId, className = '', messageC
                     </div>
                     <div>
                       <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-                        Extracted Tasks
+                        {isExtracting ? 'Extracting Tasks...' : 'Extracted Tasks'}
                       </h3>
                       <p className="text-sm text-slate-500 dark:text-slate-400">
-                        {extractionResult.totalTasksFound} tasks found • {extractionResult.extractionMetadata.complexity} complexity
+                        {isExtracting 
+                          ? 'Analyzing conversation for actionable items...'
+                          : extractionResult 
+                            ? `${extractionResult.totalTasksFound} tasks found • ${extractionResult.extractionMetadata.complexity} complexity`
+                            : 'No tasks found'
+                        }
                       </p>
                     </div>
                   </div>
