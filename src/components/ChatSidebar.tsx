@@ -301,7 +301,7 @@ const ChatSidebar = forwardRef<{ refresh: () => void }, ChatSidebarProps>(({
 
   if (isCollapsed) {
     return (
-      <div className="h-full flex flex-col items-center py-4 px-2">
+      <div className="h-full flex flex-col items-center py-4 px-2 bg-white dark:bg-gray-900">
         {/* Collapsed Header */}
         <div className="space-y-2 mb-4">
           <Button
@@ -358,7 +358,7 @@ const ChatSidebar = forwardRef<{ refresh: () => void }, ChatSidebarProps>(({
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-white dark:bg-gray-900">
       {/* Header */}
       <div className="p-4 border-b border-slate-200 dark:border-slate-700 space-y-2">
         <Button

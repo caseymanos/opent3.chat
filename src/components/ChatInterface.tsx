@@ -169,22 +169,22 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
       {/* Mobile Sidebar Backdrop */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-20 bg-black/20 lg:hidden"
+          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
       
       {/* Sidebar */}
       <div className={`
-        fixed lg:static inset-y-0 left-0 z-30
+        fixed lg:relative inset-y-0 left-0 z-40
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} 
         ${sidebarOpen ? 'w-80' : 'lg:w-20'} 
         transition-all duration-300 ease-in-out 
         border-r border-gray-200/50 dark:border-gray-700/50
-        bg-white/80 dark:bg-gray-900/80 
-        backdrop-blur-2xl
+        bg-white dark:bg-gray-900
         flex-shrink-0
         shadow-lg lg:shadow-sm
+        h-screen lg:h-full
       `}>
         <ChatSidebar
           key={sidebarKey}
@@ -198,9 +198,9 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative z-10">
         {/* Header */}
-        <div className="h-16 border-b border-gray-200/30 dark:border-gray-700/30 bg-white/60 dark:bg-gray-900/60 backdrop-blur-2xl flex items-center justify-between px-6 shadow-sm">
+        <div className="h-16 border-b border-gray-200/30 dark:border-gray-700/30 bg-white dark:bg-gray-900 flex items-center justify-between px-6 shadow-sm relative z-20">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"

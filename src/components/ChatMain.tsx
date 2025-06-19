@@ -537,7 +537,7 @@ export default function ChatMain({
       <div className="flex-1 flex overflow-hidden">
         
         {/* Main Content Area */}
-        <div className="flex-1 relative min-w-0">
+        <div className="flex-1 relative min-w-0 z-0">
           {!conversationId ? (
             <div className="h-full flex items-center justify-center">
               <div className="text-center max-w-md">
@@ -569,7 +569,7 @@ export default function ChatMain({
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
           ) : (
-            <div className="h-full flex flex-col relative">
+            <div className="h-full flex flex-col relative overflow-hidden">
               <MessageList 
                 ref={messageListRef}
                 messages={messages} 
@@ -586,7 +586,7 @@ export default function ChatMain({
                     setIsUserScrolling(false)
                     scrollToBottom('smooth')
                   }}
-                  className="absolute bottom-4 right-4 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 gpu-accelerated"
+                  className="absolute bottom-4 right-4 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 z-10"
                   aria-label="Scroll to bottom"
                 >
                   <svg className="w-5 h-5 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
