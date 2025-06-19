@@ -4,6 +4,19 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Permissions-Policy',
+            value: 'microphone=*'
+          }
+        ]
+      }
+    ]
+  },
   webpack: (config, { isServer }) => {
     // Fix for pdfjs-dist canvas dependency
     if (!isServer) {

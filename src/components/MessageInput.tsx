@@ -110,7 +110,12 @@ export default function MessageInput({
         <div className="flex items-center gap-2 flex-shrink-0">
           {/* Voice Input */}
           <VoiceInput
-            onTranscriptChange={onChange}
+            onTranscriptChange={(transcript) => {
+              // Append transcript to existing text instead of replacing it
+              const currentValue = value || ''
+              const separator = currentValue && !currentValue.endsWith(' ') ? ' ' : ''
+              onChange(currentValue + separator + transcript)
+            }}
             isDisabled={disabled}
             className="flex-shrink-0"
           />
