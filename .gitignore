@@ -43,3 +43,24 @@ next-env.d.ts
 # logs
 /logs
 *.log
+
+# Documentation (keep only README.md and CLAUDE.md)
+*.md
+!README.md
+!CLAUDE.md
+
+# Test files and artifacts
+test-*.js
+test-*.sh
+test.pdf
+test.txt
+test-*.txt
+*-performance-*.json
+/test-screenshots/
+
+# User-specific and temporary directories
+/casey-manos/
+/claude-cleanup/
+
+# Log files without extension
+errors
