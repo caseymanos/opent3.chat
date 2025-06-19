@@ -8,7 +8,7 @@ import MessageInput from './MessageInput'
 import ModelSelector from './ModelSelector'
 import CostTracker from './CostTracker'
 import ModelComparison from './ModelComparison'
-import TaskExtractor from './TaskExtractor'
+import TaskExtractorDropdown from './TaskExtractorDropdown'
 import OpenRouterSettings from './OpenRouterSettings'
 import { useScrollPosition } from '@/hooks/useScrollPosition'
 import type { Database } from '@/lib/supabase'
@@ -519,7 +519,7 @@ export default function ChatMain({
               )}
             </button>
             
-            <TaskExtractor conversationId={conversationId} messageCount={messages.length} />
+            <TaskExtractorDropdown conversationId={conversationId} messageCount={messages.length} />
             <ModelComparison 
               selectedModels={[selectedModel]}
               onModelSelect={handleModelChange}
