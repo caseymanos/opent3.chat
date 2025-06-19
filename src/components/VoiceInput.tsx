@@ -12,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { Button } from './ui/Button'
 import { useVoiceIntegration } from '@/lib/voice-integration'
+import SpeechWorkaround from './SpeechWorkaround'
 
 interface VoiceInputProps {
   onTranscriptChange: (transcript: string) => void
@@ -52,11 +53,19 @@ export default function VoiceInput({
 
   // No automatic permission check - only check when user clicks microphone
 
+  // Track the last sent transcript to avoid duplicates
+  const lastSentTranscriptRef = useRef<string>('')
+
   // Update parent component when transcript changes
   useEffect(() => {
-    const fullTranscript = transcript + interimTranscript
-    if (fullTranscript) {
-      onTranscriptChange(fullTranscript)
+    // Only send the final transcript when it changes
+    if (transcript && transcript !== lastSentTranscriptRef.current) {
+      // Extract only the new part that hasn't been sent yet
+      const newText = transcript.slice(lastSentTranscriptRef.current.length).trim()
+      if (newText) {
+        onTranscriptChange(newText)
+        lastSentTranscriptRef.current = transcript
+      }
       setShowTranscript(true)
       
       // Auto-hide transcript after 3 seconds of no activity
@@ -68,6 +77,11 @@ export default function VoiceInput({
           setShowTranscript(false)
         }
       }, 3000)
+    }
+    
+    // Show transcript display when there's interim text
+    if (interimTranscript) {
+      setShowTranscript(true)
     }
   }, [transcript, interimTranscript, onTranscriptChange, isListening])
 
@@ -90,6 +104,15 @@ export default function VoiceInput({
       stopListening()
     } else {
       try {
+        // Reset the last sent transcript when starting a new session
+        lastSentTranscriptRef.current = ''
+        
+        // Add delay for Chrome to establish connection
+        if (navigator.userAgent.includes('Chrome')) {
+          console.log('Chrome detected, adding small delay before starting...')
+          await new Promise(resolve => setTimeout(resolve, 100))
+        }
+        
         await startListening({
           continuous: true,
           interimResults: true,
@@ -103,7 +126,7 @@ export default function VoiceInput({
 
   const handleClear = () => {
     clearTranscript()
-    onTranscriptChange('')
+    lastSentTranscriptRef.current = ''
     setShowTranscript(false)
   }
 
@@ -250,6 +273,9 @@ export default function VoiceInput({
       {mounted && hasPermission === false && typeof window !== 'undefined' && 
         createPortal(renderPermissionModal(), document.body)
       }
+      
+      {/* Show workaround help if we have network errors */}
+      {error && error.includes('network') && <SpeechWorkaround />}
       
       <div className={`relative ${className}`}>
       <div className="flex items-center gap-2">
@@ -501,6 +527,25 @@ export default function VoiceInput({
                   <p className="text-xs sm:text-sm text-red-700 dark:text-red-300 leading-relaxed">
                     {error}
                   </p>
+                  {error.includes('Network') && (
+                    <div className="mt-2 space-y-2">
+                      <p className="text-xs text-red-600 dark:text-red-400">
+                        Chrome cannot connect to Google's speech servers. Common solutions:
+                      </p>
+                      <ul className="text-xs text-red-600 dark:text-red-400 space-y-1 ml-4">
+                        <li>• Check firewall settings (allow Chrome network access)</li>
+                        <li>• Disable VPN temporarily</li>
+                        <li>• Try Chrome Incognito mode (Cmd+Shift+N)</li>
+                        <li>• Check corporate network restrictions</li>
+                        {navigator.platform.includes('Mac') && (
+                          <li>• macOS: System Preferences → Security & Privacy → Firewall</li>
+                        )}
+                      </ul>
+                      <p className="text-xs text-red-500 dark:text-red-300 font-medium mt-2">
+                        Alternative: Use keyboard input or try Safari browser
+                      </p>
+                    </div>
+                  )}
                 </motion.div>
               </div>
 

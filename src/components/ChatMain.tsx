@@ -10,6 +10,7 @@ import CostTracker from './CostTracker'
 import ModelComparison from './ModelComparison'
 import TaskExtractor from './TaskExtractor'
 import OpenRouterSettings from './OpenRouterSettings'
+import VoiceDiagnostics from './VoiceDiagnostics'
 import { useScrollPosition } from '@/hooks/useScrollPosition'
 import type { Database } from '@/lib/supabase'
 import { useUsageTracking } from '@/lib/usage-tracker'
@@ -44,6 +45,7 @@ export default function ChatMain({
   const [showScrollButton, setShowScrollButton] = useState(false)
   const [isUserScrolling, setIsUserScrolling] = useState(false)
   const [isAIResponding, setIsAIResponding] = useState(false)
+  const [showDiagnostics, setShowDiagnostics] = useState(false)
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const scrollDebounceRef = useRef<NodeJS.Timeout | null>(null)
   const lastMessageCountRef = useRef(0)
@@ -529,9 +531,25 @@ export default function ChatMain({
               openRouterConfig={openRouterConfig}
               selectedModel={selectedModel}
             />
+            
+            {/* Voice Diagnostics Button */}
+            <button
+              onClick={() => setShowDiagnostics(!showDiagnostics)}
+              className="px-3 py-1.5 text-xs rounded-md bg-purple-100 dark:bg-purple-900/30 hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors text-purple-700 dark:text-purple-300"
+              title="Voice diagnostics"
+            >
+              🎤 Diagnostics
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Voice Diagnostics Panel */}
+      {showDiagnostics && (
+        <div className="border-t border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl">
+          <VoiceDiagnostics />
+        </div>
+      )}
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
