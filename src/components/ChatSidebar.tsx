@@ -18,6 +18,7 @@ interface ChatSidebarProps {
   onNewConversation: () => void
   onDeleteConversation?: (id: string) => void
   onClearAllConversations?: () => void
+  isCollapsed?: boolean
 }
 
 // Memoized conversation item component
@@ -170,7 +171,8 @@ const ChatSidebar = forwardRef<{ refresh: () => void }, ChatSidebarProps>(({
   onConversationSelect,
   onNewConversation,
   onDeleteConversation,
-  onClearAllConversations
+  onClearAllConversations,
+  isCollapsed = false
 }, ref) => {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -297,8 +299,66 @@ const ChatSidebar = forwardRef<{ refresh: () => void }, ChatSidebarProps>(({
     </div>
   ), [])
 
+  if (isCollapsed) {
+    return (
+      <div className="h-full flex flex-col items-center py-4 px-2 bg-white dark:bg-gray-900">
+        {/* Collapsed Header */}
+        <div className="space-y-2 mb-4">
+          <Button
+            onClick={onNewConversation}
+            variant="ghost"
+            size="sm"
+            className="p-2 w-12 h-12 flex items-center justify-center"
+            title="New Conversation"
+          >
+            <PlusIcon className="w-5 h-5" />
+          </Button>
+          
+          {conversations.length > 0 && (
+            <Button
+              onClick={handleShowClearConfirm}
+              variant="ghost"
+              size="sm"
+              className="p-2 w-12 h-12 flex items-center justify-center text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+              title="Clear All"
+            >
+              <TrashIcon className="w-5 h-5" />
+            </Button>
+          )}
+        </div>
+
+        {/* Clear All Confirmation Modal */}
+        <ClearConfirmModal
+          isOpen={showClearConfirm}
+          conversationCount={conversations.length}
+          onConfirm={handleClearAll}
+          onCancel={handleCancelClear}
+        />
+
+        {/* Collapsed Conversations List */}
+        <div className="flex-1 overflow-y-auto w-full space-y-2">
+          {!isLoading && conversations.map((conversation) => (
+            <button
+              key={conversation.id}
+              onClick={() => handleConversationClick(conversation.id)}
+              className={cn(
+                'w-12 h-12 flex items-center justify-center rounded-lg transition-all',
+                currentConversationId === conversation.id
+                  ? 'bg-purple-600 text-white'
+                  : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
+              )}
+              title={conversation.title || 'Untitled'}
+            >
+              <ChatBubbleLeftIcon className="w-5 h-5" />
+            </button>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-white dark:bg-gray-900">
       {/* Header */}
       <div className="p-4 border-b border-slate-200 dark:border-slate-700 space-y-2">
         <Button
@@ -356,7 +416,7 @@ const ChatSidebar = forwardRef<{ refresh: () => void }, ChatSidebarProps>(({
       {/* Footer */}
       <div className="p-4 border-t border-slate-200 dark:border-slate-700">
         <div className="text-xs text-slate-500 dark:text-slate-400 text-center">
-          T3 Crusher v1.0
+          OpenT3 v1.0
         </div>
       </div>
     </div>

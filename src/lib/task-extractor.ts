@@ -36,7 +36,7 @@ type TaskExtractionResult = z.infer<typeof TaskExtractionResult>
 
 interface ConversationMessage {
   id: string
-  content: { text: string }
+  content: any // JSONB field from database
   role: 'user' | 'assistant'
   created_at: string
 }
@@ -47,6 +47,11 @@ export class TaskExtractor {
   async extractTasks(messages: ConversationMessage[]): Promise<TaskExtractionResult> {
     logger.group('TaskExtractor.extractTasks')
     logger.info('Extracting tasks from conversation', { messageCount: messages.length })
+    
+    // Check if API key is available
+    if (!process.env.ANTHROPIC_API_KEY) {
+      throw new Error('ANTHROPIC_API_KEY environment variable is not set')
+    }
     
     try {
       // Prepare conversation context
@@ -68,18 +73,183 @@ export class TaskExtractor {
       return result.object
     } catch (error) {
       logger.error('Task extraction failed', error)
+      
+      // Check if this is a schema validation error with a malformed response
+      if (error instanceof Error && error.message.includes('response did not match schema')) {
+        // Try to parse the malformed response
+        const parsedResult = this.tryParseMalformedResponse(error)
+        if (parsedResult) {
+          logger.info('Successfully parsed malformed response', { 
+            tasksFound: parsedResult.totalTasksFound 
+          })
+          return parsedResult
+        }
+      }
+      
       throw new Error(`Failed to extract tasks: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+  
+  private tryParseMalformedResponse(error: any): TaskExtractionResult | null {
+    try {
+      logger.info('Attempting to parse malformed response')
+      
+      // Check if error has the expected structure from AI SDK
+      if (error.cause && error.cause.value) {
+        const errorValue = error.cause.value
+        
+        // Case 1: The AI put the entire response as a string in the tasks field
+        if (errorValue.tasks && typeof errorValue.tasks === 'string') {
+          logger.info('Found stringified response in tasks field')
+          
+          // The string contains the full JSON response
+          const tasksString = errorValue.tasks
+          
+          // Look for the actual JSON structure within the string
+          // It might have the format: "[{...tasks...}],\n\"summary\": ..., \"totalTasksFound\": ..."
+          // We need to reconstruct the proper object
+          
+          try {
+            // First, try to parse it as a complete JSON object
+            const actualResponse = JSON.parse(tasksString)
+            const validated = TaskExtractionResult.parse(actualResponse)
+            return validated
+          } catch {
+            // If that fails, try to extract the components manually
+            logger.info('Trying manual extraction from malformed string')
+            
+            // Extract tasks array
+            const tasksMatch = tasksString.match(/^\[([\s\S]*?)\]/)
+            if (!tasksMatch) {
+              logger.warn('Could not extract tasks array from string')
+              return null
+            }
+            
+            // Extract other fields
+            const summaryMatch = tasksString.match(/"summary":\s*"([^"]+)"/)
+            const totalMatch = tasksString.match(/"totalTasksFound":\s*(\d+)/)
+            
+            // For metadata, we need to capture the full nested object
+            const metadataMatch = tasksString.match(/"extractionMetadata":\s*({[\s\S]*?"complexity":\s*"[^"]+"\s*})/m)
+            
+            if (!summaryMatch || !totalMatch) {
+              logger.warn('Could not extract required fields')
+              return null
+            }
+            
+            // Parse the tasks array
+            const tasksArray = JSON.parse(`[${tasksMatch[1]}]`)
+            
+            // Parse metadata if found
+            let metadata = {
+              conversationLength: 1,
+              primaryTopics: [],
+              urgencyLevel: 'medium' as const,
+              complexity: 'moderate' as const
+            }
+            
+            if (metadataMatch) {
+              try {
+                metadata = JSON.parse(metadataMatch[1])
+              } catch (e) {
+                logger.warn('Could not parse metadata, using defaults', e)
+              }
+            }
+            
+            const reconstructed = {
+              tasks: tasksArray,
+              summary: summaryMatch[1],
+              totalTasksFound: parseInt(totalMatch[1]),
+              extractionMetadata: metadata
+            }
+            
+            const validated = TaskExtractionResult.parse(reconstructed)
+            return validated
+          }
+        }
+        
+        // Case 2: Try direct validation of the error value
+        try {
+          const validated = TaskExtractionResult.parse(errorValue)
+          return validated
+        } catch {
+          // Continue to other methods
+        }
+      }
+      
+      // Fallback: Try to extract from error string
+      const errorText = error.toString()
+      const responseMatch = errorText.match(/text:\s*'({.*})'/s)
+      
+      if (responseMatch) {
+        const responseText = responseMatch[1]
+        const parsed = JSON.parse(responseText)
+        
+        if (parsed.tasks && typeof parsed.tasks === 'string') {
+          // Recursive call with the parsed object
+          return this.tryParseMalformedResponse({ cause: { value: parsed } })
+        }
+        
+        const validated = TaskExtractionResult.parse(parsed)
+        return validated
+      }
+      
+      logger.warn('Could not extract response from error')
+      return null
+      
+    } catch (parseError) {
+      logger.error('Failed to parse malformed response', parseError)
+      return null
     }
   }
 
   private formatConversation(messages: ConversationMessage[]): string {
     return messages
-      .map(msg => `[${msg.role.toUpperCase()}]: ${msg.content.text}`)
+      .map(msg => {
+        // Extract text content from the JSONB content field
+        let text = ''
+        if (typeof msg.content === 'string') {
+          text = msg.content
+        } else if (msg.content && typeof msg.content === 'object') {
+          // Handle different possible structures
+          if (msg.content.text) {
+            text = msg.content.text
+          } else if (msg.content.content) {
+            text = msg.content.content
+          } else if (Array.isArray(msg.content)) {
+            // Handle array of content blocks
+            text = msg.content
+              .map(block => block.text || block.content || JSON.stringify(block))
+              .join(' ')
+          } else {
+            text = JSON.stringify(msg.content)
+          }
+        } else {
+          text = String(msg.content || '')
+        }
+        
+        return `[${msg.role.toUpperCase()}]: ${text}`
+      })
       .join('\n\n')
   }
 
   private getSystemPrompt(): string {
     return `You are an expert AI task extraction specialist. Your role is to analyze conversations and identify actionable tasks, requirements, and to-dos.
+
+IMPORTANT: You must return a properly structured JSON object with the following format:
+{
+  "tasks": [array of task objects],
+  "summary": "string summary",
+  "totalTasksFound": number,
+  "extractionMetadata": {
+    "conversationLength": number,
+    "primaryTopics": [array of strings],
+    "urgencyLevel": "low" | "medium" | "high",
+    "complexity": "simple" | "moderate" | "complex"
+  }
+}
+
+The "tasks" field MUST be an actual array, NOT a string containing an array.
 
 TASK IDENTIFICATION RULES:
 1. Extract only ACTIONABLE items - things that require specific work to be done
@@ -113,7 +283,7 @@ CONFIDENCE SCORING:
   }
 
   private buildExtractionPrompt(conversationText: string): string {
-    return `Analyze this conversation and extract all actionable tasks and requirements:
+    return `Analyze this conversation and extract all actionable tasks and requirements.
 
 CONVERSATION:
 ${conversationText}
@@ -127,10 +297,36 @@ Please identify:
 For each task, provide:
 - A clear, actionable title
 - Detailed description of what needs to be done
-- Appropriate priority and category
+- Appropriate priority (low/medium/high/urgent) and category
 - Your confidence in this being a real task (0.0-1.0)
 - Any mentioned deadlines, assignees, or dependencies
 
+Return a JSON object with this EXACT structure:
+{
+  "tasks": [
+    {
+      "id": "TASK-001",
+      "title": "Task title",
+      "description": "Task description",
+      "priority": "high",
+      "category": "technical",
+      "confidence": 0.9,
+      "estimatedHours": 2,
+      "tags": ["tag1", "tag2"],
+      "status": "pending"
+    }
+  ],
+  "summary": "Summary of extracted tasks",
+  "totalTasksFound": 1,
+  "extractionMetadata": {
+    "conversationLength": 1,
+    "primaryTopics": ["topic1", "topic2"],
+    "urgencyLevel": "medium",
+    "complexity": "moderate"
+  }
+}
+
+CRITICAL: The "tasks" field must be an actual JSON array, NOT a string.
 Focus on actionable items that require specific work, not general discussion points.`
   }
 

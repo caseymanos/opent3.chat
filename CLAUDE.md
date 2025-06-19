@@ -70,3 +70,4 @@ npm run dev, npm run build, npm run start
 - Create meaningful commit messages that describe the changes
 
 - Follow security best practices and never commit sensitive credentials
+- Focus on the specific goals of this branch: Development work on extract-sidebutton
