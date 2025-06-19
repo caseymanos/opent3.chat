@@ -31,21 +31,21 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
   const [sidebarKey, setSidebarKey] = useState(0) // Force sidebar refresh
   const [usageRefreshKey, setUsageRefreshKey] = useState(0) // Force usage counter refresh
   // Model selection state - moved up from ChatMain to ensure new conversations use current model
-  // Default to Vertex AI model for anonymous users, free model for logged-in users
+  // Default to Vertex AI model for all users (both anonymous and signed-in)
   const [selectedModel, setSelectedModel] = useState(() => {
-    return isAnonymous ? 'gemini-2.5-flash-vertex' : 'gemini-2.5-flash-preview-05-20'
+    return 'gemini-2.5-flash-vertex'
   })
   const [selectedProvider, setSelectedProvider] = useState(() => {
-    return isAnonymous ? 'vertex-ai' : 'google'
+    return 'vertex-ai'
   })
   
-  // Update default model when auth status changes
+  // Ensure Vertex AI model is always used
   useEffect(() => {
-    if (isAnonymous && selectedModel === 'gemini-2.5-flash-preview-05-20') {
+    if (selectedModel !== 'gemini-2.5-flash-vertex' || selectedProvider !== 'vertex-ai') {
       setSelectedModel('gemini-2.5-flash-vertex')
       setSelectedProvider('vertex-ai')
     }
-  }, [isAnonymous, selectedModel])
+  }, [])
   
   // Initialize with provided conversation ID only once
   useEffect(() => {
