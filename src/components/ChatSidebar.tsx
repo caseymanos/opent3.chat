@@ -360,7 +360,7 @@ const ChatSidebar = forwardRef<{ refresh: () => void }, ChatSidebarProps>(({
   return (
     <div className="h-full flex flex-col bg-white dark:bg-gray-900">
       {/* Header */}
-      <div className="p-4 border-b border-slate-200 dark:border-slate-700 space-y-2">
+      <div className="p-4 pt-14 border-b border-slate-200 dark:border-slate-700 space-y-2">
         <Button
           onClick={onNewConversation}
           className="w-full flex items-center gap-2 justify-center"

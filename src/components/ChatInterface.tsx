@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import ChatSidebar from './ChatSidebar'
 import ChatMain from './ChatMain'
 import UsageCounter from './UsageCounter'
+import ResizableSidebar from './ResizableSidebar'
 import { Button } from './ui/Button'
 import { PlusIcon, UserCircleIcon } from '@heroicons/react/24/outline'
 import { ArrowLeftStartOnRectangleIcon } from '@heroicons/react/24/outline'
@@ -166,26 +167,16 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
-      {/* Mobile Sidebar Backdrop */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-      
-      {/* Sidebar */}
-      <div className={`
-        fixed lg:relative inset-y-0 left-0 z-40
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} 
-        ${sidebarOpen ? 'w-80' : 'lg:w-20'} 
-        transition-all duration-300 ease-in-out 
-        border-r border-gray-200/50 dark:border-gray-700/50
-        bg-white dark:bg-gray-900
-        flex-shrink-0
-        shadow-lg lg:shadow-sm
-        h-screen lg:h-full
-      `}>
+      {/* Resizable Sidebar */}
+      <ResizableSidebar
+        isOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen(!sidebarOpen)}
+        defaultWidth={320}
+        minWidth={240}
+        maxWidth={480}
+        storageKey="chat-sidebar-width"
+      >
+
         <ChatSidebar
           key={sidebarKey}
           currentConversationId={currentConversationId}
@@ -195,36 +186,18 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
           onClearAllConversations={handleClearAll}
           isCollapsed={!sidebarOpen}
         />
-      </div>
+      </ResizableSidebar>
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative z-10">
         {/* Header */}
         <div className="h-16 border-b border-gray-200/30 dark:border-gray-700/30 bg-white dark:bg-gray-900 flex items-center justify-between px-6 shadow-sm relative z-20">
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            </Button>
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
-              {conversation?.title || 'OpenT3'}
-            </h1>
+            {sidebarOpen && (
+              <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
+                {conversation?.title || 'OpenT3'}
+              </h1>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -233,20 +206,15 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
             
             {/* User menu */}
             <div className="flex items-center gap-2">
-              {user && (
+              {user && !isAnonymous && (
                 <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800">
                   <div className="relative">
                     <UserCircleIcon className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-                    {!isAnonymous && (
-                      <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-green-500 rounded-full border border-white dark:border-slate-800"></div>
-                    )}
+                    <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-green-500 rounded-full border border-white dark:border-slate-800"></div>
                   </div>
                   <span className="text-sm text-slate-700 dark:text-slate-300">
                     {user.email?.split('@')[0] || 'User'}
                   </span>
-                  {isAnonymous && (
-                    <span className="text-xs text-slate-500 dark:text-slate-400">(Guest)</span>
-                  )}
                 </div>
               )}
               
