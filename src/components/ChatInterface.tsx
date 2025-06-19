@@ -69,7 +69,7 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
   } = useRealtimeChat(currentConversationId)
 
   const handleNewConversation = async () => {
-    if (creatingConversation) return // Prevent double-clicks
+    if (creatingConversation) return null // Prevent double-clicks
     
     try {
       setCreatingConversation(true)
