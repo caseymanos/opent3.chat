@@ -1,5 +1,4 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createServerClient } from '@/lib/supabase'
 import type { Database } from '@/lib/supabase'
 
 const isDev = process.env.NODE_ENV === 'development'
@@ -26,12 +25,11 @@ const SPECIAL_CALL_LIMIT = 2 // Logged-in users: 2 special calls/day (Claude spe
 const RESET_INTERVAL_DAYS = 1 // Daily reset instead of monthly
 
 export class ServerUsageTracker {
-  private supabase: ReturnType<typeof createServerComponentClient<Database>>
   private usageCache: Map<string, { data: UserUsage; timestamp: number }> = new Map()
   private readonly CACHE_TTL = 300000 // 5 minute cache for better performance
 
-  constructor() {
-    this.supabase = createServerComponentClient<Database>({ cookies })
+  private async getSupabase() {
+    return await createServerClient()
   }
 
   // Ensure profile exists for user - only create if absolutely necessary
@@ -39,7 +37,8 @@ export class ServerUsageTracker {
     try {
       // Try to create profile using upsert (insert or ignore if exists)
       log('🔍 [PROFILE UPSERT] Creating profile for user:', userId)
-      const { error } = await this.supabase
+      const supabase = await this.getSupabase()
+      const { error } = await supabase
         .from('profiles')
         .upsert({
           id: userId,
@@ -77,7 +76,8 @@ export class ServerUsageTracker {
       // Authenticated user - try to get from Supabase
       try {
         log('🔍 [PROFILE QUERY] Fetching profile for user:', userId)
-        const { data, error } = await this.supabase
+        const supabase = await this.getSupabase()
+        const { data, error } = await supabase
           .from('profiles')
           .select('premium_calls_used, special_calls_used, usage_last_reset, byok_enabled, api_keys')
           .eq('id', userId)
@@ -90,7 +90,8 @@ export class ServerUsageTracker {
           
           if (daysSinceReset >= RESET_INTERVAL_DAYS) {
             // Reset usage
-            await this.supabase
+            const supabase = await this.getSupabase()
+            await supabase
               .from('profiles')
               .update({ 
                 premium_calls_used: 0,
@@ -219,7 +220,8 @@ export class ServerUsageTracker {
       
       // First try to update, if it fails because profile doesn't exist, create it
       log('🔍 [PROFILE UPDATE] Updating usage count for user:', userId)
-      const { error } = await this.supabase
+      const supabase = await this.getSupabase()
+      const { error } = await supabase
         .from('profiles')
         .update(updateData)
         .eq('id', userId)
@@ -230,7 +232,8 @@ export class ServerUsageTracker {
         await this.ensureProfileExists(userId)
         
         // Try update again
-        const { error: retryError } = await this.supabase
+        const supabase2 = await this.getSupabase()
+        const { error: retryError } = await supabase2
           .from('profiles')
           .update(updateData)
           .eq('id', userId)

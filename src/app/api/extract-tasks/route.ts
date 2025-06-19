@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClientComponentClient } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase'
 import { taskExtractor } from '@/lib/task-extractor'
 import { logger } from '@/lib/logger'
 
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     logger.info('Extracting tasks for conversation', { conversationId })
 
     // Get messages from the conversation
-    const supabase = createClientComponentClient()
+    const supabase = await createServerClient()
     const { data: messages, error } = await supabase
       .from('messages')
       .select('id, content, role, created_at')
@@ -48,6 +48,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Extract tasks using AI
+    logger.info('About to extract tasks', { 
+      messageCount: messages.length,
+      firstMessage: typeof messages[0]?.content === 'string' 
+        ? messages[0].content.substring(0, 100) + '...' 
+        : 'Content not string type'
+    })
+    
     const result = await taskExtractor.extractTasks(messages)
     
     // Optionally save tasks to database for persistence

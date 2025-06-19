@@ -311,20 +311,42 @@ export function useRealtimeChat(conversationId: string | null) {
 
       console.log('✅ Message sent with branching info:', { parentId, branchIndex: finalBranchIndex })
       
-      // Update conversation's updated_at timestamp
-      const { error: updateError } = await supabase
-        .from('conversations')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', conversationId)
-      
-      if (updateError) {
-        console.warn('⚠️ [useRealtimeChat] Failed to update conversation timestamp:', updateError)
+      // Update conversation title if this is the first user message
+      if (role === 'user' && conversation?.title === 'New Chat' && !parentId) {
+        // Generate title from first message (truncate to ~50 chars)
+        const newTitle = content.slice(0, 50) + (content.length > 50 ? '...' : '')
+        
+        const { error: titleError } = await supabase
+          .from('conversations')
+          .update({ 
+            title: newTitle,
+            updated_at: new Date().toISOString() 
+          })
+          .eq('id', conversationId)
+          
+        if (titleError) {
+          console.warn('⚠️ [useRealtimeChat] Failed to update conversation title:', titleError)
+        } else {
+          console.log('✅ [useRealtimeChat] Updated conversation title to:', newTitle)
+          // Update local state
+          setConversation(prev => prev ? { ...prev, title: newTitle } : null)
+        }
+      } else {
+        // Just update timestamp
+        const { error: updateError } = await supabase
+          .from('conversations')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', conversationId)
+        
+        if (updateError) {
+          console.warn('⚠️ [useRealtimeChat] Failed to update conversation timestamp:', updateError)
+        }
       }
     } catch (error) {
       console.error('Error sending message:', error)
       throw error
     }
-  }, [conversationId, supabase, getSessionId])
+  }, [conversationId, conversation, supabase, getSessionId])
 
   const updateTypingStatus = useCallback(async (isTyping: boolean) => {
     if (!conversationId) return

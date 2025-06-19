@@ -70,7 +70,7 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
   } = useRealtimeChat(currentConversationId)
 
   const handleNewConversation = async () => {
-    if (creatingConversation) return // Prevent double-clicks
+    if (creatingConversation) return null // Prevent double-clicks
     
     try {
       setCreatingConversation(true)
@@ -176,6 +176,7 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
         maxWidth={480}
         storageKey="chat-sidebar-width"
       >
+
         <ChatSidebar
           key={sidebarKey}
           currentConversationId={currentConversationId}
@@ -183,13 +184,14 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
           onNewConversation={handleNewConversation}
           onDeleteConversation={handleDeleteConversation}
           onClearAllConversations={handleClearAll}
+          isCollapsed={!sidebarOpen}
         />
       </ResizableSidebar>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative z-10">
         {/* Header */}
-        <div className="h-16 border-b border-gray-200/30 dark:border-gray-700/30 bg-white/60 dark:bg-gray-900/60 backdrop-blur-2xl flex items-center justify-between px-6 shadow-sm">
+        <div className="h-16 border-b border-gray-200/30 dark:border-gray-700/30 bg-white dark:bg-gray-900 flex items-center justify-between px-6 shadow-sm relative z-20">
           <div className="flex items-center gap-4">
             {sidebarOpen && (
               <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">

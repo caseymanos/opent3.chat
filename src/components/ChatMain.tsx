@@ -8,7 +8,7 @@ import MessageInput from './MessageInput'
 import ModelSelector from './ModelSelector'
 import CostTracker from './CostTracker'
 import ModelComparison from './ModelComparison'
-import TaskExtractor from './TaskExtractor'
+import TaskExtractorDropdown from './TaskExtractorDropdownPortal'
 import OpenRouterSettings from './OpenRouterSettings'
 import VoiceDiagnostics from './VoiceDiagnostics'
 import { useScrollPosition } from '@/hooks/useScrollPosition'
@@ -25,7 +25,7 @@ interface ChatMainProps {
   selectedModel: string
   selectedProvider: string
   onModelChange: (model: string, provider: string) => void
-  onCreateConversation?: () => Promise<void>
+  onCreateConversation?: () => Promise<string | null>
   onMessageSent?: () => void
 }
 
@@ -396,7 +396,13 @@ export default function ChatMain({
       console.log('🆕 [ChatMain] No conversation exists, storing pending message and creating conversation...')
       setPendingMessage({ text: input.trim(), files: fileList })
       if (onCreateConversation) {
-        await onCreateConversation()
+        const newConversationId = await onCreateConversation()
+        if (newConversationId) {
+          console.log('✅ [ChatMain] New conversation created:', newConversationId)
+          // The pending message will be sent automatically via the useEffect
+        } else {
+          console.error('❌ [ChatMain] Failed to create conversation')
+        }
         return
       } else {
         console.error('❌ [ChatMain] No onCreateConversation handler provided')
@@ -453,35 +459,7 @@ export default function ChatMain({
     updateTypingStatus(value.length > 0)
   }
 
-  if (!conversationId) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center">
-            <svg
-              className="w-8 h-8 text-slate-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-              />
-            </svg>
-          </div>
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
-            Welcome to OpenT3
-          </h3>
-          <p className="text-slate-600 dark:text-slate-400 mb-4">
-            Start a new conversation to begin chatting with AI
-          </p>
-        </div>
-      </div>
-    )
-  }
+  // Show chat interface even without conversation ID - it will be created on first message
 
   return (
     <div className="h-full flex flex-col">
@@ -521,7 +499,7 @@ export default function ChatMain({
               )}
             </button>
             
-            <TaskExtractor conversationId={conversationId} />
+            <TaskExtractorDropdown conversationId={conversationId} messageCount={messages.length} />
             <ModelComparison 
               selectedModels={[selectedModel]}
               onModelSelect={handleModelChange}
@@ -555,39 +533,13 @@ export default function ChatMain({
       <div className="flex-1 flex overflow-hidden">
         
         {/* Main Content Area */}
-        <div className="flex-1 relative min-w-0">
-          {!conversationId ? (
-            <div className="h-full flex items-center justify-center">
-              <div className="text-center max-w-md">
-                <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                  <svg
-                    className="w-8 h-8 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                  Welcome to OpenT3
-                </h3>
-                <p className="text-slate-600 dark:text-slate-400 mb-4">
-                  Start a conversation by typing a message below.
-                </p>
-              </div>
-            </div>
-          ) : isLoading ? (
+        <div className="flex-1 relative min-w-0 z-0">
+          {isLoading && conversationId ? (
             <div className="h-full flex items-center justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
           ) : (
-            <div className="h-full flex flex-col relative">
+            <div className="h-full flex flex-col relative overflow-hidden">
               <MessageList 
                 ref={messageListRef}
                 messages={messages} 
@@ -604,7 +556,7 @@ export default function ChatMain({
                     setIsUserScrolling(false)
                     scrollToBottom('smooth')
                   }}
-                  className="absolute bottom-4 right-4 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 gpu-accelerated"
+                  className="absolute bottom-4 right-4 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 z-10"
                   aria-label="Scroll to bottom"
                 >
                   <svg className="w-5 h-5 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -689,7 +641,7 @@ export default function ChatMain({
                 value={input}
                 onChange={handleInputValueChange}
                 onSend={handleSendMessage}
-                disabled={isAILoading || !conversationId}
+                disabled={isAILoading}
                 placeholder={
                   isAILoading
                     ? 'AI is thinking...'

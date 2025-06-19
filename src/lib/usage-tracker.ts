@@ -25,6 +25,8 @@ const RESET_INTERVAL_DAYS = 1 // Daily reset instead of monthly
 export class UsageTracker {
   private supabase: ReturnType<typeof createClientComponentClient>
   private storageKey = 't3-crusher-usage'
+  private usageCache: { data: UserUsage | null; timestamp: number } | null = null
+  private readonly CACHE_TTL = 60000 // 1 minute cache to prevent excessive API calls
 
   constructor() {
     this.supabase = createClientComponentClient()
@@ -32,6 +34,12 @@ export class UsageTracker {
 
   // Get usage data for current user
   async getUsage(userId?: string): Promise<UserUsage> {
+    // Check cache first
+    if (this.usageCache && Date.now() - this.usageCache.timestamp < this.CACHE_TTL) {
+      console.log('📊 [UsageTracker] Returning cached usage data')
+      return this.usageCache.data || this.resetUsage()
+    }
+
     // Try to get from API first (works for both authenticated and anonymous users)
     try {
       const response = await fetch('/api/usage')
@@ -39,13 +47,16 @@ export class UsageTracker {
         const data = await response.json()
         if (data.success && data.usage) {
           console.log('📊 [UsageTracker] Got usage from API:', data.usage)
-          return {
+          const usageData = {
             premiumCalls: data.usage.premiumCalls || 0,
             specialCalls: data.usage.specialCalls || 0,
             lastReset: data.usage.lastReset || new Date().toISOString(),
             byokEnabled: data.usage.byokEnabled || false,
             apiKeys: data.usage.apiKeys || {}
           }
+          // Cache the result
+          this.usageCache = { data: usageData, timestamp: Date.now() }
+          return usageData
         }
       }
     } catch (error) {
@@ -98,6 +109,9 @@ export class UsageTracker {
     }
 
     usage.premiumCalls += 1
+    
+    // Invalidate cache
+    this.usageCache = null
 
     if (userId) {
       // Save to Supabase for authenticated users - don't try to create profile here
@@ -130,6 +144,9 @@ export class UsageTracker {
     }
 
     usage.specialCalls += 1
+    
+    // Invalidate cache
+    this.usageCache = null
 
     if (userId) {
       // Save to Supabase for authenticated users
@@ -226,8 +243,16 @@ export class UsageTracker {
       // Save to localStorage
       localStorage.setItem(this.storageKey, JSON.stringify(usage))
     }
+    
+    // Invalidate cache
+    this.usageCache = null
 
     return usage
+  }
+  
+  // Force refresh the cache (useful after sending messages)
+  invalidateCache(): void {
+    this.usageCache = null
   }
 
   // Check if usage should be reset (daily)
@@ -277,6 +302,7 @@ export function useUsageTracking() {
     getRemainingPremiumCalls: (usage: UserUsage) => tracker.getRemainingPremiumCalls(usage, isAnonymous),
     getRemainingSpecialCalls: (usage: UserUsage) => tracker.getRemainingSpecialCalls(usage),
     updateByokStatus: (enabled: boolean, apiKeys?: UserUsage['apiKeys']) => 
-      tracker.updateByokStatus(user?.id, enabled, apiKeys)
+      tracker.updateByokStatus(user?.id, enabled, apiKeys),
+    invalidateCache: () => tracker.invalidateCache()
   }
 }
