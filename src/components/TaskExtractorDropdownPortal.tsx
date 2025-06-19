@@ -168,7 +168,7 @@ export default function TaskExtractorDropdown({
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
         className="fixed inset-0 bg-black/20 backdrop-blur-sm"
-        style={{ zIndex: 9998 }}
+        style={{ zIndex: 99998 }}
         onClick={() => setIsOpen(false)}
       />
       
@@ -179,13 +179,13 @@ export default function TaskExtractorDropdown({
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -10, scale: 0.95 }}
         transition={{ duration: 0.2 }}
-        className="fixed bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden"
+        className="fixed bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden pointer-events-auto"
         style={{
           top: `${dropdownPosition.top}px`,
           left: `${dropdownPosition.left}px`,
           width: '450px',
           maxWidth: 'calc(100vw - 16px)',
-          zIndex: 9999,
+          zIndex: 99999,
         }}
       >
       {/* Header */}
@@ -330,7 +330,7 @@ export default function TaskExtractorDropdown({
           }
         }}
         disabled={isExtracting}
-        className={`relative flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg transition-all ${
+        className={`relative flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg transition-all z-10 ${
           isExtracting 
             ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 cursor-wait' 
             : extractionResult 
