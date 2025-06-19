@@ -44,7 +44,16 @@ export class VoiceIntegration {
       }
 
       this.recognition = new SpeechRecognition()
-      logger.info('Speech recognition initialized successfully')
+      
+      // Log environment information for debugging
+      logger.info('Speech recognition initialized successfully', {
+        browser: navigator.userAgent,
+        protocol: window.location.protocol,
+        hostname: window.location.hostname,
+        port: window.location.port,
+        online: navigator.onLine,
+        language: navigator.language
+      })
     } catch (error) {
       logger.error('Failed to initialize speech recognition', error)
       throw error
@@ -68,6 +77,16 @@ export class VoiceIntegration {
     this.recognition.interimResults = options.interimResults ?? true
     this.recognition.lang = options.language ?? 'en-US'
     this.recognition.maxAlternatives = options.maxAlternatives ?? 3
+    
+    // Add Chrome-specific configuration for network issues
+    if (navigator.userAgent.includes('Chrome')) {
+      // Force re-initialization to clear any stale state
+      try {
+        (this.recognition as any).abort()
+      } catch (e) {
+        // Ignore abort errors
+      }
+    }
 
     // Set up event handlers
     this.recognition.onstart = () => {
@@ -118,10 +137,22 @@ export class VoiceIntegration {
     }
 
     this.recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      logger.error('Speech recognition error', { 
-        error: event.error,
-        message: event.message 
-      })
+      // Log more detailed error information
+      const errorDetails = {
+        type: event.error,
+        message: event.message || 'No additional message',
+        timestamp: new Date().toISOString(),
+        environment: {
+          isProduction: process.env.NODE_ENV === 'production',
+          isVercel: process.env.VERCEL === '1',
+          hostname: window.location.hostname,
+          protocol: window.location.protocol,
+          online: navigator.onLine,
+          userAgent: navigator.userAgent.substring(0, 100)
+        }
+      }
+      
+      logger.error('Speech recognition error:', event.error, errorDetails)
 
       let errorMessage = 'Speech recognition error'
       
@@ -136,7 +167,48 @@ export class VoiceIntegration {
           errorMessage = 'Microphone permission denied.'
           break
         case 'network':
-          errorMessage = 'Network error during speech recognition.'
+          // Enhanced debugging for network errors
+          const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+          const isHTTPS = window.location.protocol === 'https:'
+          
+          logger.info('Network error details:', {
+            online: navigator.onLine,
+            connection: (navigator as any).connection?.effectiveType,
+            platform: navigator.platform,
+            userAgent: navigator.userAgent,
+            protocol: window.location.protocol,
+            hostname: window.location.hostname,
+            isLocalhost,
+            isHTTPS
+          })
+          
+          errorMessage = 'Network error: Speech recognition requires an internet connection.'
+          
+          // Provide specific guidance based on environment
+          if (!navigator.onLine) {
+            errorMessage = 'You appear to be offline. Speech recognition requires an internet connection to work.'
+          } else if (isLocalhost && isHTTPS) {
+            errorMessage = 'Speech recognition may not work properly with https://localhost. Try using http://localhost instead.'
+          } else if (window.location.protocol === 'file:') {
+            errorMessage = 'Speech recognition cannot work with file:// URLs. Please run this application on a web server.'
+          } else {
+            // Common network error on macOS with Chrome
+            const isArcBrowser = navigator.userAgent.includes('Arc/')
+            
+            if (isArcBrowser) {
+              errorMessage = 'Arc browser does not have access to Google speech servers. Web Speech API only works in Google Chrome or Safari.'
+            } else {
+              errorMessage = 'Chrome cannot connect to Google speech servers. This is often caused by firewall or network security settings.'
+            }
+            
+            if (navigator.platform.includes('Mac')) {
+              if (isArcBrowser) {
+                errorMessage += ' Please use Google Chrome or Safari for voice input.'
+              } else {
+                errorMessage += ' Try: 1) Open Chrome in Incognito mode, 2) Check macOS Firewall settings, 3) Disable VPN/proxy, or 4) Use Safari instead.'
+              }
+            }
+          }
           break
         case 'service-not-allowed':
           errorMessage = 'Speech recognition service not available.'
@@ -154,12 +226,19 @@ export class VoiceIntegration {
       // Auto-retry for certain errors
       if (this.shouldRetry(event.error) && this.retryCount < this.maxRetries) {
         this.retryCount++
-        logger.info(`Retrying speech recognition (attempt ${this.retryCount}/${this.maxRetries})`)
+        const retryDelay = event.error === 'network' ? 3000 : 1000 // Longer delay for network errors
+        logger.info(`Retrying speech recognition (attempt ${this.retryCount}/${this.maxRetries})`, {
+          error: event.error,
+          retryDelay
+        })
         setTimeout(() => {
-          if (this.isListening) {
+          if (this.isListening && navigator.onLine) {
             this.restart()
+          } else if (!navigator.onLine) {
+            this.onError?.('Cannot use speech recognition while offline. Please check your internet connection.')
+            this.isListening = false
           }
-        }, 1000)
+        }, retryDelay)
         return
       }
 
@@ -182,18 +261,46 @@ export class VoiceIntegration {
     onError: VoiceErrorCallback,
     options?: VoiceRecognitionOptions
   ): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       try {
         if (!this.isSupported()) {
           throw new Error('Speech recognition not supported')
+        }
+
+        // Chrome network error workaround: Create fresh instance
+        if (navigator.userAgent.includes('Chrome') && this.retryCount === 0) {
+          logger.info('Creating fresh SpeechRecognition instance for Chrome')
+          this.initializeSpeechRecognition()
         }
 
         if (!this.recognition) {
           throw new Error('Speech recognition not initialized')
         }
 
+        // Pre-flight checks
+        logger.info('Performing pre-flight checks for speech recognition', {
+          online: navigator.onLine,
+          protocol: window.location.protocol,
+          hostname: window.location.hostname,
+          userAgent: navigator.userAgent.substring(0, 100) // Truncate for logging
+        })
+
+        // Check network connectivity for browsers that require it
+        if (!navigator.onLine) {
+          logger.warn('Attempting to use speech recognition while offline')
+          // Some browsers might work offline, so we'll try anyway but warn the user
+          onError('Warning: Speech recognition may not work properly without an internet connection.')
+        }
+
+        // Check for problematic HTTPS on localhost
+        if (window.location.hostname === 'localhost' && window.location.protocol === 'https:') {
+          logger.warn('Using HTTPS with localhost may cause issues with speech recognition')
+        }
+
         if (this.isListening) {
           this.stopListening()
+          // Give it a moment to properly stop
+          await new Promise(resolve => setTimeout(resolve, 100))
         }
 
         this.onResult = onResult
@@ -202,12 +309,37 @@ export class VoiceIntegration {
         // Configure with provided options
         if (options) {
           this.configure(options)
+        } else {
+          // Apply default configuration
+          this.configure({
+            continuous: true,
+            interimResults: true,
+            language: 'en-US'
+          })
         }
 
-        this.recognition.start()
-        resolve()
+        try {
+          this.recognition.start()
+          resolve()
+        } catch (startError) {
+          // Handle case where recognition is already started
+          if (startError instanceof Error && startError.message.includes('already started')) {
+            logger.warn('Speech recognition already started, restarting...')
+            this.recognition.stop()
+            await new Promise(resolve => setTimeout(resolve, 200))
+            this.recognition.start()
+            resolve()
+          } else {
+            throw startError
+          }
+        }
       } catch (error) {
-        logger.error('Failed to start speech recognition', error)
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        logger.error('Failed to start speech recognition:', errorMessage, {
+          error: error,
+          stack: error instanceof Error ? error.stack : undefined
+        })
+        this.isListening = false
         reject(error)
       }
     })
@@ -252,14 +384,24 @@ export class VoiceIntegration {
   async requestPermissions(): Promise<boolean> {
     try {
       if (typeof navigator !== 'undefined' && navigator.mediaDevices) {
+        logger.info('Requesting microphone permissions...')
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
         stream.getTracks().forEach(track => track.stop()) // Stop the stream
         logger.info('Microphone permissions granted')
         return true
       }
+      logger.warn('navigator.mediaDevices not available')
       return false
     } catch (error) {
       logger.error('Microphone permission denied', error)
+      // Log specific error details
+      if (error instanceof DOMException) {
+        logger.error('Permission error details:', {
+          name: error.name,
+          message: error.message,
+          code: error.code
+        })
+      }
       return false
     }
   }
