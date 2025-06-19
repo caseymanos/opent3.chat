@@ -10,11 +10,13 @@ import {
   SparklesIcon,
   CheckCircleIcon,
   TagIcon,
-  ArrowDownIcon
+  ArrowDownIcon,
+  ArrowDownTrayIcon
 } from '@heroicons/react/24/outline'
 import { Button } from './ui/Button'
 import { Badge } from './ui/badge'
 import type { Task, TaskExtractionResult } from '@/lib/task-extractor'
+import TaskExportSelector from './TaskExportSelector'
 
 interface TaskExtractorProps {
   conversationId: string
@@ -27,6 +29,7 @@ export default function TaskExtractor({ conversationId, className = '', messageC
   const [isExtracting, setIsExtracting] = useState(false)
   const [extractionResult, setExtractionResult] = useState<TaskExtractionResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showExportOptions, setShowExportOptions] = useState(false)
 
 
   const extractTasks = async () => {
@@ -59,26 +62,9 @@ export default function TaskExtractor({ conversationId, className = '', messageC
     }
   }
 
-  const handleExport = () => {
-    if (!extractionResult) return
-    
-    // Export tasks to clipboard as JSON
-    const tasksJson = JSON.stringify(extractionResult.tasks, null, 2)
-    
-    navigator.clipboard.writeText(tasksJson).then(() => {
-      // Show success feedback
-      const button = document.querySelector('[data-export-button]') as HTMLButtonElement
-      if (button) {
-        const originalText = button.textContent
-        button.textContent = 'Copied!'
-        setTimeout(() => {
-          button.textContent = originalText
-        }, 2000)
-      }
-    }).catch((err) => {
-      console.error('Failed to copy tasks to clipboard:', err)
-      alert('Failed to copy to clipboard. Please check console for details.')
-    })
+  const handleExportComplete = () => {
+    // Optional: close the modal or show success state
+    setShowExportOptions(false)
   }
 
 
@@ -125,11 +111,14 @@ export default function TaskExtractor({ conversationId, className = '', messageC
                     </div>
                     <div>
                       <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-                        {isExtracting ? 'Extracting Tasks...' : 'Extracted Tasks'}
+                        {isExtracting ? 'Extracting Tasks...' : 
+                         showExportOptions ? 'Export Tasks' : 'Extracted Tasks'}
                       </h3>
                       <p className="text-sm text-slate-500 dark:text-slate-400">
                         {isExtracting 
                           ? 'Analyzing conversation for actionable items...'
+                          : showExportOptions
+                            ? 'Choose export format and options'
                           : extractionResult 
                             ? `${extractionResult.totalTasksFound} tasks found • ${extractionResult.extractionMetadata.complexity} complexity`
                             : 'No tasks found'
@@ -155,6 +144,12 @@ export default function TaskExtractor({ conversationId, className = '', messageC
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">This may take a few seconds</p>
                 </div>
               ) : extractionResult ? (
+                showExportOptions ? (
+                  <TaskExportSelector 
+                    taskResult={extractionResult} 
+                    onExportComplete={handleExportComplete}
+                  />
+                ) : (
                 <>
                   {/* Summary */}
                   {extractionResult.summary && (
@@ -261,6 +256,7 @@ export default function TaskExtractor({ conversationId, className = '', messageC
                   </div>
                 )}
                 </>
+                )
               ) : (
                 <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                   <ExclamationTriangleIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -280,15 +276,23 @@ export default function TaskExtractor({ conversationId, className = '', messageC
                   }
                 </div>
                 <div className="flex gap-3">
+                  {showExportOptions && (
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => setShowExportOptions(false)}
+                    >
+                      Back to Tasks
+                    </Button>
+                  )}
                   <Button variant="ghost" onClick={() => setIsOpen(false)}>
                     Close
                   </Button>
-                  {extractionResult && (
+                  {extractionResult && !showExportOptions && (
                     <Button 
-                      onClick={handleExport}
-                      className="bg-purple-600 hover:bg-purple-700 text-white"
-                      data-export-button
+                      onClick={() => setShowExportOptions(true)}
+                      className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2"
                     >
+                      <ArrowDownTrayIcon className="w-4 h-4" />
                       Export Tasks
                     </Button>
                   )}

@@ -50,9 +50,22 @@ export async function POST(request: NextRequest) {
     // Extract tasks using AI
     logger.info('About to extract tasks', { 
       messageCount: messages.length,
-      firstMessage: typeof messages[0]?.content === 'string' 
-        ? messages[0].content.substring(0, 100) + '...' 
-        : 'Content not string type'
+      firstMessage: messages[0] ? {
+        type: typeof messages[0].content,
+        content: messages[0].content,
+        role: messages[0].role,
+        hasText: messages[0].content?.text !== undefined
+      } : 'No messages'
+    })
+    
+    // Log all message contents for debugging
+    messages.forEach((msg, index) => {
+      logger.info(`Message ${index}:`, {
+        role: msg.role,
+        contentType: typeof msg.content,
+        content: msg.content,
+        contentKeys: msg.content && typeof msg.content === 'object' ? Object.keys(msg.content) : []
+      })
     })
     
     const result = await taskExtractor.extractTasks(messages)
@@ -69,6 +82,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     logger.error('Task extraction API error', error)
+    console.error('Extract tasks API error:', error)
     return NextResponse.json(
       { 
         error: 'Failed to extract tasks',

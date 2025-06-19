@@ -1,4 +1,4 @@
-import { anthropic } from '@ai-sdk/anthropic'
+import { createAnthropic } from '@ai-sdk/anthropic'
 import { generateObject } from 'ai'
 import { z } from 'zod'
 import { logger } from './logger'
@@ -42,7 +42,13 @@ interface ConversationMessage {
 }
 
 export class TaskExtractor {
-  private readonly model = anthropic('claude-3-5-sonnet-20241022')
+  private getModel() {
+    // Create Anthropic instance with API key
+    const anthropic = createAnthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY || ''
+    })
+    return anthropic('claude-3-5-sonnet-20241022')
+  }
   
   async extractTasks(messages: ConversationMessage[]): Promise<TaskExtractionResult> {
     logger.group('TaskExtractor.extractTasks')
@@ -50,15 +56,46 @@ export class TaskExtractor {
     
     // Check if API key is available
     if (!process.env.ANTHROPIC_API_KEY) {
+      logger.error('ANTHROPIC_API_KEY is not set')
       throw new Error('ANTHROPIC_API_KEY environment variable is not set')
     }
+    
+    logger.info('API key is available', { 
+      keyLength: process.env.ANTHROPIC_API_KEY.length,
+      keyPrefix: process.env.ANTHROPIC_API_KEY.substring(0, 10) + '...'
+    })
     
     try {
       // Prepare conversation context
       const conversationText = this.formatConversation(messages)
       
+      // Check if we have any meaningful content
+      if (!conversationText || conversationText.trim().length < 10) {
+        logger.warn('Conversation text is too short or empty', { 
+          textLength: conversationText.length,
+          messageCount: messages.length 
+        })
+        
+        return {
+          tasks: [],
+          summary: 'No meaningful conversation content found to extract tasks from.',
+          totalTasksFound: 0,
+          extractionMetadata: {
+            conversationLength: messages.length,
+            primaryTopics: [],
+            urgencyLevel: 'low' as const,
+            complexity: 'simple' as const
+          }
+        }
+      }
+      
+      logger.info('Prepared conversation text', { 
+        textLength: conversationText.length,
+        preview: conversationText.substring(0, 200) + '...'
+      })
+      
       const result = await generateObject({
-        model: this.model,
+        model: this.getModel(),
         system: this.getSystemPrompt(),
         prompt: this.buildExtractionPrompt(conversationText),
         schema: TaskExtractionResult,
@@ -73,6 +110,13 @@ export class TaskExtractor {
       return result.object
     } catch (error) {
       logger.error('Task extraction failed', error)
+      console.error('TaskExtractor error details:', {
+        error,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorStack: error instanceof Error ? error.stack : undefined,
+        hasApiKey: !!process.env.ANTHROPIC_API_KEY,
+        apiKeyLength: process.env.ANTHROPIC_API_KEY?.length
+      })
       
       // Check if this is a schema validation error with a malformed response
       if (error instanceof Error && error.message.includes('response did not match schema')) {
@@ -204,22 +248,43 @@ export class TaskExtractor {
   }
 
   private formatConversation(messages: ConversationMessage[]): string {
+    logger.info('Formatting conversation', { 
+      messageCount: messages.length,
+      firstMessageContent: messages[0]?.content,
+      firstMessageType: typeof messages[0]?.content
+    })
+    
     return messages
-      .map(msg => {
+      .map((msg, index) => {
         // Extract text content from the JSONB content field
         let text = ''
         if (typeof msg.content === 'string') {
           text = msg.content
         } else if (msg.content && typeof msg.content === 'object') {
+          // Log the structure for debugging
+          if (index === 0) {
+            logger.info('First message content structure', {
+              hasText: 'text' in msg.content,
+              hasContent: 'content' in msg.content,
+              isArray: Array.isArray(msg.content),
+              keys: Object.keys(msg.content)
+            })
+          }
+          
           // Handle different possible structures
-          if (msg.content.text) {
+          if ('text' in msg.content && typeof msg.content.text === 'string') {
             text = msg.content.text
-          } else if (msg.content.content) {
+          } else if ('content' in msg.content && typeof msg.content.content === 'string') {
             text = msg.content.content
           } else if (Array.isArray(msg.content)) {
             // Handle array of content blocks
             text = msg.content
-              .map(block => block.text || block.content || JSON.stringify(block))
+              .map((block: any) => {
+                if (typeof block === 'string') return block
+                if (block.text) return block.text
+                if (block.content) return block.content
+                return JSON.stringify(block)
+              })
               .join(' ')
           } else {
             text = JSON.stringify(msg.content)
