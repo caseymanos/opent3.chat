@@ -9,10 +9,13 @@ import {
   DocumentArrowDownIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
-  ClockIcon
+  ClockIcon,
+  ArrowsPointingOutIcon
 } from '@heroicons/react/24/outline'
 import { Badge } from './ui/badge'
 import type { Task, TaskExtractionResult } from '@/lib/task-extractor'
+import TaskExportSelector from './TaskExportSelector'
+import { createPortal } from 'react-dom'
 
 interface TaskExtractorDropdownProps {
   conversationId: string
@@ -29,6 +32,7 @@ export default function TaskExtractorDropdown({
   const [isExtracting, setIsExtracting] = useState(false)
   const [extractionResult, setExtractionResult] = useState<TaskExtractionResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showExportModal, setShowExportModal] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   // Close dropdown when clicking outside
@@ -81,24 +85,8 @@ export default function TaskExtractorDropdown({
 
   const handleExport = () => {
     if (!extractionResult) return
-
-    const exportData = {
-      ...extractionResult,
-      exportedAt: new Date().toISOString(),
-      conversationId
-    }
-
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { 
-      type: 'application/json' 
-    })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `tasks-${new Date().toISOString().split('T')[0]}.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+    setShowExportModal(true)
+    setIsOpen(false)
   }
 
   const getPriorityColor = (priority: string) => {
@@ -280,6 +268,40 @@ export default function TaskExtractorDropdown({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Export Modal */}
+      {showExportModal && extractionResult && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
+          >
+            <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <ArrowsPointingOutIcon className="w-5 h-5 text-purple-600" />
+                  Export Tasks
+                </h2>
+                <button
+                  onClick={() => setShowExportModal(false)}
+                  className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"
+                >
+                  <XMarkIcon className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <TaskExportSelector 
+                taskResult={extractionResult}
+                onExportComplete={() => setShowExportModal(false)}
+              />
+            </div>
+          </motion.div>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }
