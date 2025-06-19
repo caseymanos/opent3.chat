@@ -473,7 +473,7 @@ export default function ChatMain({
               OpenT3
             </h2>
             <span className="text-sm text-slate-500 dark:text-slate-400">
-              Conversation {conversationId.split('-')[0]}
+              Conversation {conversationId?.split('-')[0] || 'New'}
             </span>
             
           </div>
@@ -499,16 +499,18 @@ export default function ChatMain({
               )}
             </button>
             
-            <TaskExtractorDropdown conversationId={conversationId} messageCount={messages.length} />
+            {conversationId && <TaskExtractorDropdown conversationId={conversationId} messageCount={messages.length} />}
             <ModelComparison 
               selectedModels={[selectedModel]}
               onModelSelect={handleModelChange}
             />
-            <CostTracker 
-              conversationId={conversationId} 
-              openRouterConfig={openRouterConfig}
-              selectedModel={selectedModel}
-            />
+            {conversationId && (
+              <CostTracker 
+                conversationId={conversationId} 
+                openRouterConfig={openRouterConfig}
+                selectedModel={selectedModel}
+              />
+            )}
             
             {/* Voice Diagnostics Button */}
             <button
