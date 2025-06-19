@@ -5,8 +5,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Context
 
 **Project Type:** Next.js Application
-**Branch:** speech
-**Focus Area:** Development work on speech
+
+**Branch:** main
+**Focus Area:** Multi-model AI chat application
 
 ## Project Overview
 
@@ -14,7 +15,8 @@ This is a Next.js React application with server-side rendering capabilities.
 
 ## Branch Purpose
 
-This branch (speech) is focused on: Development work on speech
+
+This is the main branch containing the production-ready code for the multi-model AI chat application
 
 ## Development Guidelines
 
@@ -66,4 +68,5 @@ npm run dev, npm run build, npm run start
 - Always verify functionality in the development environment
 - Run linting and type checking before committing
 - Create meaningful commit messages that describe the changes
-- Focus on the specific goals of this branch: Development work on speech
+
+- Follow security best practices and never commit sensitive credentials

@@ -39,17 +39,6 @@ export default function LandingPage() {
           </span>
         </div>
         
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm">
-            About
-          </Button>
-          <Button variant="ghost" size="sm" onClick={scrollToFeatures}>
-            Features
-          </Button>
-          <Button variant="outline" size="sm" onClick={openGitHub}>
-            GitHub
-          </Button>
-        </div>
       </nav>
 
       {/* Hero Section */}
@@ -129,7 +118,7 @@ export default function LandingPage() {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9, duration: 0.8 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl w-full"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl w-full"
         >
           {[
             {
@@ -155,48 +144,6 @@ export default function LandingPage() {
               title: 'Easy to Try',
               description: 'Get started quickly with our streamlined interface',
               category: 'required'
-            },
-            {
-              icon: '📎',
-              title: 'Attachment Support',
-              description: 'Upload and analyze files including images and PDFs',
-              category: 'bonus'
-            },
-            {
-              icon: '🎨',
-              title: 'Syntax Highlighting',
-              description: 'Beautiful code formatting and syntax highlighting',
-              category: 'bonus'
-            },
-            {
-              icon: '🌳',
-              title: 'Chat Branching',
-              description: 'Create alternative conversation paths from any message',
-              category: 'bonus'
-            },
-            {
-              icon: '⏸️',
-              title: 'Resumable Streams',
-              description: 'Continue AI generation after page refresh',
-              category: 'bonus'
-            },
-            {
-              icon: '🔗',
-              title: 'Chat Sharing',
-              description: 'Share conversations with others easily',
-              category: 'bonus'
-            },
-            {
-              icon: '🔑',
-              title: 'Bring Your Own Key',
-              description: 'Use your own API keys for full control',
-              category: 'bonus'
-            },
-            {
-              icon: '🎆',
-              title: 'Anything Else',
-              description: 'Get creative - we love unique ideas and feedback!',
-              category: 'bonus'
             }
           ].map((feature, index) => (
             <motion.div
