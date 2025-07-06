@@ -32,10 +32,10 @@ export default function LandingPage() {
       <nav className="relative z-10 flex items-center justify-between p-6 lg:px-12">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center">
-            <span className="text-white font-bold text-sm">T3</span>
+            <span className="text-white font-bold text-sm">DALE</span>
           </div>
           <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            OpenT3
+            DALE AI
           </span>
         </div>
         

@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "OpenT3 - AI Chat Platform",
+  title: "DALE AI - AI Chat Platform",
   description: "Advanced AI chat platform with multi-model support, real-time collaboration, and intelligent conversation branching",
 };
 

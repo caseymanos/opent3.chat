@@ -416,7 +416,7 @@ const ChatSidebar = forwardRef<{ refresh: () => void }, ChatSidebarProps>(({
       {/* Footer */}
       <div className="p-4 border-t border-slate-200 dark:border-slate-700">
         <div className="text-xs text-slate-500 dark:text-slate-400 text-center">
-          OpenT3 v1.0
+          DALE AI v1.0
         </div>
       </div>
     </div>

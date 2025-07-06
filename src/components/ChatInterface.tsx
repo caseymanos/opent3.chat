@@ -195,7 +195,7 @@ export default function ChatInterface({ initialConversationId }: ChatInterfacePr
           <div className="flex items-center gap-4">
             {sidebarOpen && (
               <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
-                {conversation?.title || 'OpenT3'}
+                {conversation?.title || 'DALE AI'}
               </h1>
             )}
           </div>

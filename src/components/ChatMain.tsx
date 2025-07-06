@@ -468,7 +468,7 @@ export default function ChatMain({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-              OpenT3
+              DALE AI
             </h2>
             <span className="text-sm text-slate-500 dark:text-slate-400">
               Conversation {conversationId?.split('-')[0] || 'New'}
